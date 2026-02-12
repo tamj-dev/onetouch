@@ -1,0 +1,3034 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+  <title>データインポート | マスタ管理</title>
+  <meta name="theme-color" content="#1a1a1a">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon-192.png">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- 新システムのスクリプト -->
+  <script>
+    // item-storage.js を直接埋め込み（file:// プロトコル対応）
+    const DB_NAME = 'OneTouchDB';
+    const DB_VERSION = 1;
+    let db = null;
+
+    async function openDB() {
+      return new Promise((resolve, reject) => {
+        if (db) return resolve(db);
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => { db = request.result; resolve(db); };
+        request.onupgradeneeded = (event) => {
+          const database = event.target.result;
+          if (!database.objectStoreNames.contains('items')) {
+            const itemStore = database.createObjectStore('items', { keyPath: 'itemId' });
+            itemStore.createIndex('companyCode', 'companyCode', { unique: false });
+            itemStore.createIndex('officeCode', 'officeCode', { unique: false });
+          }
+        };
+      });
+    }
+
+    function isDemoMode() {
+      try {
+        const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+        return currentUser && currentUser.companyCode === 'TAMJ';
+      } catch (e) { return false; }
+    }
+
+    async function initDemoItems() {
+      if (!isDemoMode() || sessionStorage.getItem('demo.items')) return;
+      sessionStorage.setItem('demo.items', JSON.stringify([]));
+    }
+
+    async function getItems() {
+      const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+      if (!currentUser) return [];
+      if (isDemoMode()) {
+        return JSON.parse(sessionStorage.getItem('demo.items') || '[]');
+      }
+      // 本番モード: localStorageから取得（scope別フィルタ）
+      const allItems = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
+      if (currentUser.role === 'system_admin') return allItems;
+      if (currentUser.role === 'company_admin') return allItems.filter(i => i.companyCode === currentUser.companyCode);
+      return allItems.filter(i => i.officeCode === currentUser.officeCode);
+    }
+
+    async function addItem(item) {
+      const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+      if (!item.itemId) {
+        const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
+        const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+        item.itemId = `ITEM-${dateStr}-${random}`;
+      }
+      item.createdAt = item.createdAt || new Date().toISOString();
+      item.updatedAt = new Date().toISOString();
+      item.companyCode = item.companyCode || currentUser.companyCode;
+      item.officeCode = item.officeCode || currentUser.officeCode;
+      
+      if (isDemoMode()) {
+        const items = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
+        items.push(item);
+        sessionStorage.setItem('demo.items', JSON.stringify(items));
+        return item;
+      }
+      // 本番モード: localStorageに保存
+      const items = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
+      items.push(item);
+      localStorage.setItem('onetouch.items', JSON.stringify(items));
+      return item;
+    }
+
+    async function updateItem(item) {
+      item.updatedAt = new Date().toISOString();
+      if (isDemoMode()) {
+        const items = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
+        const index = items.findIndex(i => i.itemId === item.itemId);
+        if (index !== -1) {
+          items[index] = item;
+          sessionStorage.setItem('demo.items', JSON.stringify(items));
+        }
+        return item;
+      }
+      // 本番モード: localStorageに保存
+      const items = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
+      items.push(item);
+      localStorage.setItem('onetouch.items', JSON.stringify(items));
+      return item;
+    }
+
+    async function deleteItem(itemId) {
+      if (isDemoMode()) {
+        const items = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
+        const filtered = items.filter(i => i.itemId !== itemId);
+        sessionStorage.setItem('demo.items', JSON.stringify(filtered));
+        return true;
+      }
+      // 本番モード: localStorageから削除
+      const items3 = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
+      const filtered2 = items3.filter(i => i.itemId !== itemId);
+      localStorage.setItem('onetouch.items', JSON.stringify(filtered2));
+      return true;
+    }
+
+    window.ItemStorage = { isDemoMode, initDemoItems, getItems, addItem, updateItem, deleteItem };
+  </script>
+  <script src="upload-limits.js"></script>
+  <script src="csv-utils.js"></script>
+  <script src="document-storage.js"></script>
+  <!-- Tesseract.js 削除: OCR処理はサーバ側 GCP Vision API で実行 -->
+  <style>
+    :root{--bg:#fff;--bg2:#f8f9fa;--text:#1a1a1a;--muted:#666;--accent:#1a1a1a;--yellow:#E9A825;--border:#e5e7eb;--ok:#10b981;--err:#ef4444;--warn:#f59e0b;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Noto Sans JP',sans-serif;background:var(--bg2);min-height:100vh;}
+    .topnav{display:flex;align-items:center;justify-content:flex-end;padding:6px 16px;background:var(--bg2);border-bottom:1px solid var(--border);gap:8px;}
+    .topnav a,.topnav button{color:var(--muted);text-decoration:none;font-size:12px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-family:inherit;}
+    .topnav button.out{color:var(--accent);border-color:rgba(155,35,53,.2);}
+    .hdr{background:var(--bg);padding:14px 20px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+    .back{background:none;border:none;padding:6px;cursor:pointer;border-radius:8px;display:flex;}
+    .back:hover{background:var(--bg2);}
+    .back svg{width:24px;height:24px;color:var(--text);}
+    .hdr h1{font-size:1.1rem;font-weight:600;flex:1;}
+    .hdr-user{font-size:0.8rem;color:var(--muted);background:var(--bg2);padding:4px 10px;border-radius:6px;}
+    .wrap{max-width:640px;margin:0 auto;padding:20px;}
+
+    .steps-bar{display:flex;gap:4px;margin-bottom:20px;}
+    .step-dot{flex:1;height:4px;border-radius:2px;background:var(--border);}
+    .step-dot.active{background:var(--yellow);}
+    .step-dot.done{background:var(--ok);}
+
+    .drop{background:var(--bg);border:2px dashed var(--border);border-radius:16px;padding:48px 24px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px;}
+    .drop:hover,.drop.over{border-color:var(--yellow);background:#fffbf0;}
+    .drop.off{opacity:.5;pointer-events:none;}
+    .drop input{display:none;}
+    .drop-icon{width:64px;height:64px;margin:0 auto 16px;background:linear-gradient(135deg,#fff8e6,#fffbf0);border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--yellow);}
+    .drop-icon svg{width:32px;height:32px;color:var(--yellow);}
+    .drop h3{font-size:1rem;font-weight:600;margin-bottom:6px;}
+    .drop p{font-size:0.85rem;color:var(--muted);}
+    .ftypes{display:flex;justify-content:center;gap:10px;margin-top:14px;flex-wrap:wrap;}
+    .ftype{font-size:0.75rem;color:var(--muted);padding:4px 10px;background:var(--bg2);border-radius:6px;}
+    .enc-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px;font-size:0.8rem;color:var(--muted);}
+    .enc-row select{padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.8rem;}
+
+    .fcard{background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px;}
+    .fcard.ok{border-color:var(--ok);}
+    .fcard.err{border-color:var(--err);background:#fef2f2;}
+    .fcard-top{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+    .fcard-icon{font-size:28px;flex-shrink:0;}
+    .fcard-info{flex:1;min-width:0;}
+    .fcard-name{font-size:0.9rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .fcard-meta{font-size:0.78rem;color:var(--muted);margin-top:2px;}
+    .fcard-badge{font-size:0.78rem;padding:3px 10px;border-radius:99px;font-weight:600;flex-shrink:0;}
+    .fcard-badge.parsing{background:#fef3c7;color:#d97706;}
+    .fcard-badge.ready{background:#dbeafe;color:#2563eb;}
+    .fcard-badge.ok{background:#d1fae5;color:#059669;}
+    .fcard-badge.err{background:#fee2e2;color:#dc2626;}
+    .fcard-stats{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0;font-size:0.82rem;}
+    .fcard-stat{display:flex;align-items:center;gap:4px;}
+    .fcard-stat .dot{width:8px;height:8px;border-radius:50%;}
+    .fcard-btns{display:flex;gap:8px;margin-top:12px;}
+    .btn{border:none;border-radius:10px;padding:10px 18px;font-family:inherit;font-size:0.85rem;font-weight:600;cursor:pointer;transition:all .15s;}
+    .btn-main{background:linear-gradient(135deg,var(--accent),#333);color:#fff;box-shadow:0 4px 12px rgba(155,35,53,.25);}
+    .btn-main:hover{transform:translateY(-1px);}
+    .btn-sub{background:var(--bg2);color:var(--text);border:1px solid var(--border);}
+    .btn-sub:hover{border-color:var(--yellow);}
+    .btn-ok{background:var(--ok);color:#fff;}
+    .spin{width:14px;height:14px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:sp .8s linear infinite;display:inline-block;vertical-align:middle;margin-right:4px;}
+    @keyframes sp{to{transform:rotate(360deg)}}
+
+    /* プレビューモーダル */
+    .mov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;z-index:1000;overflow-y:auto;}
+    .mov.open{display:block;}
+    .mmod{max-width:720px;margin:20px auto;background:var(--bg);border-radius:16px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.3);position:relative;}
+    .mmod h2{font-size:1.1rem;font-weight:700;margin-bottom:4px;}
+    .msub{font-size:0.82rem;color:var(--muted);margin-bottom:16px;}
+    .mtabs{display:flex;gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px;}
+    .mtab{flex:1;padding:10px 8px;text-align:center;font-size:0.82rem;font-weight:600;cursor:pointer;background:var(--bg);border:none;font-family:inherit;color:var(--muted);}
+    .mtab.active{background:var(--yellow);color:#fff;}
+    .mpanel{display:none;}
+    .mpanel.show{display:block;}
+    .mrow{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.82rem;}
+    .mrow:last-child{border-bottom:none;}
+    .mcol{flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+    .marr{color:var(--muted);flex-shrink:0;font-size:0.8rem;}
+    .msel select{width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.82rem;}
+    .msel{flex:1.2;}
+    .msam{font-size:0.72rem;color:var(--muted);flex:0 0 90px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .mb-auto{font-size:0.78rem;padding:6px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);cursor:pointer;font-family:inherit;color:var(--text);}
+    .mb-auto:hover{border-color:var(--yellow);}
+    .rule{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);font-size:0.85rem;}
+    .rule:last-child{border-bottom:none;}
+    .rule input[type=checkbox]{width:18px;height:18px;accent-color:var(--yellow);flex-shrink:0;}
+    .rule-text{flex:1;}
+    .rule-count{font-size:0.75rem;color:var(--muted);flex-shrink:0;min-width:40px;text-align:right;}
+    .pvwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:10px;max-height:400px;overflow-y:auto;}
+    .pvwrap table{border-collapse:collapse;width:100%;min-width:500px;font-size:0.78rem;}
+    .pvwrap th{background:var(--bg2);padding:6px 8px;text-align:left;font-weight:600;border-bottom:2px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:1;}
+    .pvwrap td{padding:5px 8px;border-bottom:1px solid #f3f4f6;white-space:nowrap;max-width:150px;overflow:hidden;text-overflow:ellipsis;}
+    .pvwrap tr.excluded{opacity:.35;text-decoration:line-through;}
+    .pvwrap tr:hover{background:#fffbf0;}
+    .pvwrap input[type=checkbox]{width:16px;height:16px;accent-color:var(--yellow);}
+    .mfoot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;padding-top:16px;border-top:2px solid var(--border);flex-wrap:wrap;}
+    .mfoot-stats{font-size:0.82rem;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap;}
+    .mfoot-stats b{color:var(--text);}
+    .mfoot-btns{display:flex;gap:8px;}
+    .msave{display:flex;align-items:center;gap:6px;font-size:0.78rem;color:var(--muted);margin-top:8px;}
+    .msave input{width:14px;height:14px;}
+    .result-card{background:var(--bg);border:2px solid var(--ok);border-radius:14px;padding:24px;text-align:center;margin-top:16px;}
+    .result-card h3{font-size:1.1rem;font-weight:700;color:var(--ok);margin-bottom:8px;}
+    .result-card .nums{display:flex;gap:16px;justify-content:center;margin:12px 0;font-size:0.85rem;}
+    .result-card .nums span{display:flex;align-items:center;gap:4px;}
+    .help{margin-top:32px;padding-top:24px;border-top:1px solid var(--border);}
+    .help h3{font-size:0.9rem;font-weight:600;margin-bottom:14px;}
+    .hgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;}
+    .hcard{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;}
+    .hcard h4{font-size:0.8rem;font-weight:600;margin-bottom:4px;}
+    .hcard p{font-size:0.7rem;color:var(--muted);}
+
+    /* ヘッダー行選択モーダル */
+    .hdr-picker-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;z-index:1100;overflow-y:auto;}
+    .hdr-picker-overlay.open{display:block;}
+    .hdr-picker-modal{max-width:860px;margin:20px auto;background:var(--bg);border-radius:16px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+    .hdr-picker-modal h2{font-size:1.05rem;font-weight:700;margin-bottom:4px;}
+    .hdr-picker-modal .sub{font-size:0.82rem;color:var(--muted);margin-bottom:12px;}
+    .hdr-cands{margin-bottom:16px;}
+    .hdr-cand{display:flex;align-items:center;gap:10px;padding:10px 12px;border:2px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer;transition:all .15s;font-size:0.82rem;}
+    .hdr-cand:hover{border-color:var(--yellow);background:#fffbf0;}
+    .hdr-cand.selected{border-color:var(--yellow);background:#fffbf0;box-shadow:0 0 0 3px rgba(233,168,37,.15);}
+    .hdr-cand-rank{background:var(--yellow);color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.75rem;flex-shrink:0;}
+    .hdr-cand-cells{flex:1;display:flex;gap:6px;flex-wrap:wrap;min-width:0;}
+    .hdr-cand-cell{background:var(--bg2);padding:2px 8px;border-radius:4px;font-size:0.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;}
+    .hdr-cand-cell.match{background:#d1fae5;color:#059669;font-weight:600;}
+    .hdr-cand-score{font-size:0.72rem;color:var(--muted);flex-shrink:0;min-width:50px;text-align:right;}
+
+    /*  ピッカー モード切替ツールバー */
+    .pk-toolbar{display:flex;gap:6px;margin:12px 0;flex-wrap:wrap;}
+    .pk-mode{padding:7px 14px;border:2px solid var(--border);border-radius:8px;background:var(--bg);font-size:0.78rem;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit;display:flex;align-items:center;gap:5px;}
+    .pk-mode:hover{border-color:var(--yellow);background:#fffbf0;}
+    .pk-mode.active{border-color:var(--yellow);background:#fef3c7;box-shadow:0 0 0 2px rgba(233,168,37,.2);}
+    .pk-mode .pk-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+    .pk-mode-hint{font-size:0.75rem;color:var(--muted);margin-bottom:8px;padding:8px 12px;background:var(--bg2);border-radius:8px;border-left:3px solid var(--yellow);}
+
+    /*  設定サマリー */
+    .pk-summary{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0;font-size:0.78rem;}
+    .pk-sum-item{padding:5px 10px;border-radius:6px;display:flex;align-items:center;gap:5px;}
+    .pk-sum-item.set{background:#d1fae5;color:#059669;}
+    .pk-sum-item.unset{background:var(--bg2);color:var(--muted);}
+
+    /*  テーブル拡張（ゾーン色分け） */
+    .hdr-raw-table{max-height:380px;overflow:auto;border:1px solid var(--border);border-radius:10px;margin-bottom:16px;}
+    .hdr-raw-table table{border-collapse:collapse;width:100%;font-size:0.75rem;min-width:500px;}
+    .hdr-raw-table th{background:var(--bg2);padding:4px 8px;text-align:left;font-weight:600;border-bottom:2px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:2;}
+    .hdr-raw-table td{padding:4px 8px;border-bottom:1px solid #f3f4f6;white-space:nowrap;max-width:140px;overflow:hidden;text-overflow:ellipsis;position:relative;}
+    .hdr-raw-table tr{cursor:pointer;transition:background .1s;}
+    .hdr-raw-table tr:hover{background:#fffbf0;}
+    /* ヘッダー行 */
+    .hdr-raw-table tr.pk-hdr{background:#fef3c7;font-weight:600;}
+    .hdr-raw-table tr.pk-hdr td{border-bottom:2px solid var(--yellow);}
+    /* フッター行 */
+    .hdr-raw-table tr.pk-ftr{background:#fee2e2;}
+    .hdr-raw-table tr.pk-ftr td{border-top:2px solid var(--err);}
+    /* フッターより下のゾーン */
+    .hdr-raw-table tr.pk-below-ftr{opacity:.35;pointer-events:none;}
+    /* ヘッダーより上（販売会社ゾーン） */
+    .hdr-raw-table tr.pk-above{background:#eff6ff;}
+    /* データゾーン */
+    .hdr-raw-table tr.pk-data{}
+    /* 販売会社セル */
+    .hdr-raw-table td.pk-vendor-cell{background:#dbeafe;outline:2px solid #3b82f6;outline-offset:-1px;border-radius:3px;}
+    /* 列ロールヘッダー */
+    .hdr-raw-table td.pk-col-assigned{position:relative;}
+    .pk-col-tag{position:absolute;top:1px;right:2px;font-size:0.6rem;font-weight:700;color:#fff;padding:1px 4px;border-radius:3px;z-index:1;line-height:1.1;}
+    .pk-col-tag.name{background:#059669;}
+    .pk-col-tag.model{background:#7c3aed;}
+    .pk-col-tag.unitPrice{background:#dc2626;}
+    .pk-col-tag.qty{background:#2563eb;}
+    .pk-col-tag.amount{background:#d97706;}
+    .pk-col-tag.maker{background:#0891b2;}
+    .pk-col-tag.category{background:#6b7280;}
+    .pk-col-tag.notes{background:#9ca3af;}
+
+    /* セルクリック時のハイライト */
+    .pk-mode-col .hdr-raw-table tr.pk-hdr td:hover{outline:2px solid var(--accent);outline-offset:-1px;cursor:crosshair;}
+    .pk-mode-vendor .hdr-raw-table tr.pk-above td:hover{outline:2px solid #3b82f6;outline-offset:-1px;cursor:crosshair;}
+
+    /*  列ロール選択ポップアップ */
+    .pk-role-popup{position:fixed;z-index:1200;background:var(--bg);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:8px 0;min-width:160px;}
+    .pk-role-popup .pk-role-opt{padding:8px 14px;font-size:0.8rem;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:inherit;}
+    .pk-role-popup .pk-role-opt:hover{background:var(--bg2);}
+    .pk-role-popup .pk-role-opt .pk-r-dot{width:8px;height:8px;border-radius:50%;}
+    .pk-role-popup .pk-role-opt.active{font-weight:700;background:#d1fae5;}
+    .pk-role-popup .pk-role-opt.clear{color:var(--err);}
+    .hdr-picker-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:12px;}
+    .hdr-info-badge{display:inline-flex;align-items:center;gap:4px;font-size:0.75rem;padding:4px 10px;border-radius:6px;margin-bottom:12px;}
+    .hdr-info-badge.auto{background:#d1fae5;color:#059669;}
+    .hdr-info-badge.manual{background:#fef3c7;color:#d97706;}
+    .hdr-info-badge.low{background:#fee2e2;color:#dc2626;}
+
+    /* 反映先マッピングパネル */
+    .ref-section{font-size:0.88rem;font-weight:700;margin:14px 0 8px;display:flex;align-items:center;gap:8px;}
+    .ref-section::after{content:'';flex:1;height:1px;background:var(--border);}
+    .ref-target{border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;background:var(--bg);}
+    .ref-target-hdr{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+    .ref-target-hdr h4{font-size:0.88rem;font-weight:700;flex:1;}
+    .ref-target-toggle{width:18px;height:18px;accent-color:var(--yellow);}
+    .ref-map-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f3f4f6;font-size:0.82rem;}
+    .ref-map-row:last-child{border-bottom:none;}
+    .ref-map-src{flex:0 0 100px;font-weight:600;color:var(--text);font-size:0.8rem;}
+    .ref-map-arrow{color:#ccc;flex-shrink:0;font-size:0.78rem;}
+    .ref-map-dest{flex:1;}
+    .ref-map-dest select{width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.82rem;}
+    .ref-map-check{flex-shrink:0;}
+    .ref-map-check input{width:16px;height:16px;accent-color:var(--yellow);}
+    .ref-summary{background:var(--bg2);border-radius:10px;padding:12px;margin-top:12px;font-size:0.82rem;color:var(--muted);}
+    .ref-summary b{color:var(--text);}
+
+    /* 必須フィールドバッジ */
+    .req-badge{display:inline-block;font-size:0.65rem;font-weight:700;color:#fff;background:var(--accent);padding:1px 6px;border-radius:4px;margin-left:4px;vertical-align:middle;}
+    .mapped-ok{color:var(--ok);font-weight:600;}
+    .mapped-ng{color:var(--err);font-weight:600;}
+    .req-status{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0;padding:10px 14px;border-radius:10px;font-size:0.82rem;}
+    .req-status.complete{background:#d1fae5;border:1px solid var(--ok);}
+    .req-status.incomplete{background:#fee2e2;border:1px solid var(--err);}
+
+    /* 信頼度バッジ */
+    .conf-badge{display:inline-flex;align-items:center;gap:4px;font-size:0.72rem;font-weight:600;padding:3px 8px;border-radius:6px;margin-left:6px;}
+    .conf-badge.high{background:#d1fae5;color:#059669;}
+    .conf-badge.mid{background:#fef3c7;color:#d97706;}
+    .conf-badge.low{background:#fee2e2;color:#dc2626;}
+    .fcard-conf{display:flex;align-items:center;gap:6px;margin:8px 0;font-size:0.78rem;color:var(--muted);}
+    .fcard-conf .bar{flex:1;max-width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+    .fcard-conf .bar-fill{height:100%;border-radius:3px;transition:width .3s;}
+    .fcard-method{font-size:0.72rem;color:var(--muted);background:var(--bg2);padding:2px 8px;border-radius:4px;display:inline-block;margin-top:4px;}
+
+    /* テンプレート選択 */
+    .tpl-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px 14px;background:var(--bg2);border-radius:10px;font-size:0.82rem;}
+    .tpl-bar select{flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.82rem;}
+    .tpl-bar button{font-size:0.78rem;padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);cursor:pointer;font-family:inherit;white-space:nowrap;}
+    .tpl-bar button:hover{border-color:var(--yellow);}
+    .tpl-name-input{padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.82rem;width:160px;}
+
+    @media(max-width:700px){
+      .oc-left{flex:1;max-width:100%;}
+      .oc-right{display:none;}
+    }
+  </style>
+    <script src="demo-mode.js"></script>
+    <script src="unified-header.js"></script>
+</head>
+<body>
+    <!-- 統一ヘッダー -->
+    <div id="unified-header-mount"></div>
+
+  <div class="wrap">
+    <div class="steps-bar">
+      <div class="step-dot active" id="s1"></div>
+      <div class="step-dot" id="s2"></div>
+      <div class="step-dot" id="s3"></div>
+      <div class="step-dot" id="s4"></div>
+    </div>
+
+    <div class="enc-row">
+      <label>文字コード:</label>
+      <select id="encSel">
+        <option value="auto">自動判定</option>
+        <option value="UTF-8">UTF-8</option>
+        <option value="Shift_JIS">Shift_JIS</option>
+      </select>
+    </div>
+
+    <!-- アップロード制限情報 -->
+    <div id="uploadLimitsInfo" style="background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 13px; color: #0369a1;">
+      <div style="font-weight: 600; margin-bottom: 4px;"> 本日のアップロード状況</div>
+      <div id="uploadLimitsText">読み込み中...</div>
+    </div>
+
+    <div class="drop" id="dropZone">
+      <input type="file" id="fileInput" accept=".csv,.xlsx,.xls,.txt,.pdf,.jpg,.jpeg,.png" multiple>
+      <div class="drop-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+      <h3>ファイルをドロップ</h3>
+      <p>または クリックして選択</p>
+      <div class="ftypes"><span class="ftype">CSV / TXT</span><span class="ftype">Excel (.xlsx)</span><span class="ftype">PDF</span><span class="ftype">画像 (JPG/PNG)</span></div>
+    </div>
+
+    <div id="fileList"></div>
+    <div id="resultArea"></div>
+
+    <div class="help">
+      <h3>Bob案: 3レイヤー 取り込みアーキテクチャ</h3>
+      <div class="hgrid" style="grid-template-columns:repeat(3,1fr);margin-bottom:18px;">
+        <div class="hcard" style="border-color:var(--ok);"><h4>L1 直接パース</h4><p>Excel/CSV/TXT → OCR不要（最安・最速）。列マッピングでほぼ99%</p></div>
+        <div class="hcard" style="border-color:var(--warn);"><h4>L2 Vision OCR</h4><p>PDF/画像 → テキスト抽出 → ダメならGCP Vision OCR</p></div>
+        <div class="hcard" style="border-color:#7c3aed;"><h4>L3 構造化</h4><p>A) ルール抽出（無料）→ B) 失敗時のみ🤖AI整形（Gemini）</p></div>
+      </div>
+      <h3>対応フォーマット</h3>
+      <div class="hgrid">
+        <div class="hcard"><h4>CSV / TXT</h4><p>カンマ・タブ区切り（直接パース）</p></div>
+        <div class="hcard"><h4>Excel</h4><p>.xlsx / .xls（直接パース・結合セル対応）</p></div>
+        <div class="hcard"><h4>PDF</h4><p>テキスト抽出 → ダメならOCR</p></div>
+        <div class="hcard"><h4>画像</h4><p>JPG / PNG → GCP Vision OCR</p></div>
+      </div>
+      <div style="margin-top:14px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:10px;font-size:0.8rem;color:var(--muted);">
+        <b style="color:var(--text);">必須抽出:</b> 販売会社・商品名・型番・単価<br>
+        <b style="color:var(--text);">confidence:</b> +0.35 商品名 +0.25 単価 +0.15 型番 +0.15 販売会社 +0.10 明細3行以上（テンプレ適用時+0.20）<br>
+        <b style="color:var(--text);">AI整形:</b> 明細2行未満 / 単価欠損 / 販売会社不明 / 合計しか拾えない → 自動発動<br>
+        <b style="color:var(--text);">商用制御:</b> ファイル10MB制限・OCR最大10ページ・タイムアウト30秒・エラーログ保存
+      </div>
+    </div>
+  </div>
+
+  <!-- プレビュー&取込設定モーダル -->
+  <div class="mov" id="pvModal">
+    <div class="mmod">
+      <h2 id="pvTitle">プレビュー</h2>
+      <p class="msub" id="pvSub">取り込む列と行を選んでください。</p>
+
+      <div class="mtabs">
+        <button class="mtab active" onclick="showPanel('colMap')">① 列の割当</button>
+        <button class="mtab" onclick="showPanel('vendor')">② 販売会社</button>
+        <button class="mtab" onclick="showPanel('rules')">③ 除外ルール</button>
+        <button class="mtab" onclick="showPanel('rows')">④ 行プレビュー</button>
+        <button class="mtab" onclick="showPanel('reflect')">⑤ 反映先</button>
+      </div>
+
+      <!-- パネル1: 列マッピング -->
+      <div class="mpanel show" id="panelColMap">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
+          <div id="colMapReqStatus" style="font-size:0.78rem;"></div>
+          <button class="mb-auto" onclick="autoDetect()"> 自動推定</button>
+        </div>
+        <div id="mapRows"></div>
+        <label class="msave"><input type="checkbox" id="mapSave" checked>この設定を次回も使う</label>
+      </div>
+
+      <!-- パネル2: 販売会社情報 -->
+      <div class="mpanel" id="panelVendor">
+        <p style="font-size:0.82rem;color:var(--muted);margin-bottom:12px;">書類から自動検出した販売会社情報です。必要に応じて修正してください。</p>
+        <div id="vendorFields"></div>
+      </div>
+
+      <!-- パネル3: 除外ルール -->
+      <div class="mpanel" id="panelRules">
+        <div id="rulesArea"></div>
+      </div>
+
+      <!-- パネル4: 行プレビュー -->
+      <div class="mpanel" id="panelRows">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:0.8rem;color:var(--muted);">チェックON＝取り込む行</span>
+          <div style="display:flex;gap:6px;">
+            <button class="mb-auto" onclick="checkAll(true)">全選択</button>
+            <button class="mb-auto" onclick="checkAll(false)">全解除</button>
+          </div>
+        </div>
+        <div class="pvwrap" id="pvTable"></div>
+      </div>
+
+      <!-- パネル5: 反映先マッピング -->
+      <div class="mpanel" id="panelReflect">
+        <p style="font-size:0.82rem;color:var(--muted);margin-bottom:12px;">抽出した正規データを「どの画面・どの項目」に反映するかを選択してください。</p>
+
+        <div class="req-status incomplete" id="reqStatusBar">
+          <span>必須項目: </span>
+          <span id="reqStatusItems">確認中…</span>
+        </div>
+
+        <!-- テンプレート選択バー -->
+        <div class="tpl-bar" id="tplBar">
+          <span style="font-weight:600;white-space:nowrap;"> テンプレ:</span>
+          <select id="tplSelect" onchange="onTplSelect()">
+            <option value="">（手動設定）</option>
+          </select>
+          <button onclick="saveCurrentAsTemplate()">💾 保存</button>
+          <button onclick="deleteTplCurrent()" id="tplDelBtn" style="display:none;color:var(--err);"></button>
+        </div>
+        <div id="tplAutoApplied" style="display:none;font-size:0.78rem;color:var(--ok);margin-bottom:8px;padding:6px 10px;background:#d1fae5;border-radius:6px;">
+           販売会社に一致するテンプレートを自動適用しました
+        </div>
+
+        <div class="ref-section">反映先の画面</div>
+        <div id="reflectTargets"></div>
+
+        <div class="ref-summary" id="reflectSummary">
+          反映先が未設定です。上のチェックボックスで画面を選択してください。
+        </div>
+
+        <label class="msave" style="margin-top:10px;"><input type="checkbox" id="reflectSave" checked>この反映設定を次回も使う</label>
+      </div>
+
+      <div class="mfoot">
+        <div class="mfoot-stats" id="pvStats">
+          検出: <b>0</b> 行 ｜ 除外: <b>0</b> 行 ｜ 取込: <b>0</b> 行
+        </div>
+        <div class="mfoot-btns">
+          <button class="btn btn-sub" onclick="closePreview()">キャンセル</button>
+          <button class="btn btn-main" id="btnImport" onclick="doImport()">取り込む（0件）</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ヘッダー行選択モーダル →  データ範囲＆フィールド指定モーダル -->
+  <div class="hdr-picker-overlay" id="hdrPickerOverlay">
+    <div class="hdr-picker-modal">
+      <h2> 読み取り範囲の設定</h2>
+      <p class="sub">表のヘッダー行・フッター行・各列の役割・販売会社の位置をクリックで指定できます。</p>
+      <div id="hdrPickerBadge"></div>
+
+      <!-- モード切替ツールバー -->
+      <div class="pk-toolbar" id="pkToolbar">
+        <button class="pk-mode active" data-pk-mode="header" onclick="setPkMode('header')">
+          <span class="pk-dot" style="background:var(--yellow);"></span>① ヘッダー行
+        </button>
+        <button class="pk-mode" data-pk-mode="footer" onclick="setPkMode('footer')">
+          <span class="pk-dot" style="background:var(--err);"></span>② フッター行
+        </button>
+        <button class="pk-mode" data-pk-mode="col" onclick="setPkMode('col')">
+          <span class="pk-dot" style="background:#7c3aed;"></span>③ 列の役割
+        </button>
+        <button class="pk-mode" data-pk-mode="vendor" onclick="setPkMode('vendor')">
+          <span class="pk-dot" style="background:#3b82f6;"></span>④ 販売会社
+        </button>
+      </div>
+
+      <!-- モード別ヒント -->
+      <div class="pk-mode-hint" id="pkModeHint">
+        行をクリックしてヘッダー行（列名が並んでいる行）を選択してください。
+      </div>
+
+      <!-- 設定サマリー -->
+      <div class="pk-summary" id="pkSummary"></div>
+
+      <!-- 候補（ヘッダーモード時のみ表示） -->
+      <div id="hdrCandSection">
+        <div class="ref-section">候補（スコア順）</div>
+        <div id="hdrCandidates" class="hdr-cands"></div>
+      </div>
+
+      <!-- 全行プレビューテーブル -->
+      <div class="ref-section">全行プレビュー <span style="font-size:0.72rem;color:var(--muted);font-weight:400;">（クリックで設定）</span></div>
+      <div class="hdr-raw-table" id="hdrRawTable"></div>
+
+      <!-- 列ロール選択ポップアップ（非表示で配置） -->
+      <div class="pk-role-popup" id="pkRolePopup" style="display:none;"></div>
+
+      <div class="hdr-picker-foot">
+        <button class="btn btn-sub" onclick="closeHdrPicker(true)">キャンセル</button>
+        <button class="btn btn-main" id="btnHdrConfirm" onclick="confirmHdrPicker()">✓ この設定で確定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OCR処理はサーバ側（GCP Vision API）で実行。結果はconfidenceカードで表示 -->
+
+  <script>
+    // ========================================================================
+    // 認証チェック
+    // ========================================================================
+    const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+    if (!currentUser) {
+      window.location.href = 'login.html';
+    }
+
+    // ========================================================================
+    // グローバル状態
+    // ========================================================================
+    var currentFile=null;
+    var rowFlags=[];
+    var vendorInfo={name:'',address:'',tel:'',contact:'',email:''};
+    var EXCLUDE_WORDS=['合計','小計','総計','消費税','税込','税抜','値引','割引','送料','振込','お支払','注釈','備考','見積書','納品書','請求書'];
+
+    // ========================================================================
+    //  Bob案: サーバAPI設定（GCP Vision OCR 連携）
+    // ========================================================================
+    //  ここにCloud RunのURLを設定 
+    // デプロイ後: var API_BASE='https://import-api-xxxxx-an.a.run.app/api';
+    // ローカル開発: var API_BASE='http://localhost:8080/api';
+    var API_BASE='/api'; // 同一オリジン or プロキシ経由
+    var SERVER_AVAILABLE=false; // サーバ接続状態
+    var AI_AVAILABLE=false;     //  Vertex AI (Gemini) 利用可能か
+
+    // サーバ接続チェック（起動時）
+    async function checkServerAPI(){
+      try{
+        var resp=await fetch(API_BASE+'/health',{method:'GET',signal:AbortSignal.timeout(3000)});
+        if(resp.ok){
+          SERVER_AVAILABLE=true;
+          var data=await resp.json().catch(function(){return {};});
+          AI_AVAILABLE=!!(data.vertexAi);
+          console.log('[API] サーバ接続OK'+(AI_AVAILABLE?' | AI整形: ON':' | AI整形: OFF'));
+          return true;
+        }
+      }catch(e){console.log('[API] サーバ未接続 → ローカルモードで動作');}
+      SERVER_AVAILABLE=false;
+      AI_AVAILABLE=false;
+      return false;
+    }
+
+    // サーバ抽出API呼び出し（Bob案: POST /api/import/extract）
+    async function callExtractAPI(file){
+      if(!SERVER_AVAILABLE) return null;
+      try{
+        var form=new FormData();
+        form.append('file',file);
+        form.append('facilityId',demoGetFromLocalStorage(ONE.KEYS.facilityId)||'');
+        var resp=await fetch(API_BASE+'/import/extract',{method:'POST',body:form,signal:AbortSignal.timeout(30000)});
+        if(!resp.ok) throw new Error('API status '+resp.status);
+        var data=await resp.json();
+        //  レスポンスからAI整形の利用可否を更新
+        if(data.evidence&&data.evidence.aiAvailable!==undefined) AI_AVAILABLE=data.evidence.aiAvailable;
+        return data;
+      }catch(e){
+        console.warn('[API] 抽出エラー:',e.message);
+        return null;
+      }
+    }
+
+    // サーバ高精度再抽出（AI整形 強制ON）
+    async function callExtractAPIHighPrecision(file){
+      if(!SERVER_AVAILABLE) return null;
+      try{
+        var form=new FormData();
+        form.append('file',file);
+        form.append('facilityId',demoGetFromLocalStorage(ONE.KEYS.facilityId)||'');
+        form.append('mode','force_ai'); //  レイヤー3B: AI整形を強制ON
+        var resp=await fetch(API_BASE+'/import/extract',{method:'POST',body:form,signal:AbortSignal.timeout(60000)});
+        if(!resp.ok) throw new Error('API status '+resp.status);
+        return await resp.json();
+      }catch(e){
+        console.warn('[API] AI整形エラー:',e.message);
+        return null;
+      }
+    }
+
+    // ========================================================================
+    //  Bob案: confidence → UI動作分岐
+    // ========================================================================
+    function getConfidenceLevel(conf){
+      if(conf>=0.85)return 'high';
+      if(conf>=0.60)return 'mid';
+      return 'low';
+    }
+    function getConfidenceLabel(conf){
+      var level=getConfidenceLevel(conf);
+      if(level==='high')return ' 高信頼（'+Math.round(conf*100)+'%）';
+      if(level==='mid')return ' 要確認（'+Math.round(conf*100)+'%）';
+      return ' 低信頼（'+Math.round(conf*100)+'%）';
+    }
+    function getConfidenceColor(conf){
+      var level=getConfidenceLevel(conf);
+      if(level==='high')return 'var(--ok)';
+      if(level==='mid')return 'var(--warn)';
+      return 'var(--err)';
+    }
+
+    // ========================================================================
+    //  Bob案: テンプレート管理（販売会社別マッピング保存）
+    // ========================================================================
+    var allTemplates=[];
+
+    function loadAllTemplates(){
+      try{
+        var fid=demoGetFromLocalStorage(ONE.KEYS.facilityId)||'default';
+        var s=demoGetFromLocalStorage('tpl.'+fid);
+        allTemplates=s?JSON.parse(s):[];
+      }catch(e){allTemplates=[];}
+    }
+    function saveAllTemplates(){
+      try{
+        var fid=demoGetFromLocalStorage(ONE.KEYS.facilityId)||'default';
+        demoSaveToLocalStorage('tpl.'+fid,JSON.stringify(allTemplates));
+      }catch(e){}
+    }
+    function findTemplateByVendor(vendorName){
+      if(!vendorName)return null;
+      var vn=vendorName.replace(/[\s　]/g,'').toLowerCase();
+      for(var i=0;i<allTemplates.length;i++){
+        var tn=(allTemplates[i].vendorPattern||'').replace(/[\s　]/g,'').toLowerCase();
+        if(tn&&(vn.indexOf(tn)>=0||tn.indexOf(vn)>=0)) return allTemplates[i];
+      }
+      return null;
+    }
+    function saveCurrentAsTemplate(tplName){
+      if(!tplName){
+        tplName=prompt('テンプレート名を入力してください（例: invox系、楽々明細系）:','');
+        if(!tplName)return;
+      }
+      onReflectMapChange(); // 最新の状態を収集
+      var vi=getVendorFromUI();
+      var colMap=getMapByHeader();
+      var tpl={
+        name:tplName,
+        vendorPattern:vi.name||'',
+        createdAt:new Date().toISOString(),
+        colMapping:colMap,
+        reflectConfig:JSON.parse(JSON.stringify(reflectConfig)),
+      };
+      // 同名テンプレがあれば上書き
+      var found=false;
+      for(var i=0;i<allTemplates.length;i++){
+        if(allTemplates[i].name===tplName){allTemplates[i]=tpl;found=true;break;}
+      }
+      if(!found)allTemplates.push(tpl);
+      saveAllTemplates();
+      alert('テンプレート「'+tplName+'」を保存しました。');
+    }
+    function applyTemplate(tpl){
+      if(!tpl)return;
+      // 列マッピングを適用
+      if(tpl.colMapping&&currentFile&&currentFile.parsed){
+        var sels=document.querySelectorAll('#mapRows select');
+        sels.forEach(function(s){s.value='';});
+        var headers=currentFile.parsed.headers;
+        for(var hdr in tpl.colMapping){
+          var idx=headers.indexOf(hdr);
+          if(idx>=0){
+            var sel=document.querySelector('#mapRows select[data-col="'+idx+'"]');
+            if(sel)sel.value=tpl.colMapping[hdr];
+          }
+        }
+        onMapChange();
+      }
+      // 反映先マッピングを適用
+      if(tpl.reflectConfig){
+        reflectConfig=JSON.parse(JSON.stringify(tpl.reflectConfig));
+      }
+    }
+    function deleteTemplate(name){
+      allTemplates=allTemplates.filter(function(t){return t.name!==name;});
+      saveAllTemplates();
+    }
+
+    var FIELDS=[
+      {key:'itemId',label:'商品No.',req:false,p:['商品No','商品ナンバー','商品番号','商品no','itemId','item_id','品番','No','NO','no']},
+      {key:'name',label:'商品名 必須',req:true,p:['商品名','品名','名称','item','name','品目','product','摘要','内容','明細']},
+      {key:'assignedPartnerName',label:'担当業者 必須',req:true,p:['担当業者','業者','業者名','取引先','外注先','販売会社','partner','vendor','supplier']},
+      {key:'qty',label:'数量',req:false,p:['数量','個数','qty','quantity','入数','本数','数']},
+      {key:'unitPrice',label:'単価',req:false,p:['単価','定価','unit','price','unitprice']},
+      {key:'amount',label:'金額',req:false,p:['金額','合計','amount','total','小計','税込','税抜']},
+      {key:'maker',label:'メーカー',req:false,p:['メーカー','製造元','maker','manufacturer','ブランド','メーカ']},
+      {key:'model',label:'型番',req:false,p:['型番','品番','model','code','jan','sku','商品コード','型式','規格']},
+      {key:'category',label:'カテゴリ',req:false,p:['カテゴリ','分類','category','種別','区分']},
+      {key:'notes',label:'備考',req:false,p:['備考','摘要','note','notes','remark','remarks','コメント','注記']},
+    ];
+
+    var RULES=[
+      {id:'empty',label:'商品名が空の行を除外',on:true},
+      {id:'keywords',label:'合計・小計・税・値引・送料 等を含む行を除外',on:true},
+      {id:'noNumbers',label:'数量も金額も無い行を除外（見出し・注釈）',on:true},
+      {id:'short',label:'商品名が2文字以下の行を除外',on:false},
+    ];
+
+    // メーカー辞書
+    var MAKERS=['日立','HITACHI','東芝','TOSHIBA','三菱','三菱電機','MITSUBISHI','パナソニック','Panasonic',
+      'SHARP','シャープ','ダイキン','DAIKIN','富士通','NEC','SONY','ソニー','象印','タイガー','アイリスオーヤマ',
+      'アイリス','マキタ','コイズミ','エレコム','ナカバヤシ','アクア','AQUA','ピーコック','ブラザー','キヤノン',
+      'Canon','リンナイ','ノーリツ','日本アンテナ','ティファール','ASUS','フィリップス','キングジム','セイコー',
+      'カシオ','CASIO','バッファロー','BUFFALO','エプソン','EPSON','LG','Samsung','サムスン','Dell','HP',
+      'Lenovo','Apple','BALMUDA','バルミューダ','ツインバード','TWINBIRD','山善','YAMAZEN'];
+
+    // ========================================================================
+    //  高精度パーシング補助関数（新版ロジック）
+    // ========================================================================
+    function norm(s){
+      return String(s||"").replace(/！-～/g,function(c){return String.fromCharCode(c.charCodeAt(0)-0xFEE0);})
+        .replace(/[　]/g," ")
+        .replace(/[‐‑‒–—―ーｰ]/g,"-")
+        .replace(/[￥¥]/g,"¥")
+        .replace(/\s+/g," ")
+        .trim();
+    }
+    function numLike(s){
+      var t=String(s||"").replace(/[^\d.\-]/g,"");
+      if(!t)return null;
+      var v=Number(t);
+      return Number.isFinite(v)?v:null;
+    }
+    function isProbablyTotalRow(name){
+      var t=norm(name);
+      return /^(合計|小計|総計|消費税|税|送料|値引|値引き|割引|お値引|端数|調整|振込|内訳|請求額)$/i.test(t) ||
+        /合計|小計|総計|消費税|税込|税抜|送料|値引|割引/.test(t);
+    }
+
+    var HEADER_SYNONYMS = {
+      name:  [/^(商品名|品名|名称|摘要|明細|内容|内訳|製品名|品目)$/i, /(商品|品名|名称|摘要|明細|内容|内訳|製品|品目)/i],
+      model: [/^(型番|品番|品目コード|商品コード|ｺｰﾄﾞ|コード|規格|JAN|SKU)$/i, /(型番|品番|コード|規格|JAN|SKU)/i],
+      qty:   [/^(数量|個数|数|Qty)$/i, /(数量|個数|Qty)/i],
+      unit:  [/^(単価|unit price)$/i, /(単価)/i],
+      amount:[/^(金額|価格|合計|小計|金額\(.+\)|総額|請求額|Amount)$/i, /(金額|価格|合計|小計|総額|請求額|Amount)/i],
+    };
+
+    function scoreHeaderRow(row){
+      var score=0;
+      //  ヘッダーマッチ時はスペースを全除去（「内　容」→「内容」対応）
+      var cells=(row||[]).map(function(c){return norm(c).replace(/\s+/g,'');});
+      for(var i=0;i<cells.length;i++){
+        var c=cells[i];
+        if(!c)continue;
+        if(HEADER_SYNONYMS.name[0].test(c)||HEADER_SYNONYMS.name[1].test(c)) score+=2;
+        if(HEADER_SYNONYMS.model[0].test(c)||HEADER_SYNONYMS.model[1].test(c)) score+=2;
+        if(HEADER_SYNONYMS.qty[0].test(c)||HEADER_SYNONYMS.qty[1].test(c)) score+=1;
+        if(HEADER_SYNONYMS.unit[0].test(c)||HEADER_SYNONYMS.unit[1].test(c)) score+=1;
+        if(HEADER_SYNONYMS.amount[0].test(c)||HEADER_SYNONYMS.amount[1].test(c)) score+=2;
+      }
+      return score;
+    }
+
+    function pickHeaderRow(rows, maxScan){
+      maxScan=maxScan||40;
+      var best={idx:-1, score:0};
+      var lim=Math.min(rows.length, maxScan);
+      for(var i=0;i<lim;i++){
+        var sc=scoreHeaderRow(rows[i]||[]);
+        if(sc>best.score) best={idx:i, score:sc};
+      }
+      if(best.score>=3) return best;
+      return {idx:-1, score:best.score};
+    }
+
+    function mapColumnsNew(headers, dataRows){
+      //  スペースを全除去してマッチング（「内　容」→「内容」対応）
+      var h=headers.map(function(x){return norm(x).replace(/\s+/g,'');});
+      var map={name:-1, model:-1, amount:-1, qty:-1, unit:-1};
+      function findIndex(regexes){
+        for(var i=0;i<h.length;i++){
+          var c=h[i]; if(!c)continue;
+          if(regexes[0].test(c)||regexes[1].test(c)) return i;
+        }
+        return -1;
+      }
+      map.name=findIndex(HEADER_SYNONYMS.name);
+      map.model=findIndex(HEADER_SYNONYMS.model);
+      map.qty=findIndex(HEADER_SYNONYMS.qty);
+      map.unit=findIndex(HEADER_SYNONYMS.unit);
+      map.amount=findIndex(HEADER_SYNONYMS.amount);
+
+      //  name列の妥当性チェック: 結合セルで実データが別列にある場合の補正
+      if(map.name>=0 && dataRows && dataRows.length>0){
+        var sampleSize=Math.min(dataRows.length, 20);
+        var nameNonEmpty=0;
+        for(var r=0;r<sampleSize;r++){
+          var v=String(dataRows[r][map.name]||'').trim();
+          if(v && !v.startsWith('◆')) nameNonEmpty++;
+        }
+        // name列が50%未満しか埋まっていない → 隣接列で最もテキストが多い列を探す
+        if(nameNonEmpty < sampleSize * 0.5){
+          var bestCol=-1, bestCount=0;
+          // name列の±3列を探索
+          var scanStart=Math.max(0, map.name-1);
+          var scanEnd=Math.min(headers.length-1, map.name+5);
+          for(var ci=scanStart;ci<=scanEnd;ci++){
+            if(ci===map.name || ci===map.qty || ci===map.unit || ci===map.amount || ci===map.model) continue;
+            var count=0;
+            for(var ri=0;ri<sampleSize;ri++){
+              var v2=String(dataRows[ri][ci]||'').trim();
+              if(v2 && v2.length>2 && !v2.startsWith('◆') && !/^\d+$/.test(v2)) count++;
+            }
+            if(count>bestCount){bestCount=count;bestCol=ci;}
+          }
+          if(bestCol>=0 && bestCount>nameNonEmpty){
+            console.log('[mapColumns] name col corrected: '+map.name+' → '+bestCol+' ('+nameNonEmpty+' vs '+bestCount+' filled)');
+            // 元のname列をmaker列として記録（メーカー情報）
+            map.maker=map.name;
+            map.name=bestCol;
+          }
+        }
+      }
+
+      //  model列未検出時: name列の隣にコード系データがあれば型番とみなす
+      if(map.model===-1 && map.name>=0 && dataRows && dataRows.length>0){
+        var sampleSize2=Math.min(dataRows.length, 15);
+        for(var ci2=0;ci2<headers.length;ci2++){
+          if(ci2===map.name||ci2===map.qty||ci2===map.unit||ci2===map.amount) continue;
+          var codeCount=0;
+          for(var ri2=0;ri2<sampleSize2;ri2++){
+            var v3=String(dataRows[ri2][ci2]||'').trim();
+            if(v3 && /^[A-Za-z0-9\-_.]{3,}$/.test(v3)) codeCount++;
+          }
+          if(codeCount>=sampleSize2*0.3){
+            map.model=ci2;
+            console.log('[mapColumns] model col detected from data: col '+ci2);
+            break;
+          }
+        }
+      }
+
+      if(map.amount===-1){
+        var best={idx:-1,hits:0};
+        for(var i=0;i<h.length;i++){
+          var hits=0;
+          var kws=["金","額","¥","円","合計","小計","total","amount"];
+          for(var k=0;k<kws.length;k++){
+            if(h[i].toLowerCase().indexOf(kws[k].toLowerCase())>=0)hits++;
+          }
+          if(hits>best.hits) best={idx:i,hits:hits};
+        }
+        if(best.idx!==-1) map.amount=best.idx;
+      }
+      return map;
+    }
+
+    function detectDelimiter(line){
+      var candidates=[",","\t",";"];
+      var best={d:",",c:0};
+      for(var i=0;i<candidates.length;i++){
+        var cnt=line.split(candidates[i]).length-1;
+        if(cnt>best.c) best={d:candidates[i],c:cnt};
+      }
+      return best.d;
+    }
+
+    function guessDocType(t){
+      var s=String(t||"");
+      if(/見\s*積\s*書|見積書/.test(s)) return "見積書";
+      if(/請\s*求\s*書|請求書/.test(s)) return "請求書";
+      if(/納\s*品\s*書|納品書/.test(s)) return "納品書";
+      if(/発\s*注\s*書|発注書/.test(s)) return "発注書";
+      if(/明\s*細\s*書|明細書/.test(s)) return "明細書";
+      return "書類";
+    }
+
+    function mergeVendor(a,b){
+      return {name:a.name||b.name||"",address:a.address||b.address||"",tel:a.tel||b.tel||""};
+    }
+
+    // ========================================================================
+    //  PDF テキスト解析（新版ロジック）
+    // ========================================================================
+    function groupPdfIntoLines(items){
+      var sorted=items.slice().sort(function(a,b){
+        if(a.page!==b.page)return a.page-b.page;
+        if(a.y!==b.y)return b.y-a.y;
+        return a.x-b.x;
+      });
+      var lines=[], cur=null, yTol=4;
+      for(var i=0;i<sorted.length;i++){
+        var it=sorted[i];
+        if(!cur||it.page!==cur.page||Math.abs(it.y-cur.y)>yTol){
+          if(cur){cur.cells.sort(function(a,b){return a.x-b.x;});cur.text=cur.cells.map(function(c){return c.text;}).join(" ");lines.push(cur);}
+          cur={page:it.page,y:it.y,cells:[it],text:""};
+        }else{cur.cells.push(it);}
+      }
+      if(cur){cur.cells.sort(function(a,b){return a.x-b.x;});cur.text=cur.cells.map(function(c){return c.text;}).join(" ");lines.push(cur);}
+      return lines.filter(function(l,idx){
+        if(idx===0)return true;
+        var prev=lines[idx-1];
+        if(l.page===prev.page&&l.text===prev.text&&Math.abs(l.y-prev.y)<=2)return false;
+        return true;
+      });
+    }
+
+    function computeColumnBounds(headerCells){
+      var bounds=[];
+      for(var i=0;i<headerCells.length;i++){
+        var left=headerCells[i].x;
+        var right=(i<headerCells.length-1)?Math.round((headerCells[i].x+headerCells[i+1].x)/2):999999;
+        bounds.push({left:left,right:right});
+      }
+      return bounds;
+    }
+
+    function splitLineByBounds(cells,bounds){
+      var cols=[];
+      for(var i=0;i<bounds.length;i++) cols.push([]);
+      for(var c=0;c<cells.length;c++){
+        var cell=cells[c], idx=-1;
+        for(var b=0;b<bounds.length;b++){
+          if(cell.x>=bounds[b].left&&cell.x<bounds[b].right){idx=b;break;}
+        }
+        if(idx===-1)idx=0;
+        cols[idx].push(cell.text);
+      }
+      return cols.map(function(a){return norm(a.join(" "));});
+    }
+
+    function normalizeRows(headers, map, rows){
+      var out=[];
+      for(var r=0;r<rows.length;r++){
+        var row=rows[r];
+        var name=norm(row[map.name]||"");
+        if(!name)continue;
+        if(isProbablyTotalRow(name))continue;
+        var model=norm(row[map.model]||"");
+        var amountRaw=row[map.amount]||"";
+        var amount=numLike(amountRaw);
+        if(amount==null){
+          var best=null;
+          for(var c=0;c<row.length;c++){
+            var v=numLike(row[c]);
+            if(v!=null&&(best==null||v>best))best=v;
+          }
+          amount=(best==null)?0:best;
+        }
+        if(!model){
+          var m=name.match(/[A-Z0-9]{2,}[A-Z0-9\-\/]{3,}/i);
+          if(m)model=m[0];
+          var jan=name.match(/\b(49\d{11,12})\b/);
+          if(jan)model="JAN:"+jan[1];
+        }
+        var headerish=scoreHeaderRow([name,model,String(amountRaw||"")])>=3;
+        if(headerish)continue;
+        out.push({name:name,model:model,amount:Number.isFinite(amount)?Math.round(amount):0});
+      }
+      return out;
+    }
+
+    async function parsePDFTextDirect(file){
+      pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      var buf=await file.arrayBuffer();
+      var pdf=await pdfjsLib.getDocument({data:buf}).promise;
+      var items=[], pagesText=[];
+      for(var p=1;p<=pdf.numPages;p++){
+        var page=await pdf.getPage(p);
+        var tc=await page.getTextContent();
+        var pageItems=tc.items.filter(function(it){return it.str&&it.str.trim();}).map(function(it){
+          return {text:norm(it.str),x:Math.round(it.transform[4]),y:Math.round(it.transform[5]),w:Math.round(it.width||0),page:p};
+        });
+        items=items.concat(pageItems);
+        pagesText.push(pageItems.map(function(x){return x.text;}).join(" "));
+      }
+      var lines=groupPdfIntoLines(items);
+      var topLines=lines.filter(function(l){return l.page===1;}).slice(0,30).map(function(l){return l.text;}).join("\n");
+      var vendor=extractVendorFromTextNew(topLines);
+      var lineTokens=lines.map(function(l){return l.cells.map(function(c){return c.text;});});
+      var pick=pickHeaderRow(lineTokens,80);
+      if(pick.idx===-1){
+        return {vendor:vendor,items:[],rawText:pagesText.join("\n"),lines:lines,headers:[],dataRows:[],headerIdx:-1,pdfParsed:true};
+      }
+      var headerLine=lines[pick.idx];
+      var headers=headerLine.cells.map(function(c){return c.text;});
+      var colMap=mapColumnsNew(headers);
+      var bounds=computeColumnBounds(headerLine.cells);
+      var tableRows=[];
+      for(var i=pick.idx+1;i<lines.length;i++){
+        var ln=lines[i];
+        if(ln.cells.length>=2){var sc=scoreHeaderRow(ln.cells.map(function(c){return c.text;}));if(sc>=3)break;}
+        var text=ln.text;
+        if(!text||text.length<2)continue;
+        if(/^(合計|小計|総計|消費税|税|送料|値引)/.test(text))continue;
+        var row=splitLineByBounds(ln.cells,bounds);
+        if(row.every(function(x){return !norm(x);}))continue;
+        tableRows.push(row);
+      }
+      var normalized=normalizeRows(headers,colMap,tableRows);
+      return {vendor:mergeVendor(vendor,extractVendorFromTextNew(pagesText.slice(0,1).join("\n"))),items:normalized,rawText:pagesText.join("\n"),headers:headers,dataRows:tableRows,headerIdx:pick.idx,pdfParsed:true};
+    }
+
+    // ========================================================================
+    // 初期化
+    // ========================================================================
+    document.addEventListener('DOMContentLoaded',function(){
+      setupDrop();
+      checkServerAPI(); //  サーバ接続チェック
+      loadAllTemplates(); //  テンプレート読込
+      updateUploadLimitsDisplay(); //  アップロード制限表示
+    });
+
+    // アップロード制限情報を表示
+    function updateUploadLimitsDisplay() {
+      try {
+        const info = UploadLimits.getUploadLimitsInfo();
+        const text = `本日: ${info.uploadedToday} / ${info.maxUploadPerDay}回 （残り ${info.remainingToday}回）｜ 1回あたり: ${info.maxFilesPerUpload}ファイルまで ｜ ファイルサイズ: ${info.maxFileSizeMB}MBまで`;
+        document.getElementById('uploadLimitsText').textContent = text;
+      } catch (e) {
+        console.error('[UploadLimits] 表示エラー:', e);
+        document.getElementById('uploadLimitsText').textContent = '制限情報の取得に失敗しました';
+      }
+    }
+
+    function setupDrop(){
+      var dz=document.getElementById('dropZone'),fi=document.getElementById('fileInput');
+      function stop(e){e.preventDefault();e.stopPropagation();}
+      ['dragenter','dragover','dragleave','drop'].forEach(function(ev){dz.addEventListener(ev,stop,{passive:false});});
+      dz.addEventListener('click',function(){fi.click();});
+      dz.addEventListener('dragenter',function(){dz.classList.add('over');});
+      dz.addEventListener('dragleave',function(){dz.classList.remove('over');});
+      dz.addEventListener('drop',function(e){dz.classList.remove('over');var f=e.dataTransfer&&e.dataTransfer.files;if(f&&f.length>0){for(var i=0;i<f.length;i++)handleFile(f[i]);}});
+      fi.addEventListener('change',function(e){if(e.target.files&&e.target.files.length>0){for(var i=0;i<e.target.files.length;i++)handleFile(e.target.files[i]);}fi.value='';});
+    }
+
+    // ========================================================================
+    // ファイル読込ルーター
+    // ========================================================================
+    var OCR_EXTS=['jpg','jpeg','png','gif','webp'];  //  PDFは別処理
+    
+    // ========================================================================
+    //  ユーティリティ関数（新システム）
+    // ========================================================================
+    function generateFileId() {
+      const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
+      const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+      return `DOC-${dateStr}-${random}`;
+    }
+    
+    function parseNumber(text) {
+      if (!text) return 0;
+      const normalized = String(text).replace(/[^\d.\-]/g, '');
+      const num = parseFloat(normalized);
+      return isNaN(num) ? 0 : num;
+    }
+
+    async function handleFile(file){
+      // ========================================================================
+      //  アップロード制限チェック（修正版）
+      // ========================================================================
+      // ファイルサイズチェック
+      const sizeCheck = UploadLimits.checkFileSize(file);
+      if (!sizeCheck.valid) {
+        alert(sizeCheck.reason);
+        return;
+      }
+      
+      // アップロード回数チェック
+      const uploadCheck = UploadLimits.canUpload(1);
+      if (!uploadCheck.canUpload) {
+        alert(uploadCheck.reason);
+        return;
+      }
+      
+      var ext=file.name.split('.').pop().toLowerCase();
+      var isImage=OCR_EXTS.indexOf(ext)>=0;
+      var isPDF=(ext==='pdf');
+      if(!isImage&&!isPDF&&!['csv','xlsx','xls','txt'].includes(ext)){alert(file.name+' は非対応形式です');return;}
+
+      // アップロードカウントを増やす
+      UploadLimits.incrementUploadCount();
+
+      var fid=generateFileId();
+      currentFile={fileObj:file,fileName:file.name,ext:ext,fileId:fid,parsed:null,_confidence:null,_evidence:null};
+      
+      // ========================================================================
+      //  Document保存（新機能）
+      // ========================================================================
+      try {
+        const doc = {
+          docId: fid,
+          companyCode: currentUser.companyCode,
+          officeCode: currentUser.officeCode,
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size,
+          uploadedBy: currentUser.userId,
+          status: 'pending'
+        };
+        await DocumentStorage.addDocument(doc);
+        console.log('[Document] 保存完了:', doc.docId);
+      } catch (e) {
+        console.error('[Document] 保存エラー:', e);
+      }
+
+      // ==================================================================
+      //  PDF/画像 → サーバAPI統合処理（GCP Vision OCR + AI構造化）
+      // ==================================================================
+      if(isPDF||isImage){
+        if(SERVER_AVAILABLE){
+          //  サーバAPIで一括処理（L1→L2→L3 全レイヤー）
+          showCard(fid,file.name,file.size,'parsing',null,'☁️ サーバ解析中…');
+          setStep(2);
+          var apiResult=await callExtractAPI(file);
+          if(apiResult&&apiResult.items&&apiResult.items.length>0){
+            currentFile._confidence=apiResult.confidence||0;
+            currentFile._evidence=apiResult.evidence||{method:'server'};
+            vendorInfo={
+              name:(apiResult.vendor&&apiResult.vendor.name)||'',
+              address:(apiResult.vendor&&apiResult.vendor.address)||'',
+              tel:(apiResult.vendor&&apiResult.vendor.tel)||'',
+              contact:'',email:''
+            };
+            var synHeaders=['商品名','型番','単価'];
+            var synRows=apiResult.items.map(function(it){
+              return [it.product_name||it.name||'',it.model||'',String(it.unit_price||it.unitPrice||'')];
+            });
+            currentFile.parsed={headers:synHeaders,rows:synRows};
+            var excluded=countExcluded(currentFile.parsed);
+            var candidate=synRows.length-excluded;
+            showCard(fid,file.name,file.size,'ready',{
+              total:synRows.length,excluded:excluded,candidate:candidate,cols:synHeaders.length
+            });
+            var confLevel=getConfidenceLevel(apiResult.confidence||0);
+            if(confLevel==='high') openPreview();
+            return;
+          }
+          // サーバAPI失敗 → PDFのみローカルテキスト抽出にフォールバック
+          if(isPDF){
+            console.log('[API] サーバ抽出失敗 → ローカルPDFテキスト抽出へ');
+          }else{
+            // 画像はサーバOCR必須 → エラー表示
+            showCard(fid,file.name,file.size,'error',null,'サーバでの画像読取りに失敗しました。再試行するか、CSV/Excelでアップロードしてください。');
+            return;
+          }
+        }else if(isImage){
+          //  画像はサーバ接続必須
+          showCard(fid,file.name,file.size,'error',null,'画像の読取りにはサーバ接続が必要です。ネットワーク接続を確認するか、CSV/Excelでアップロードしてください。');
+          setStep(2);
+          return;
+        }
+
+        //  PDFローカルフォールバック: テキスト抽出のみ（OCRなし）
+        if(isPDF){
+          showCard(fid,file.name,file.size,'parsing',null,' PDFテキスト抽出中…');
+          setStep(2);
+          try{
+            var pdfResult=await parsePDFTextDirect(file);
+            if(pdfResult.items&&pdfResult.items.length>0){
+              var headers=pdfResult.headers||[];
+              var dataRows=pdfResult.dataRows||[];
+              vendorInfo=pdfResult.vendor||{name:'',address:'',tel:'',contact:'',email:''};
+              if(!vendorInfo.contact)vendorInfo.contact='';
+              if(!vendorInfo.email)vendorInfo.email='';
+              if(headers.length>0&&dataRows.length>0){
+                currentFile.parsed={headers:headers,rows:dataRows};
+              }else{
+                var synHeaders2=['商品名','型番','金額'];
+                var synRows2=pdfResult.items.map(function(it){return [it.name,it.model,String(it.amount||'')];});
+                currentFile.parsed={headers:synHeaders2,rows:synRows2};
+              }
+              currentFile._headerIdx=pdfResult.headerIdx||0;
+              currentFile._aboveText=pdfResult.rawText||'';
+              currentFile._pdfItems=pdfResult.items;
+              currentFile._confidence=estimateLocalConfidence(currentFile.parsed,vendorInfo);
+              currentFile._evidence={method:'local_pdf',notes:[]};
+              var excluded2=countExcluded(currentFile.parsed);
+              var candidate2=currentFile.parsed.rows.length-excluded2;
+              showCard(fid,file.name,file.size,'ready',{
+                total:currentFile.parsed.rows.length, excluded:excluded2, candidate:candidate2, cols:currentFile.parsed.headers.length
+              });
+              return;
+            }
+          }catch(pdfErr){
+            console.warn('[PDF Text] extraction failed:', pdfErr);
+          }
+          // テキスト抽出も失敗 → スキャンPDFなのでサーバが必要
+          showCard(fid,file.name,file.size,'error',null,
+            SERVER_AVAILABLE
+              ? 'PDFからデータを取得できませんでした。🤖 AI整形を試すか、CSV/Excelでアップロードしてください。'
+              : 'このPDFはスキャン画像のため、サーバ接続が必要です。ネットワークを確認してください。'
+          );
+          return;
+        }
+        return; // ここには到達しないはず
+      }
+
+      // CSV/Excel → ヘッダー行自動検出付きフロー
+      showCard(fid,file.name,file.size,'parsing');
+      setStep(2);
+
+      try{
+        var raw;
+        if(ext==='csv'||ext==='txt'){
+          raw=await parseCSVRaw(file);
+        }else{
+          raw=await parseExcelRaw(file);
+        }
+
+        //  ヘッダー行をスコアで自動検出
+        var detected=detectHeaderRow(raw);
+        var headerIdx=detected.headerIdx;
+        var autoScore=detected.score;
+
+        //  低スコア（<5）または Excel帳票型の場合 → データ範囲設定モーダルを表示
+        if(autoScore<5||(ext!=='csv'&&ext!=='txt'&&autoScore<7)){
+          showCard(fid,file.name,file.size,'ready',{total:0,excluded:0,candidate:0,cols:0});
+          var pickedIdx=await showHdrPicker(raw, headerIdx, autoScore);
+          if(pickedIdx>=0){
+            headerIdx=pickedIdx;
+            //  pkState全体を反映（フッター・列ロール・販売会社セル）
+            var applied=applyPkStateToData(raw, headerIdx);
+            vendorInfo=extractVendorInfo(applied.vendorText);
+            currentFile.parsed={headers:applied.headers,rows:applied.dataRows};
+            currentFile._headerIdx=headerIdx;
+            currentFile._aboveText=applied.vendorText;
+            currentFile._rawRows=raw;
+            currentFile._pkColRoles=applied.colRoles;
+            currentFile._confidence=estimateLocalConfidence(currentFile.parsed,vendorInfo);
+            currentFile._evidence={method:'local_excel',notes:[]};
+            var excludedPk=countExcluded(currentFile.parsed);
+            var candidatePk=applied.dataRows.length-excludedPk;
+            showCard(fid,file.name,file.size,'ready',{
+              total:applied.dataRows.length,excluded:excludedPk,candidate:candidatePk,cols:applied.headers.length
+            });
+            return;
+          }else{
+            dismissCard(fid);
+            return;
+          }
+        }
+
+        var headersCSV=raw[headerIdx].map(function(h){return String(h).trim();});
+        var dataRowsCSV=[];
+        for(var i=headerIdx+1;i<raw.length;i++){
+          if(raw[i].some(function(c){return String(c||'').trim();})){
+            dataRowsCSV.push(raw[i]);
+          }
+        }
+
+        var aboveText='';
+        for(var a=0;a<headerIdx;a++){
+          aboveText+=raw[a].map(function(c){return String(c||'');}).join(' ')+'\n';
+        }
+        vendorInfo=extractVendorInfo(aboveText);
+
+        currentFile.parsed={headers:headersCSV,rows:dataRowsCSV};
+        currentFile._headerIdx=headerIdx;
+        currentFile._aboveText=aboveText;
+        currentFile._rawRows=raw;
+        //  ローカル抽出の信頼度を推定
+        currentFile._confidence=estimateLocalConfidence(currentFile.parsed,vendorInfo);
+        currentFile._evidence={method:'local_excel',notes:[]};
+        var excludedCSV=countExcluded(currentFile.parsed);
+        var candidateCSV=dataRowsCSV.length-excludedCSV;
+
+        showCard(fid,file.name,file.size,'ready',{
+          total:dataRowsCSV.length, excluded:excludedCSV, candidate:candidateCSV, cols:headersCSV.length
+        });
+
+      }catch(err){
+        console.error('Parse error:',err);
+        showCard(fid,file.name,file.size,'error',null,err.message);
+      }
+    }
+
+    //  ローカル抽出の信頼度推定（仕様書準拠 confidence算出）
+    // +0.35 商品名取得 / +0.25 単価取得 / +0.15 型番取得 / +0.15 販売会社取得 / +0.10 明細3行以上
+    function estimateLocalConfidence(parsed,vi){
+      if(!parsed||!parsed.rows)return 0;
+      var conf=0;
+      var colMap=mapColumnsNew(parsed.headers,parsed.rows);
+      // 商品名取得 (+0.35)
+      if(colMap.name>=0){
+        var named=parsed.rows.filter(function(r){return r[colMap.name]&&r[colMap.name].trim();}).length;
+        if(named>0)conf+=(parsed.rows.length>0&&named/parsed.rows.length>=0.5)?0.35:0.15;
+      }
+      // 単価取得 (+0.25)
+      var priceCol=(colMap.unit>=0)?colMap.unit:(colMap.amount>=0?colMap.amount:-1);
+      if(priceCol>=0){
+        var priced=parsed.rows.filter(function(r){return r[priceCol]&&/\d/.test(r[priceCol]);}).length;
+        if(priced>0)conf+=(parsed.rows.length>0&&priced/parsed.rows.length>=0.5)?0.25:0.10;
+      }
+      // 型番取得 (+0.15)
+      if(colMap.model>=0){
+        var modeled=parsed.rows.filter(function(r){return r[colMap.model]&&r[colMap.model].trim();}).length;
+        if(modeled>0)conf+=(parsed.rows.length>0&&modeled/parsed.rows.length>=0.3)?0.15:0.05;
+      }
+      // 販売会社 (+0.15)
+      if(vi&&vi.name)conf+=0.15;
+      // 明細3行以上 (+0.10)
+      if(parsed.rows.length>=3)conf+=0.10;
+      return Math.min(conf,1.0);
+    }
+
+    // ========================================================================
+    // CSV/Excel → 全行を2D配列で取得（ヘッダー行を仮定しない）
+    // ========================================================================
+    function readText(f,enc){return new Promise(function(ok,ng){var r=new FileReader();r.onerror=function(){ng(r.error);};r.onload=function(){ok(r.result);};r.readAsText(f,enc||'UTF-8');});}
+    function readBuf(f){return new Promise(function(ok,ng){var r=new FileReader();r.onerror=function(){ng(r.error);};r.onload=function(){ok(r.result);};r.readAsArrayBuffer(f);});}
+
+    async function parseCSVRaw(f){
+      var encSel=document.getElementById('encSel').value;
+      var enc=(encSel==='auto')?'UTF-8':encSel;
+      var t=await readText(f,enc);
+      if(encSel==='auto'&&/[�]/.test(t.substring(0,500))){
+        try{t=await readText(f,'Shift_JIS');}catch(e){}
+      }
+      var ls=t.replace(/\r\n/g,"\n").replace(/\r/g,"\n").split("\n").filter(function(l){return l.trim();});
+      if(ls.length<2)throw new Error('データが見つかりません（行数不足）');
+      //  自動区切り文字検出
+      var sample=ls.find(function(l){return l.trim().length>0;})||"";
+      var delim=detectDelimiter(sample);
+      return ls.map(function(l){
+        if(window.ONE&&typeof ONE.parseCSVLine==='function') return ONE.parseCSVLine(l,delim);
+        return l.split(delim);
+      });
+    }
+
+    async function parseExcelRaw(f){
+      var buf=await readBuf(f);
+      var wb=XLSX.read(new Uint8Array(buf),{type:'array'});
+      //  最大6シートをスキャンして最適なヘッダーを持つシートを選択
+      var bestSheet=wb.SheetNames[0], bestScore=0, bestRows=null;
+      var sheetLimit=Math.min(wb.SheetNames.length, 6);
+      for(var s=0;s<sheetLimit;s++){
+        var shName=wb.SheetNames[s];
+        var ws=wb.Sheets[shName];
+        var range=XLSX.utils.decode_range(ws["!ref"]||"A1:A1");
+        var rows=[];
+        for(var r=range.s.r;r<=range.e.r;r++){
+          var row=[], hasAny=false;
+          for(var c=range.s.c;c<=range.e.c;c++){
+            var addr=XLSX.utils.encode_cell({r:r,c:c});
+            var cell=ws[addr];
+            var v=cell?(cell.w!=null?cell.w:(cell.v!=null?cell.v:"")):"";
+            var sv=String(v||"").trim();
+            if(sv) hasAny=true;
+            row.push(sv);
+          }
+          if(hasAny) rows.push(row);
+        }
+        var pick=pickHeaderRow(rows, 45);
+        if(pick.score>bestScore){
+          bestScore=pick.score;
+          bestSheet=shName;
+          bestRows=rows;
+        }
+        if(!bestRows) bestRows=rows;
+      }
+      if(!bestRows||bestRows.length<2)throw new Error('データが見つかりません');
+      console.log('[ExcelParse] bestSheet='+bestSheet+', score='+bestScore);
+      return bestRows;
+    }
+
+    // ========================================================================
+    //  ヘッダー行自動検出（高精度スコアベース）
+    // ========================================================================
+    function detectHeaderRow(rawRows){
+      var pick=pickHeaderRow(rawRows, 45);
+      if(pick.idx!==-1){
+        console.log('[HeaderDetect] pickHeaderRow: row='+pick.idx+', score='+pick.score);
+        return {headerIdx:pick.idx, score:pick.score};
+      }
+      // fallback: 旧ロジック（HDR_WORDS + ボーナス/ペナルティ）
+      var HDR_WORDS=[
+        {words:['商品名','品名','名称','品目','摘要','内容','明細','商品'],score:3},
+        {words:['型番','品番','商品コード','型式','規格'],score:2},
+        {words:['数量','個数','入数','本数'],score:2},
+        {words:['単価','定価'],score:2},
+        {words:['金額','合計金額','税込金額','税抜金額'],score:3},
+        {words:['メーカー','製造元','ブランド'],score:1},
+        {words:['カテゴリ','分類','種別'],score:1},
+      ];
+      var bestIdx=0, bestScore=0;
+      var limit=Math.min(rawRows.length, 30);
+      for(var i=0;i<limit;i++){
+        var row=rawRows[i]; if(!row||row.length<2)continue;
+        var rowText=row.map(function(c){return String(c||'').trim().toLowerCase().replace(/[\s　]/g,'');});
+        var score=0, matched={};
+        for(var h=0;h<HDR_WORDS.length;h++){
+          var group=HDR_WORDS[h], found=false;
+          for(var w=0;w<group.words.length&&!found;w++){
+            var kw=group.words[w].toLowerCase();
+            for(var c=0;c<rowText.length&&!found;c++){
+              if(rowText[c]&&rowText[c].indexOf(kw)>=0){score+=group.score;matched[h]=true;found=true;}
+            }
+          }
+        }
+        if(matched[0]&&(matched[4]||matched[3]))score+=3;
+        var numCount=0;
+        rowText.forEach(function(t){if(/^\d[\d,.]+$/.test(t))numCount++;});
+        if(numCount>row.length*0.5)score-=5;
+        var emptyCount=rowText.filter(function(t){return !t;}).length;
+        if(emptyCount>row.length*0.5)score-=3;
+        if(score>bestScore){bestScore=score;bestIdx=i;}
+      }
+      if(bestScore<2)bestIdx=0;
+      console.log('[HeaderDetect] fallback: row='+bestIdx+', score='+bestScore);
+      return {headerIdx:bestIdx, score:bestScore};
+    }
+
+    // ========================================================================
+    //  販売会社情報の抽出（高精度版 - 新ロジック）
+    // ========================================================================
+    function extractVendorFromTextNew(text){
+      var t=norm(text);
+      var out={name:"",address:"",tel:"",contact:"",email:""};
+      if(!t)return out;
+
+      // TEL
+      var telMatch=t.match(/(?:TEL|Tel|電話|Phone|ＴＥＬ)[:\s]*((?:0\d{1,4}[-\s]?\d{1,4}[-\s]?\d{3,4})|(?:0\d{9,10}))/i)||t.match(/(0\d{1,4}[-\s]?\d{1,4}[-\s]?\d{3,4})/);
+      if(telMatch) out.tel=telMatch[1]?telMatch[1].replace(/\s+/g,""):telMatch[0].replace(/\s+/g,"");
+
+      // Postal + address
+      var postal=t.match(/〒\s?\d{3}-\d{4}/);
+      if(postal){
+        var pi=t.indexOf(postal[0]);
+        out.address=norm(t.slice(pi,pi+120));
+      }else{
+        var am=t.match(/(東京都|北海道|(?:京都|大阪)府|.{2,3}県).{0,60}(?:市|区|町|村).{0,80}/);
+        if(am) out.address=norm(am[0]);
+      }
+
+      // Company name
+      var lines=t.split(/\n|　|  /).map(norm).filter(Boolean);
+      var bestName="";
+      for(var i=0;i<lines.length;i++){
+        if(/(株式会社|合同会社|有限会社|一般社団法人|特定非営利活動法人|NPO法人)/.test(lines[i])){
+          if(lines[i].length>bestName.length) bestName=lines[i];
+        }
+      }
+      if(!bestName){
+        for(var j=0;j<lines.length;j++){
+          if(/御中|様/.test(lines[j])&&!/御社|貴社|担当/.test(lines[j])){
+            var cleaned=lines[j].replace(/(御中|様).*/,"").trim();
+            if(cleaned&&cleaned.length>bestName.length) bestName=cleaned;
+          }
+        }
+      }
+      if(!bestName){
+        for(var k=0;k<lines.length;k++){
+          if(lines[k].length>=6&&!/^\d+$/.test(lines[k])&&!/(見積書|請求書|納品書|明細書|発注書|No\.|番号|日付|〒|TEL|電話)/.test(lines[k])){
+            bestName=lines[k]; break;
+          }
+        }
+      }
+      out.name=bestName.replace(/^(販売元|発行元|発行者|御請求先|納入先)[:\s]*/,"").trim();
+      out.address=out.address.replace(/^(住所|所在地)[:\s]*/,"").trim();
+      out.tel=out.tel.replace(/^TEL[:\s]*/i,"").trim();
+
+      // メール
+      var emMatch=text.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
+      if(emMatch) out.email=emMatch[0];
+      // 担当者
+      var tanMatch=text.match(/担当[:：\s]*([^\s,、。\n]{2,10})/);
+      if(tanMatch) out.contact=tanMatch[1];
+
+      return out;
+    }
+
+    function extractVendorInfo(text){
+      return extractVendorFromTextNew(text);
+    }
+
+    function isAddressLine(line){
+      if(!line)return false;
+      if(/〒\d{3}[\-ー]\d{4}/.test(line))return true;
+      if(/(?:東京都|北海道|(?:京都|大阪)府|.{2,3}県)/.test(line)&&/[市区町村郡]/.test(line))return true;
+      return false;
+    }
+
+    // ========================================================================
+    // 除外判定
+    // ========================================================================
+    function shouldExclude(row,map){
+      var nameIdx=(map&&map.name!==undefined)?map.name:null;
+      var qtyIdx=(map&&map.qty!==undefined)?map.qty:null;
+      var priceIdx=(map&&map.unitPrice!==undefined)?map.unitPrice:null;
+      var amtIdx=(map&&map.amount!==undefined)?map.amount:null;
+
+      var ni=(nameIdx!==null)?nameIdx:0;
+      var name=String(row[ni]||'').trim();
+
+      //  セクションヘッダー（◆食器、◆厨房備品 等）を除外
+      var rowText=row.map(function(c){return String(c||'').trim();}).join('');
+      if(/^◆/.test(rowText.trim())) return 'keywords';
+
+      if(RULES[0].on&&!name)return 'empty';
+      if(RULES[1].on&&name){
+        //  高精度: isProbablyTotalRow も使用
+        if(isProbablyTotalRow(name))return 'keywords';
+        for(var i=0;i<EXCLUDE_WORDS.length;i++){
+          if(name.indexOf(EXCLUDE_WORDS[i])>=0)return 'keywords';
+        }
+      }
+      if(RULES[2].on){
+        var hasNum=false;
+        [qtyIdx,priceIdx,amtIdx].forEach(function(idx){
+          if(idx!==null&&idx<row.length&&String(row[idx]||'').replace(/[,\s円¥]/g,'').match(/\d/))hasNum=true;
+        });
+        if(nameIdx===null){
+          for(var j=1;j<row.length;j++){
+            if(String(row[j]||'').replace(/[,\s円¥]/g,'').match(/\d/))hasNum=true;
+          }
+        }
+        if(!hasNum&&name.length<=5)return 'noNumbers';
+      }
+      if(RULES[3].on&&name.length<=2)return 'short';
+      return null;
+    }
+
+    function countExcluded(parsed){
+      var c=0;
+      //  実データに基づくカラムマップを使って判定
+      var colMap=mapColumnsNew(parsed.headers, parsed.rows);
+      var map={};
+      if(colMap.name>=0) map.name=colMap.name;
+      if(colMap.qty>=0) map.qty=colMap.qty;
+      if(colMap.unit>=0) map.unitPrice=colMap.unit;
+      if(colMap.amount>=0) map.amount=colMap.amount;
+      parsed.rows.forEach(function(r){if(shouldExclude(r,map))c++;});
+      return c;
+    }
+
+    // ========================================================================
+    // UI: ステップ・カード
+    // ========================================================================
+    function setStep(n){
+      for(var i=1;i<=4;i++){
+        var el=document.getElementById('s'+i);
+        if(el) el.className='step-dot'+(i<n?' done':(i===n?' active':''));
+      }
+    }
+
+    function showCard(fid,name,size,status,stats,errorMsg){
+      var list=document.getElementById('fileList');
+      var c=document.getElementById('fc-'+fid);
+      if(!c){c=document.createElement('div');c.id='fc-'+fid;list.appendChild(c);}
+      var sz=size<1048576?(size/1024).toFixed(1)+' KB':(size/1048576).toFixed(1)+' MB';
+      var icon=status==='error'?'':'';
+      var badge='',body='',btns='';
+      var cls='fcard';
+
+      switch(status){
+        case'parsing':
+          var parseMsg=errorMsg||'解析中…';
+          badge='<span class="fcard-badge parsing"><span class="spin"></span>'+esc(parseMsg)+'</span>';
+          break;
+        case'ready':
+          badge='<span class="fcard-badge ready">プレビュー可</span>';
+          //  信頼度バッジ
+          var conf=currentFile&&currentFile._confidence;
+          var confHtml='';
+          if(conf!==null&&conf!==undefined){
+            var confLevel=getConfidenceLevel(conf);
+            var confColor=getConfidenceColor(conf);
+            confHtml='<div class="fcard-conf">'
+              +'<span>信頼度:</span>'
+              +'<div class="bar"><div class="bar-fill" style="width:'+Math.round(conf*100)+'%;background:'+confColor+';"></div></div>'
+              +'<span class="conf-badge '+confLevel+'">'+getConfidenceLabel(conf)+'</span>'
+              +'</div>';
+          }
+          //  抽出方法バッジ
+          var methodHtml='';
+          if(currentFile&&currentFile._evidence&&currentFile._evidence.method){
+            var methodLabels={
+              local_pdf:' ローカルPDF',local_excel:' ローカルExcel',server:'☁️ サーバAPI',
+              ocr:' OCR',local:' ローカル',pdf_text:' PDFテキスト',
+              'excel':' Excel',csv:' CSV',txt:' TXT',
+              'ai_fix':'🤖 AI整形',
+              'excel+ai':' Excel + 🤖AI','txt+ai':' TXT + 🤖AI',
+              'pdf_text+ai':' PDF + 🤖AI','ocr+ai':' OCR + 🤖AI',
+              rules:' ルール抽出',ai:'🤖 AI整形',
+            };
+            methodHtml='<span class="fcard-method">'+(methodLabels[currentFile._evidence.method]||currentFile._evidence.method)+'</span>';
+            //  テンプレ適用バッジ
+            if(currentFile._evidence.template_used){
+              methodHtml+=' <span class="fcard-method" style="background:#dbeafe;color:#1e40af;"> テンプレ適用済</span>';
+            }
+          }
+          body='<div class="fcard-stats">'
+            +'<span class="fcard-stat"><span class="dot" style="background:var(--text)"></span>検出: <b>'+stats.total+'</b>行</span>'
+            +'<span class="fcard-stat"><span class="dot" style="background:var(--warn)"></span>自動除外: <b>'+stats.excluded+'</b>行</span>'
+            +'<span class="fcard-stat"><span class="dot" style="background:var(--ok)"></span>取込候補: <b>'+stats.candidate+'</b>行</span>'
+            +'</div>'+confHtml+methodHtml;
+          btns='<div class="fcard-btns"><button class="btn btn-main" onclick="openPreview()">プレビューして取り込む</button>'
+            +(currentFile&&currentFile._rawRows?'<button class="btn btn-sub" onclick="reopenHdrPicker()"> 読取り範囲を設定</button>':'');
+          //  AI整形ボタン: サーバ接続あり＋AI有効＋(低信頼 or 中信頼)
+          if(SERVER_AVAILABLE&&AI_AVAILABLE&&conf!==null&&conf<0.85){
+            btns+='<button class="btn btn-sub" onclick="retryWithAI()" style="border-color:#7c3aed;color:#7c3aed;">🤖 AI整形</button>';
+          }
+          // サーバ接続あり＋AI無効＋低信頼 → 高精度OCRだけ再試行
+          else if(SERVER_AVAILABLE&&!AI_AVAILABLE&&conf!==null&&conf<0.60){
+            btns+='<button class="btn btn-sub" onclick="retryHighPrecision()" style="border-color:var(--accent);color:var(--accent);">🔬 高精度OCR</button>';
+          }
+          btns+='</div>';
+          break;
+        case'importing':
+          badge='<span class="fcard-badge parsing"><span class="spin"></span>取り込み中…</span>';
+          break;
+        case'done':
+          cls='fcard ok';icon='';
+          badge='<span class="fcard-badge ok">取込完了</span>';
+          body='<div class="fcard-stats">'
+            +'<span class="fcard-stat">取込: <b>'+stats.imported+'</b>件</span>'
+            +'<span class="fcard-stat">除外: <b>'+stats.excluded+'</b>件</span>'
+            +'</div>';
+          if(stats.docId)btns='<div class="fcard-btns"><a class="btn btn-ok" href="confirm-items.html?docId='+stats.docId+'" style="text-decoration:none;color:#fff;">確認画面へ →</a></div>';
+          break;
+        case'error':
+          cls='fcard err';icon='';
+          badge='<span class="fcard-badge err">エラー</span>';
+          body='<div style="font-size:0.82rem;color:var(--err);margin-top:6px;">'+esc(errorMsg||'解析に失敗しました')+'</div>';
+          btns='<div class="fcard-btns"><button class="btn btn-sub" onclick="dismissCard(\''+fid+'\')">✕ 閉じる</button>';
+          //  エラー時もAI整形再試行可能
+          if(SERVER_AVAILABLE&&AI_AVAILABLE){
+            btns+='<button class="btn btn-sub" onclick="retryWithAI()" style="border-color:#7c3aed;color:#7c3aed;">🤖 AI整形で再試行</button>';
+          }else if(SERVER_AVAILABLE){
+            btns+='<button class="btn btn-sub" onclick="retryHighPrecision()" style="border-color:var(--accent);color:var(--accent);">🔬 高精度OCRで再試行</button>';
+          }
+          btns+='</div>';
+          break;
+      }
+      c.className=cls;
+      c.innerHTML='<div class="fcard-top"><div class="fcard-icon">'+icon+'</div><div class="fcard-info"><div class="fcard-name">'+esc(name)+'</div><div class="fcard-meta">'+sz+'</div></div>'+badge+'</div>'+body+btns;
+    }
+
+    //  Bob案 レイヤー3B: AI整形で再試行
+    async function retryWithAI(){
+      if(!currentFile||!currentFile.fileObj)return;
+      var fid=currentFile.fileId;
+      showCard(fid,currentFile.fileName,currentFile.fileObj.size,'parsing',null,'🤖 AI整形中…（Gemini構造化）');
+      var apiResult=await callExtractAPIHighPrecision(currentFile.fileObj);
+      if(apiResult&&apiResult.items&&apiResult.items.length>0){
+        currentFile._confidence=apiResult.confidence||0;
+        currentFile._evidence=apiResult.evidence||{method:'ai'};
+        // AIレスポンスからaiAvailableフラグも更新
+        if(apiResult.evidence&&apiResult.evidence.aiAvailable!==undefined) AI_AVAILABLE=apiResult.evidence.aiAvailable;
+        vendorInfo={
+          name:(apiResult.vendor&&apiResult.vendor.name)||'',
+          address:(apiResult.vendor&&apiResult.vendor.address)||'',
+          tel:(apiResult.vendor&&apiResult.vendor.tel)||'',
+          contact:'',email:''
+        };
+        var synHeaders=['商品名','型番','単価'];
+        var synRows=apiResult.items.map(function(it){
+          return [it.product_name||it.name||'',it.model||'',String(it.unit_price||it.unitPrice||'')];
+        });
+        currentFile.parsed={headers:synHeaders,rows:synRows};
+        currentFile._rawRows=null; // サーバ結果はrawRowsなし
+        var excluded=countExcluded(currentFile.parsed);
+        var candidate=synRows.length-excluded;
+        showCard(fid,currentFile.fileName,currentFile.fileObj.size,'ready',{
+          total:synRows.length,excluded:excluded,candidate:candidate,cols:synHeaders.length
+        });
+        // 高信頼なら自動プレビュー
+        if(getConfidenceLevel(apiResult.confidence||0)==='high'){
+          openPreview();
+        }
+      }else{
+        showCard(fid,currentFile.fileName,currentFile.fileObj.size,'error',null,'AI整形でもデータを取得できませんでした。CSV/Excelでの再アップロードをお勧めします。');
+      }
+    }
+
+    //  高精度OCR再試行（AI整形なし・Vision OCR DOCUMENT_TEXT_DETECTIONのみ）
+    async function retryHighPrecision(){
+      if(!currentFile||!currentFile.fileObj)return;
+      var fid=currentFile.fileId;
+      showCard(fid,currentFile.fileName,currentFile.fileObj.size,'parsing',null,'🔬 高精度OCR中…');
+      var apiResult=await callExtractAPIHighPrecision(currentFile.fileObj);
+      if(apiResult&&apiResult.items&&apiResult.items.length>0){
+        currentFile._confidence=apiResult.confidence||0;
+        currentFile._evidence=apiResult.evidence||{method:'ocr'};
+        vendorInfo={
+          name:(apiResult.vendor&&apiResult.vendor.name)||'',
+          address:(apiResult.vendor&&apiResult.vendor.address)||'',
+          tel:(apiResult.vendor&&apiResult.vendor.tel)||'',
+          contact:'',email:''
+        };
+        var synHeaders=['商品名','型番','単価'];
+        var synRows=apiResult.items.map(function(it){
+          return [it.product_name||it.name||'',it.model||'',String(it.unit_price||it.unitPrice||'')];
+        });
+        currentFile.parsed={headers:synHeaders,rows:synRows};
+        var excluded=countExcluded(currentFile.parsed);
+        var candidate=synRows.length-excluded;
+        showCard(fid,currentFile.fileName,currentFile.fileObj.size,'ready',{
+          total:synRows.length,excluded:excluded,candidate:candidate,cols:synHeaders.length
+        });
+      }else{
+        showCard(fid,currentFile.fileName,currentFile.fileObj.size,'error',null,'高精度OCRでもデータを取得できませんでした。CSV/Excelでの再アップロードをお勧めします。');
+      }
+    }
+
+    function dismissCard(fid){
+      var c=document.getElementById('fc-'+fid);
+      if(c)c.remove();
+      currentFile=null;
+      setStep(1);
+    }
+
+    // ========================================================================
+    // プレビューモーダル
+    // ========================================================================
+    function openPreview(){
+      if(!currentFile||!currentFile.parsed)return;
+      setStep(3);
+      var p=currentFile.parsed;
+      document.getElementById('pvTitle').textContent=esc(currentFile.fileName)+' のプレビュー';
+
+      //  信頼度情報をサブタイトルに表示
+      var confText='';
+      if(currentFile._confidence!==null&&currentFile._confidence!==undefined){
+        confText=' ｜ 信頼度: '+Math.round(currentFile._confidence*100)+'%';
+      }
+      document.getElementById('pvSub').textContent=p.headers.length+'列 × '+p.rows.length+'行を検出。'+confText;
+
+      buildColMap(p.headers,p.rows);
+      buildVendorPanel();
+      buildRules();
+      applyRulesAndBuildTable();
+
+      //  テンプレート自動適用を隠しておく
+      var autoEl=document.getElementById('tplAutoApplied');
+      if(autoEl)autoEl.style.display='none';
+
+      //  confidence判定 → 初期表示タブの自動分岐
+      var conf=currentFile._confidence;
+      if(conf!==null&&conf!==undefined){
+        var confLevel=getConfidenceLevel(conf);
+        if(confLevel==='high'){
+          // 高信頼 → 行プレビュー（確認→確定）
+          showPanel('rows');
+        }else if(confLevel==='mid'){
+          // 要確認 → 列マッピングタブ
+          showPanel('colMap');
+        }else{
+          // 低信頼 → 列マッピングタブ（手動補正が必要）
+          showPanel('colMap');
+        }
+      }else{
+        showPanel('colMap');
+      }
+
+      document.getElementById('pvModal').classList.add('open');
+
+      //  テンプレート自動適用（販売会社が検出された場合）
+      setTimeout(function(){
+        tryAutoApplyTemplate();
+      },300);
+    }
+
+    function closePreview(){
+      document.getElementById('pvModal').classList.remove('open');
+    }
+
+    function showPanel(id){
+      ['colMap','vendor','rules','rows','reflect'].forEach(function(p){
+        var elId='panel'+p.charAt(0).toUpperCase()+p.slice(1);
+        var el=document.getElementById(elId);
+        if(el)el.className='mpanel'+(p===id?' show':'');
+      });
+      document.querySelectorAll('.mtab').forEach(function(t,i){
+        t.className='mtab'+(['colMap','vendor','rules','rows','reflect'][i]===id?' active':'');
+      });
+      if(id==='rows')applyRulesAndBuildTable();
+      if(id==='reflect')buildReflectPanel();
+    }
+
+    // ========================================================================
+    // タブ1: 列マッピング
+    // ========================================================================
+    function buildColMap(headers,rows){
+      var saved=loadMap(headers);
+      //  ピッカーで列ロールが指定されていればそれを優先
+      var pkRoles=currentFile&&currentFile._pkColRoles||null;
+
+      var h='';
+      for(var i=0;i<headers.length;i++){
+        var sam=rows.length>0?String(rows[0][i]||''):'';
+        // 優先順: pkRoles > saved > 空
+        var sv='';
+        if(pkRoles&&pkRoles[i]) sv=pkRoles[i];
+        else if(saved) sv=saved[headers[i]]||'';
+
+        h+='<div class="mrow">';
+        h+='<div class="mcol" title="'+esc(headers[i])+'">'+esc(headers[i])+'</div>';
+        h+='<span class="marr">→</span>';
+        h+='<div class="msel"><select data-col="'+i+'" onchange="onMapChange()">';
+        h+='<option value="">（スキップ）</option>';
+        for(var j=0;j<FIELDS.length;j++){
+          var f=FIELDS[j],sel=(sv===f.key)?' selected':'';
+          h+='<option value="'+f.key+'"'+sel+'>'+f.label+'</option>';
+        }
+        h+='</select></div>';
+        h+='<div class="msam" title="'+esc(sam)+'">例: '+esc(sam)+'</div>';
+        h+='</div>';
+      }
+      document.getElementById('mapRows').innerHTML=h;
+      if(pkRoles&&Object.keys(pkRoles).length>0){
+        // ピッカーで設定済みならautoDetectは不要、ステータスだけ更新
+        onMapChange();
+      }else if(!saved){
+        autoDetect();
+      }else{
+        onMapChange();
+      }
+    }
+
+    function autoDetect(){
+      var sels=document.querySelectorAll('#mapRows select');
+      sels.forEach(function(s){s.value='';});
+      var used={};
+
+      //  高精度: mapColumnsNew を使って主要列を自動検出
+      var colMapNew=mapColumnsNew(currentFile.parsed.headers, currentFile.parsed.rows);
+      var newFieldMap={name:'name',model:'model',amount:'amount',qty:'qty',unit:'unitPrice',maker:'maker'};
+      for(var mk in colMapNew){
+        if(colMapNew[mk]>=0&&newFieldMap[mk]){
+          var fldKey=newFieldMap[mk];
+          var targetSel=document.querySelector('#mapRows select[data-col="'+colMapNew[mk]+'"]');
+          if(targetSel&&!used[fldKey]){
+            targetSel.value=fldKey;
+            used[fldKey]=true;
+          }
+        }
+      }
+
+      // 残りのFIELDSで未マッピング列を補完
+      sels.forEach(function(sel){
+        if(sel.value) return; // 既にマッピング済み
+        var ci=parseInt(sel.getAttribute('data-col'));
+        var cn=currentFile.parsed.headers[ci].toLowerCase().replace(/[\s　]/g,'');
+        for(var i=0;i<FIELDS.length;i++){
+          var f=FIELDS[i];if(used[f.key])continue;
+          for(var p=0;p<f.p.length;p++){
+            if(cn.indexOf(f.p[p].toLowerCase())>=0){sel.value=f.key;used[f.key]=true;break;}
+          }
+          if(used[f.key])break;
+        }
+      });
+
+      //  金額列の補助推定: マッピングされていない場合、数値列を金額候補にする
+      if(!used['amount']&&!used['unitPrice']&&currentFile.parsed.rows.length>0){
+        var rows=currentFile.parsed.rows;
+        var headers=currentFile.parsed.headers;
+        var bestCol=-1, bestScore=0;
+        for(var c=0;c<headers.length;c++){
+          var colScore=0;
+          for(var r=0;r<Math.min(rows.length,10);r++){
+            var val=String(rows[r][c]||'');
+            if(/[¥￥]/.test(val))colScore+=3;
+            else if(/^[\d,]+$/.test(val.trim())&&parseInt(val.replace(/,/g,''))>=100)colScore+=2;
+            else if(/^\d/.test(val.trim()))colScore+=1;
+          }
+          if(colScore>bestScore&&!isColUsed(sels,c)){bestScore=colScore;bestCol=c;}
+        }
+        if(bestCol>=0&&bestScore>=5){
+          var sel=document.querySelector('#mapRows select[data-col="'+bestCol+'"]');
+          if(sel){sel.value='amount';used['amount']=true;}
+        }
+      }
+
+      onMapChange();
+    }
+
+    function isColUsed(sels,colIdx){
+      var used=false;
+      sels.forEach(function(s){if(parseInt(s.getAttribute('data-col'))===colIdx&&s.value)used=true;});
+      return used;
+    }
+
+    function getMap(){
+      var m={};
+      document.querySelectorAll('#mapRows select').forEach(function(s){
+        var ci=parseInt(s.getAttribute('data-col')),fld=s.value;
+        if(fld)m[fld]=ci;
+      });
+      return m;
+    }
+    function getMapByHeader(){
+      var m={};
+      document.querySelectorAll('#mapRows select').forEach(function(s){
+        var ci=parseInt(s.getAttribute('data-col')),fld=s.value;
+        if(fld)m[currentFile.parsed.headers[ci]]=fld;
+      });
+      return m;
+    }
+    function onMapChange(){
+      applyRulesAndBuildTable();
+      //  必須フィールドの状態表示
+      var map=getMap();
+      var reqs=[
+        {key:'name',label:'商品名'},
+        {key:'model',label:'型番'},
+        {key:'unitPrice',label:'単価'},
+      ];
+      var el=document.getElementById('colMapReqStatus');
+      if(el){
+        el.innerHTML=reqs.map(function(r){
+          var ok=map[r.key]!==undefined;
+          return '<span style="margin-right:8px;">'+(ok?'':'')+' '+r.label+'</span>';
+        }).join('');
+      }
+    }
+
+    // ========================================================================
+    // タブ2: 販売会社
+    // ========================================================================
+    function buildVendorPanel(){
+      var vf=[
+        {key:'name',label:'社名',auto:true},
+        {key:'address',label:'住所',auto:true},
+        {key:'tel',label:'TEL',auto:true},
+        {key:'contact',label:'担当者',auto:false},
+        {key:'email',label:'メール',auto:false},
+      ];
+      var h='';
+      vf.forEach(function(f){
+        var val=vendorInfo[f.key]||'';
+        var badge=f.auto&&val?'<span style="font-size:0.7rem;color:var(--ok);margin-left:6px;">自動検出</span>':'';
+        if(f.auto&&!val)badge='<span style="font-size:0.7rem;color:var(--muted);margin-left:6px;">未検出</span>';
+        h+='<div class="oc-row">';
+        h+='<div class="oc-field">'+esc(f.label)+badge+'</div>';
+        h+='<div class="oc-val"><input type="text" id="vi_'+f.key+'" value="'+esc(val)+'" placeholder="'+(f.auto?'自動検出':'手入力')+'"></div>';
+        h+='</div>';
+      });
+      document.getElementById('vendorFields').innerHTML=h;
+    }
+
+    function getVendorFromUI(){
+      return {
+        name:(document.getElementById('vi_name')||{}).value||'',
+        address:(document.getElementById('vi_address')||{}).value||'',
+        tel:(document.getElementById('vi_tel')||{}).value||'',
+        contact:(document.getElementById('vi_contact')||{}).value||'',
+        email:(document.getElementById('vi_email')||{}).value||'',
+      };
+    }
+
+    // ========================================================================
+    // タブ3: 除外ルール
+    // ========================================================================
+    function buildRules(){
+      var h='';
+      RULES.forEach(function(r,i){
+        h+='<div class="rule">';
+        h+='<input type="checkbox" id="rule_'+r.id+'" '+(r.on?'checked':'')+' onchange="RULES['+i+'].on=this.checked;applyRulesAndBuildTable();">';
+        h+='<div class="rule-text">'+esc(r.label)+'</div>';
+        h+='<div class="rule-count" id="rc_'+r.id+'">-</div>';
+        h+='</div>';
+      });
+      document.getElementById('rulesArea').innerHTML=h;
+    }
+
+    // ========================================================================
+    // タブ4: 行プレビュー + 統計
+    // ========================================================================
+    function applyRulesAndBuildTable(){
+      if(!currentFile||!currentFile.parsed)return;
+      var p=currentFile.parsed, map=getMap(), rows=p.rows;
+      rowFlags=[];
+      var ruleCounts={empty:0,keywords:0,noNumbers:0,short:0};
+      rows.forEach(function(r){
+        var reason=shouldExclude(r,map);
+        if(reason){rowFlags.push(false);if(ruleCounts[reason]!==undefined)ruleCounts[reason]++;}
+        else{rowFlags.push(true);}
+      });
+      RULES.forEach(function(r){
+        var el=document.getElementById('rc_'+r.id);
+        if(el)el.textContent=ruleCounts[r.id]+'行';
+      });
+      var af=FIELDS.filter(function(f){return map[f.key]!==undefined;});
+      var included=rowFlags.filter(function(f){return f;}).length;
+      var h='<table><thead><tr><th style="width:36px;">✓</th><th style="width:30px;">#</th>';
+      if(af.length>0){
+        af.forEach(function(f){h+='<th>'+f.label.replace('（必須）','').replace(' 必須','')+'</th>';});
+      }else{
+        p.headers.forEach(function(hd){h+='<th>'+esc(hd)+'</th>';});
+      }
+      h+='</tr></thead><tbody>';
+      rows.forEach(function(row,idx){
+        var on=rowFlags[idx];
+        h+='<tr class="'+(on?'':'excluded')+'">';
+        h+='<td><input type="checkbox" '+(on?'checked':'')+' onchange="rowFlags['+idx+']=this.checked;updStats();this.parentElement.parentElement.className=this.checked?\'\':\'excluded\';"></td>';
+        h+='<td style="color:var(--muted);">'+(idx+1)+'</td>';
+        if(af.length>0){
+          af.forEach(function(f){h+='<td>'+esc(String(row[map[f.key]]||''))+'</td>';});
+        }else{
+          row.forEach(function(c){h+='<td>'+esc(String(c||''))+'</td>';});
+        }
+        h+='</tr>';
+      });
+      h+='</tbody></table>';
+      document.getElementById('pvTable').innerHTML=h;
+      updStats();
+    }
+
+    function checkAll(on){rowFlags=rowFlags.map(function(){return on;});applyRulesAndBuildTable();}
+
+    function updStats(){
+      if(!currentFile||!currentFile.parsed)return;
+      var total=currentFile.parsed.rows.length;
+      var included=rowFlags.filter(function(f){return f;}).length;
+      var excluded=total-included;
+      document.getElementById('pvStats').innerHTML='検出: <b>'+total+'</b>行 ｜ 除外: <b>'+excluded+'</b>行 ｜ 取込: <b>'+included+'</b>行';
+      document.getElementById('btnImport').textContent='取り込む（'+included+'件）';
+      document.getElementById('btnImport').disabled=(included===0);
+    }
+
+    // ========================================================================
+    // 確定取り込み（DB保存）
+    // ========================================================================
+    async function doImport(){
+      var map=getMap();
+      if(map.name===undefined){alert('「商品名」列が必要です。①列の割当で商品名を選んでください。');showPanel('colMap');return;}
+
+      //  警告（担当業者が無い場合）
+      var missingReq=[];
+      if(map.assignedPartnerName===undefined)missingReq.push('担当業者');
+      if(missingReq.length>0){
+        var ok=confirm('以下の項目が未設定です:\n・'+missingReq.join('\n・')+'\n\n担当業者が未設定の商品は通報時に自動割当できません。\nこのまま取り込みますか？');
+        if(!ok)return;
+      }
+
+      var p=currentFile.parsed;
+      var selectedRows=p.rows.filter(function(r,i){return rowFlags[i];});
+      if(selectedRows.length===0){alert('取り込む行が0件です。');return;}
+
+      if(document.getElementById('mapSave').checked)saveMap(getMapByHeader());
+
+      //  反映先設定を保存
+      if(document.getElementById('reflectSave')&&document.getElementById('reflectSave').checked){
+        onReflectMapChange();
+        saveReflectConfig();
+      }
+      var refConfig=getReflectConfig();
+
+      // 販売会社情報を取得
+      vi=getVendorFromUI();
+
+      closePreview();
+      showCard(currentFile.fileId,currentFile.fileName,currentFile.fileObj.size,'importing');
+      setStep(4);
+
+      try{
+        var hash=await hashFile(currentFile.fileObj);
+        
+        // ========================================================================
+        //  新システム: Document保存（既存のdocを更新）
+        // ========================================================================
+        const existingDocs = await DocumentStorage.getDocuments(currentUser.officeCode);
+        const existingDoc = existingDocs.find(d => d.docId === currentFile.fileId);
+        
+        if (existingDoc) {
+          existingDoc.status = 'processed';
+          existingDoc.vendor = vi;
+          existingDoc.confidence = currentFile._confidence || 0;
+          existingDoc.evidence = currentFile._evidence || {};
+          await DocumentStorage.updateDocument(existingDoc);
+        }
+
+        var items=selectedRows.map(function(row,idx){
+          var name=String(row[map.name]||'').trim();
+          if(!name)return null;
+          var raw={};p.headers.forEach(function(h,i){raw[h]=row[i];});
+
+          var model=map.model!==undefined?String(row[map.model]||'').trim():'';
+          if(!model){
+            var mp=extractModelFromName(name);
+            if(mp.model){model=mp.model;name=mp.name;}
+          }
+
+          var maker=map.maker!==undefined?String(row[map.maker]||'').trim():'';
+          if(!maker)maker=extractMakerName(name);
+
+          // 担当業者のマッチング
+          var partnerName=map.assignedPartnerName!==undefined?String(row[map.assignedPartnerName]||'').trim():'';
+          var partnerId='';
+          if(partnerName){
+            var partners=[];
+            try{partners=JSON.parse(sessionStorage.getItem('partners')||'[]');}catch(e){}
+            try{var pl=JSON.parse(localStorage.getItem('partners')||'[]');pl.forEach(function(p){if(!partners.find(function(m){return m.id===p.id;}))partners.push(p);});}catch(e){}
+            var matched=partners.find(function(p){
+              return (p.name&&p.name===partnerName)||(p.companyName&&p.companyName===partnerName);
+            });
+            if(matched)partnerId=matched.id;
+          }
+
+          // 商品ナンバー（Excelに記載があれば使用）
+          var itemId = map.itemId!==undefined?String(row[map.itemId]||'').trim():'';
+
+          return {
+            itemId: itemId,
+            lineId: null,
+            docId: currentFile.fileId,
+            lineNumber: idx + 1,
+            name: name,
+            maker: maker,
+            model: model,
+            quantity: map.qty!==undefined?parseNumber(row[map.qty]):1,
+            price: map.unitPrice!==undefined?parseNumber(row[map.unitPrice]):0,
+            unit: '個',
+            category: map.category!==undefined?String(row[map.category]||'').trim():'',
+            assignedPartnerId: partnerId,
+            assignedPartnerName: partnerName,
+            status: 'pending'
+          };
+        }).filter(function(x){return x!==null;});
+
+        // ========================================================================
+        //  商品ナンバーによる新規/上書き判定
+        // ========================================================================
+        var existingItems = [];
+        try { existingItems = JSON.parse(sessionStorage.getItem('items') || '[]'); } catch(e) {}
+        try { var il = JSON.parse(localStorage.getItem('items') || '[]'); il.forEach(function(i){ if(!existingItems.find(function(m){return m.itemId===i.itemId;})) existingItems.push(i); }); } catch(e) {}
+
+        var newItems = [];
+        var updateItems = [];
+        var unknownItems = [];
+
+        items.forEach(function(item) {
+          if (!item.itemId) {
+            // 商品ナンバーなし → 新規
+            newItems.push(item);
+          } else {
+            var existing = existingItems.find(function(e) { return e.itemId === item.itemId; });
+            if (existing) {
+              // 既存 → 上書き更新（空欄は既存データを維持）
+              var merged = Object.assign({}, existing);
+              if (item.name) merged.name = item.name;
+              if (item.maker) merged.maker = item.maker;
+              if (item.model) merged.model = item.model;
+              if (item.price) merged.price = item.price;
+              if (item.quantity) merged.stock = item.quantity;
+              if (item.category) merged.category = item.category;
+              if (item.assignedPartnerId) merged.assignedPartnerId = item.assignedPartnerId;
+              if (item.assignedPartnerName) merged.assignedPartnerName = item.assignedPartnerName;
+              merged.updatedAt = new Date().toISOString();
+              updateItems.push(merged);
+            } else {
+              // 存在しないナンバー → 警告付き新規
+              unknownItems.push(item);
+            }
+          }
+        });
+
+        // 上書き確認
+        if (updateItems.length > 0 || unknownItems.length > 0) {
+          var msg = '';
+          if (updateItems.length > 0) msg += '上書き更新: ' + updateItems.length + '件\n';
+          if (unknownItems.length > 0) msg += '不明なナンバー（新規登録）: ' + unknownItems.length + '件\n';
+          msg += '新規登録: ' + newItems.length + '件\n\n実行しますか？';
+          if (!confirm(msg)) return;
+        }
+
+        // 上書き更新を適用
+        updateItems.forEach(function(updated) {
+          var idx = existingItems.findIndex(function(e) { return e.itemId === updated.itemId; });
+          if (idx !== -1) existingItems[idx] = updated;
+        });
+
+        // 不明ナンバーは新規扱い
+        newItems = newItems.concat(unknownItems);
+
+        // 保存
+        if (updateItems.length > 0) {
+          sessionStorage.setItem('items', JSON.stringify(existingItems));
+          localStorage.setItem('items', JSON.stringify(existingItems));
+        }
+
+        console.log('[Import] 新規:' + newItems.length + '件, 更新:' + updateItems.length + '件');
+
+        // ========================================================================
+        //  新システム: LineItems保存（新規分のみ）
+        // ========================================================================
+        if (newItems.length > 0) {
+          await DocumentStorage.addLineItems(newItems);
+        }
+        
+        console.log('[LineItems] 保存完了:', newItems.length, '件');
+
+        var totalProcessed = newItems.length + updateItems.length;
+        var excluded=p.rows.length-totalProcessed;
+        showCard(currentFile.fileId,currentFile.fileName,currentFile.fileObj.size,'done',{
+          imported:totalProcessed,excluded:excluded,updated:updateItems.length,docId:currentFile.fileId
+        });
+        try{ONE.logEvent('import_success',{fileName:currentFile.fileName,count:items.length,confidence:currentFile._confidence||0,method:(currentFile._evidence&&currentFile._evidence.method)||'local'});}catch(e){}
+        // 監査ログ
+        try{
+          var auditLogs=JSON.parse(demoGetFromLocalStorage('audit.logs')||'[]');
+          auditLogs.push({timestamp:new Date().toISOString(),type:'import_success',screen:'import',user:currentUser?.name||'',userId:currentUser?.userId||currentUser?.id||'',companyCode:currentUser?.companyCode||'',details:JSON.stringify({fileName:currentFile.fileName,count:items.length})});
+          demoSaveToLocalStorage('audit.logs',JSON.stringify(auditLogs));
+        }catch(e){}
+
+        //  テンプレ保存の提案（販売会社がありテンプレ未登録なら）
+        if(vi.name&&!findTemplateByVendor(vi.name)){
+          setTimeout(function(){
+            if(confirm('「'+vi.name+'」用のテンプレートを保存しますか？\n次回同じ販売会社の書類を取り込むとき、列マッピングと反映先が自動適用されます。')){
+              saveCurrentAsTemplate(vi.name+'テンプレ');
+            }
+          },500);
+        }
+
+      }catch(err){
+        console.error('Import error:',err);
+        showCard(currentFile.fileId,currentFile.fileName,currentFile.fileObj.size,'error',null,err.message);
+        try{ONE.logEvent('import_error',{fileName:currentFile.fileName,error:err.message});}catch(e){}
+      }
+    }
+
+    // ========================================================================
+    //  データ範囲＆フィールド指定ピッカー（拡張版）
+    // ========================================================================
+    var hdrPickerRawRows=null;
+    var hdrPickerResolve=null;
+
+    //  ピッカー状態
+    var pkState={
+      mode:'header',        // 'header'|'footer'|'col'|'vendor'
+      headerIdx:0,          // ヘッダー行
+      footerIdx:-1,         // フッター行（-1=未設定=最終行まで）
+      colRoles:{},          // {colIdx: 'name'|'assignedPartnerName'|'model'|'unitPrice'|'qty'|'amount'|'maker'|'category'|'notes'}
+      vendorCells:[],       // [{row,col}] 販売会社セル
+    };
+
+    var PK_ROLES=[
+      {key:'name',    label:'商品名 ',color:'#059669',req:true},
+      {key:'assignedPartnerName',label:'担当業者 ',color:'#ea580c',req:true},
+      {key:'model',   label:'型番',    color:'#7c3aed',req:false},
+      {key:'unitPrice',label:'単価',   color:'#dc2626',req:false},
+      {key:'qty',     label:'数量',    color:'#2563eb',req:false},
+      {key:'amount',  label:'金額',    color:'#d97706',req:false},
+      {key:'maker',   label:'メーカー',color:'#0891b2',req:false},
+      {key:'category',label:'カテゴリ',color:'#6b7280',req:false},
+      {key:'notes',   label:'備考',    color:'#9ca3af',req:false},
+    ];
+
+    var PK_MODE_HINTS={
+      header:'行をクリックしてヘッダー行（列名が並んでいる行）を選択してください。',
+      footer:'行をクリックしてフッター行（データの最終行）を選択してください。フッターより下は取り込みません。',
+      col:'ヘッダー行のセルをクリックして、その列の役割（商品名・型番・単価など）を指定してください。',
+      vendor:'ヘッダーより上の領域で、販売会社の情報が書かれたセルをクリックしてください。',
+    };
+
+    function findHeaderCandidates(rawRows, maxScan){
+      maxScan=maxScan||45;
+      var results=[];
+      var lim=Math.min(rawRows.length, maxScan);
+      for(var i=0;i<lim;i++){
+        var sc=scoreHeaderRow(rawRows[i]||[]);
+        if(sc>=2) results.push({idx:i, score:sc, row:rawRows[i]});
+      }
+      results.sort(function(a,b){return b.score-a.score;});
+      return results.slice(0,5);
+    }
+
+    function isHeaderKeyword(cell){
+      var t=norm(cell).replace(/\s+/g,'');
+      if(!t)return false;
+      for(var k in HEADER_SYNONYMS){
+        if(HEADER_SYNONYMS[k][0].test(t)||HEADER_SYNONYMS[k][1].test(t))return true;
+      }
+      return false;
+    }
+
+    //  モード切替
+    function setPkMode(mode){
+      pkState.mode=mode;
+      // ツールバーボタン
+      document.querySelectorAll('.pk-mode').forEach(function(b){
+        b.classList.toggle('active',b.getAttribute('data-pk-mode')===mode);
+      });
+      // ヒント
+      document.getElementById('pkModeHint').textContent=PK_MODE_HINTS[mode]||'';
+      // 候補セクション（ヘッダーモードのみ）
+      var candSec=document.getElementById('hdrCandSection');
+      if(candSec)candSec.style.display=(mode==='header')?'':'none';
+      // テーブルコンテナにモードクラス
+      var overlay=document.getElementById('hdrPickerOverlay');
+      overlay.className='hdr-picker-overlay open pk-mode-'+mode;
+      // ロールポップアップ非表示
+      closePkRolePopup();
+    }
+
+    //  テーブル描画（ゾーン色分け付き）
+    function renderPkTable(){
+      var rawRows=hdrPickerRawRows;
+      if(!rawRows)return;
+      var maxCols=0;
+      var showRows=Math.min(rawRows.length, 80);
+      for(var r=0;r<showRows;r++){
+        if(rawRows[r]&&rawRows[r].length>maxCols) maxCols=rawRows[r].length;
+      }
+
+      var hIdx=pkState.headerIdx;
+      var fIdx=pkState.footerIdx;
+
+      // ヘッダー行のカラムロールタグ
+      var colTags={};
+      for(var ci in pkState.colRoles){
+        var rk=pkState.colRoles[ci];
+        var rl=PK_ROLES.find(function(r){return r.key===rk;});
+        if(rl) colTags[ci]='<span class="pk-col-tag '+rk+'" style="background:'+rl.color+'">'+rl.label.replace(' ','')+'</span>';
+      }
+
+      // 販売会社セル → Set
+      var vendorSet={};
+      pkState.vendorCells.forEach(function(vc){
+        vendorSet[vc.row+'_'+vc.col]=true;
+      });
+
+      var th='<table><thead><tr><th style="width:36px;">#</th>';
+      for(var c=0;c<maxCols;c++) th+='<th>列'+(c+1)+'</th>';
+      th+='</tr></thead><tbody>';
+
+      for(var ri=0;ri<showRows;ri++){
+        // ゾーンクラス
+        var cls='';
+        if(ri===hIdx) cls='pk-hdr';
+        else if(fIdx>=0&&ri===fIdx) cls='pk-ftr';
+        else if(fIdx>=0&&ri>fIdx) cls='pk-below-ftr';
+        else if(ri<hIdx) cls='pk-above';
+        else cls='pk-data';
+
+        th+='<tr class="'+cls+'" data-raw-idx="'+ri+'" onclick="onPkRowClick('+ri+',event)">';
+        th+='<td style="color:var(--muted);font-size:0.7rem;">'+(ri+1)+'</td>';
+        for(var ci2=0;ci2<maxCols;ci2++){
+          var val=rawRows[ri]&&rawRows[ri][ci2]?String(rawRows[ri][ci2]).trim():'';
+          var tdCls='';
+          var extra='';
+          // 販売会社セル
+          if(vendorSet[ri+'_'+ci2]) tdCls='pk-vendor-cell';
+          // ヘッダー行のカラムロールタグ
+          if(ri===hIdx&&colTags[ci2]){
+            tdCls+=' pk-col-assigned';
+            extra=colTags[ci2];
+          }
+          th+='<td class="'+tdCls+'" data-col="'+ci2+'" title="'+esc(val)+'" onclick="onPkCellClick('+ri+','+ci2+',event)">'+extra+esc(val)+'</td>';
+        }
+        th+='</tr>';
+      }
+      th+='</tbody></table>';
+      document.getElementById('hdrRawTable').innerHTML=th;
+
+      // サマリー更新
+      updatePkSummary();
+    }
+
+    //  サマリー
+    function updatePkSummary(){
+      var h='';
+      // ヘッダー行
+      h+='<div class="pk-sum-item set"> ヘッダー: 行'+(pkState.headerIdx+1)+'</div>';
+      // フッター行
+      if(pkState.footerIdx>=0){
+        h+='<div class="pk-sum-item set">🔚 フッター: 行'+(pkState.footerIdx+1)+'</div>';
+      }else{
+        h+='<div class="pk-sum-item unset">🔚 フッター: 未設定（最終行まで）</div>';
+      }
+      // 列ロール
+      var assigned=Object.keys(pkState.colRoles).length;
+      var reqOk=PK_ROLES.filter(function(r){return r.req;}).every(function(r){
+        for(var k in pkState.colRoles){if(pkState.colRoles[k]===r.key)return true;}return false;
+      });
+      if(assigned>0){
+        h+='<div class="pk-sum-item '+(reqOk?'set':'unset')+'"> 列指定: '+assigned+'列'+(reqOk?' ':'')+'</div>';
+      }else{
+        h+='<div class="pk-sum-item unset"> 列指定: 未設定</div>';
+      }
+      // 販売会社
+      if(pkState.vendorCells.length>0){
+        var vTexts=pkState.vendorCells.map(function(vc){
+          return String((hdrPickerRawRows[vc.row]||[])[vc.col]||'').trim();
+        }).filter(Boolean);
+        h+='<div class="pk-sum-item set"> 販売会社: '+esc(vTexts.join(' / ').slice(0,30))+'</div>';
+      }else{
+        h+='<div class="pk-sum-item unset"> 販売会社: 未設定</div>';
+      }
+      document.getElementById('pkSummary').innerHTML=h;
+    }
+
+    //  行クリック（モード別）
+    function onPkRowClick(rowIdx, ev){
+      if(pkState.mode==='header'){
+        pkState.headerIdx=rowIdx;
+        // フッターがヘッダーより上なら解除
+        if(pkState.footerIdx>=0&&pkState.footerIdx<=rowIdx)pkState.footerIdx=-1;
+        // 列ロール: ヘッダーが変わったら自動推定を再実行
+        autoAssignColRoles();
+        renderPkTable();
+        // 候補カードも連動
+        document.querySelectorAll('.hdr-cand').forEach(function(el){
+          el.classList.toggle('selected',parseInt(el.getAttribute('data-hdr-idx'))===rowIdx);
+        });
+      }else if(pkState.mode==='footer'){
+        if(rowIdx<=pkState.headerIdx){
+          // ヘッダー行以前はフッターにできない
+          return;
+        }
+        if(pkState.footerIdx===rowIdx){
+          // 同じ行をもう一度クリック → 解除
+          pkState.footerIdx=-1;
+        }else{
+          pkState.footerIdx=rowIdx;
+        }
+        renderPkTable();
+      }
+      // col/vendor モードの行クリックは無視（セルクリックで処理）
+    }
+
+    //  セルクリック（モード別）
+    function onPkCellClick(rowIdx, colIdx, ev){
+      if(pkState.mode==='col'){
+        // ヘッダー行のセルのみ
+        if(rowIdx!==pkState.headerIdx)return;
+        ev.stopPropagation();
+        showPkRolePopup(colIdx, ev);
+      }else if(pkState.mode==='vendor'){
+        // ヘッダーより上のセルのみ
+        if(rowIdx>=pkState.headerIdx)return;
+        ev.stopPropagation();
+        var val=String((hdrPickerRawRows[rowIdx]||[])[colIdx]||'').trim();
+        if(!val)return;
+        // トグル
+        var exists=pkState.vendorCells.findIndex(function(vc){return vc.row===rowIdx&&vc.col===colIdx;});
+        if(exists>=0){
+          pkState.vendorCells.splice(exists,1);
+        }else{
+          pkState.vendorCells.push({row:rowIdx,col:colIdx});
+        }
+        renderPkTable();
+      }
+      // header/footer モードではセルクリックを止めない → tr の onPkRowClick に委譲
+    }
+
+    //  列ロール割当ポップアップ
+    function showPkRolePopup(colIdx, ev){
+      var popup=document.getElementById('pkRolePopup');
+      var currentRole=pkState.colRoles[colIdx]||'';
+
+      var h='';
+      PK_ROLES.forEach(function(r){
+        var isActive=(currentRole===r.key);
+        // 他の列で使われてるかチェック
+        var usedByOther=false;
+        for(var k in pkState.colRoles){
+          if(parseInt(k)!==colIdx&&pkState.colRoles[k]===r.key){usedByOther=true;break;}
+        }
+        var cls='pk-role-opt'+(isActive?' active':'');
+        var suffix=r.req?' 必須':'';
+        var usedNote=usedByOther?' （列'+(parseInt(Object.keys(pkState.colRoles).find(function(k2){return pkState.colRoles[k2]===r.key;}))+1)+'で使用中）':'';
+        h+='<div class="'+cls+'" onclick="assignPkRole('+colIdx+',\''+r.key+'\')">';
+        h+='<span class="pk-r-dot" style="background:'+r.color+';"></span>';
+        h+=esc(r.label+suffix+usedNote);
+        h+='</div>';
+      });
+      // 解除
+      if(currentRole){
+        h+='<div class="pk-role-opt clear" onclick="assignPkRole('+colIdx+',\'\')">✕ 解除</div>';
+      }
+      popup.innerHTML=h;
+
+      // 位置
+      var rect=ev.target.getBoundingClientRect();
+      popup.style.left=Math.min(rect.left, window.innerWidth-180)+'px';
+      popup.style.top=Math.min(rect.bottom+4, window.innerHeight-250)+'px';
+      popup.style.display='block';
+
+      // 外クリックで閉じる
+      setTimeout(function(){
+        document.addEventListener('click',closePkRolePopupOnce,{once:true});
+      },10);
+    }
+
+    function closePkRolePopup(){
+      var p=document.getElementById('pkRolePopup');
+      if(p)p.style.display='none';
+    }
+    function closePkRolePopupOnce(ev){
+      var p=document.getElementById('pkRolePopup');
+      if(p&&!p.contains(ev.target)){p.style.display='none';}
+    }
+
+    function assignPkRole(colIdx, roleKey){
+      if(roleKey){
+        // 他の列から同じロールを外す
+        for(var k in pkState.colRoles){
+          if(pkState.colRoles[k]===roleKey) delete pkState.colRoles[k];
+        }
+        pkState.colRoles[colIdx]=roleKey;
+      }else{
+        delete pkState.colRoles[colIdx];
+      }
+      closePkRolePopup();
+      renderPkTable();
+    }
+
+    //  列ロール自動推定（ヘッダー行の文字列からFIELDS辞書でマッチ）
+    function autoAssignColRoles(){
+      pkState.colRoles={};
+      var hRow=hdrPickerRawRows[pkState.headerIdx]||[];
+      FIELDS.forEach(function(field){
+        for(var ci=0;ci<hRow.length;ci++){
+          if(pkState.colRoles[ci])continue; // 既に割当済み
+          var val=String(hRow[ci]||'').trim().replace(/\s+/g,'');
+          if(!val)continue;
+          var matched=field.p.some(function(pat){
+            return val.toLowerCase().indexOf(pat.toLowerCase())>=0;
+          });
+          if(matched){
+            pkState.colRoles[ci]=field.key;
+            break;
+          }
+        }
+      });
+    }
+
+    //  showHdrPicker（拡張版）
+    function showHdrPicker(rawRows, autoIdx, autoScore){
+      hdrPickerRawRows=rawRows;
+      pkState.headerIdx=autoIdx>=0?autoIdx:0;
+      pkState.footerIdx=-1;
+      pkState.colRoles={};
+      pkState.vendorCells=[];
+      pkState.mode='header';
+
+      // 列ロールを自動推定
+      autoAssignColRoles();
+
+      // バッジ
+      var badgeEl=document.getElementById('hdrPickerBadge');
+      if(autoScore>=5){
+        badgeEl.innerHTML='<div class="hdr-info-badge auto"> 高精度で自動検出しました（スコア: '+autoScore+'）</div>';
+      }else if(autoScore>=3){
+        badgeEl.innerHTML='<div class="hdr-info-badge manual"> 自動検出しましたが確信度が低めです（スコア: '+autoScore+'）。確認してください。</div>';
+      }else{
+        badgeEl.innerHTML='<div class="hdr-info-badge low"> ヘッダー行を自動検出できませんでした。手動で選択してください。</div>';
+      }
+
+      // 候補カード
+      var candidates=findHeaderCandidates(rawRows);
+      var ch='';
+      if(candidates.length>0){
+        candidates.forEach(function(c,rank){
+          var sel=(c.idx===pkState.headerIdx)?'selected':'';
+          ch+='<div class="hdr-cand '+sel+'" onclick="selectHdrCandidate('+c.idx+')" data-hdr-idx="'+c.idx+'">';
+          ch+='<div class="hdr-cand-rank">'+(rank+1)+'</div>';
+          ch+='<div class="hdr-cand-cells">';
+          (c.row||[]).forEach(function(cell){
+            var cv=String(cell||'').trim();
+            if(!cv)return;
+            var isKw=isHeaderKeyword(cv);
+            ch+='<span class="hdr-cand-cell'+(isKw?' match':'')+'">'+esc(cv)+'</span>';
+          });
+          ch+='</div>';
+          ch+='<div class="hdr-cand-score">行'+(c.idx+1)+' / '+c.score+'pt</div>';
+          ch+='</div>';
+        });
+      }else{
+        ch='<p style="font-size:0.82rem;color:var(--muted);padding:8px;">候補が見つかりませんでした。プレビューからクリックで選択してください。</p>';
+      }
+      document.getElementById('hdrCandidates').innerHTML=ch;
+
+      // ツールバーリセット
+      setPkMode('header');
+
+      // テーブル描画
+      renderPkTable();
+
+      document.getElementById('hdrPickerOverlay').classList.add('open');
+      return new Promise(function(resolve){hdrPickerResolve=resolve;});
+    }
+
+    function selectHdrCandidate(idx){
+      pkState.headerIdx=idx;
+      if(pkState.footerIdx>=0&&pkState.footerIdx<=idx)pkState.footerIdx=-1;
+      autoAssignColRoles();
+      renderPkTable();
+      document.querySelectorAll('.hdr-cand').forEach(function(el){
+        el.classList.toggle('selected',parseInt(el.getAttribute('data-hdr-idx'))===idx);
+      });
+      var selRow=document.querySelector('#hdrRawTable tr[data-raw-idx="'+idx+'"]');
+      if(selRow) selRow.scrollIntoView({behavior:'smooth',block:'center'});
+    }
+
+    function selectHdrRow(idx){
+      selectHdrCandidate(idx);
+    }
+
+    function confirmHdrPicker(){
+      if(pkState.headerIdx<0){alert('ヘッダー行を選択してください。');return;}
+      document.getElementById('hdrPickerOverlay').classList.remove('open');
+      closePkRolePopup();
+      //  pkState全体を返す（呼び出し側で利用）
+      if(hdrPickerResolve)hdrPickerResolve(pkState.headerIdx);
+      hdrPickerResolve=null;
+    }
+
+    function closeHdrPicker(cancel){
+      document.getElementById('hdrPickerOverlay').classList.remove('open');
+      closePkRolePopup();
+      if(cancel&&hdrPickerResolve)hdrPickerResolve(-1);
+      hdrPickerResolve=null;
+    }
+
+    //  pkState → 列マッピング・販売会社・フッターを実データに反映
+    function applyPkStateToData(raw, headerIdx){
+      var hIdx=pkState.headerIdx;
+      var fIdx=pkState.footerIdx;
+
+      var headers=raw[hIdx].map(function(h){return String(h).trim();});
+      var dataRows=[];
+      var endIdx=(fIdx>=0)?fIdx:raw.length;
+      for(var i=hIdx+1;i<endIdx;i++){
+        if(raw[i]&&raw[i].some(function(c){return String(c||'').trim();})){
+          dataRows.push(raw[i]);
+        }
+      }
+
+      // 販売会社セルからテキスト構築
+      var vendorText='';
+      if(pkState.vendorCells.length>0){
+        pkState.vendorCells.forEach(function(vc){
+          var val=String((raw[vc.row]||[])[vc.col]||'').trim();
+          if(val) vendorText+=val+'\n';
+        });
+      }else{
+        // 従来: ヘッダーより上全体
+        for(var a=0;a<hIdx;a++){
+          vendorText+=raw[a].map(function(c){return String(c||'');}).join(' ')+'\n';
+        }
+      }
+
+      return {
+        headers:headers,
+        dataRows:dataRows,
+        vendorText:vendorText,
+        colRoles:pkState.colRoles,
+        footerIdx:fIdx,
+      };
+    }
+
+    async function reopenHdrPicker(){
+      if(!currentFile||!currentFile._rawRows)return;
+      var raw=currentFile._rawRows;
+      var detected=detectHeaderRow(raw);
+      var pickedIdx=await showHdrPicker(raw, detected.headerIdx, detected.score);
+      if(pickedIdx<0)return;
+
+      //  pkState全体を反映
+      var applied=applyPkStateToData(raw, pickedIdx);
+      vendorInfo=extractVendorInfo(applied.vendorText);
+      currentFile.parsed={headers:applied.headers,rows:applied.dataRows};
+      currentFile._headerIdx=pickedIdx;
+      currentFile._aboveText=applied.vendorText;
+      currentFile._pkColRoles=applied.colRoles; // 列ロールも保存
+
+      var excluded=countExcluded(currentFile.parsed);
+      var candidate=applied.dataRows.length-excluded;
+      showCard(currentFile.fileId,currentFile.fileName,currentFile.fileObj.size,'ready',{
+        total:applied.dataRows.length,excluded:excluded,candidate:candidate,cols:applied.headers.length
+      });
+    }
+
+    // ========================================================================
+    //  反映先マッピング
+    // ========================================================================
+    var REFLECT_TARGETS=[
+      {id:'report',label:'通報画面',icon:'',fields:[
+        {dest:'title',destLabel:'タイトル'},
+        {dest:'body',destLabel:'本文'},
+        {dest:'amount',destLabel:'金額欄'},
+        {dest:'contact',destLabel:'連絡先'},
+        {dest:'category',destLabel:'カテゴリ'},
+      ]},
+      {id:'ledger',label:'動産台帳',icon:'',fields:[
+        {dest:'assetName',destLabel:'資産名'},
+        {dest:'modelNo',destLabel:'型番'},
+        {dest:'maker',destLabel:'メーカー'},
+        {dest:'purchasePrice',destLabel:'取得価格'},
+        {dest:'vendor',destLabel:'取得先（販売会社）'},
+        {dest:'quantity',destLabel:'数量'},
+      ]},
+      {id:'order',label:'発注依頼',icon:'',fields:[
+        {dest:'orderItem',destLabel:'発注品目'},
+        {dest:'orderModel',destLabel:'型番'},
+        {dest:'orderQty',destLabel:'数量'},
+        {dest:'orderPrice',destLabel:'単価'},
+        {dest:'orderVendor',destLabel:'発注先'},
+      ]},
+      {id:'custom',label:'カスタム画面',icon:'',fields:[
+        {dest:'field1',destLabel:'自由項目1'},
+        {dest:'field2',destLabel:'自由項目2'},
+        {dest:'field3',destLabel:'自由項目3'},
+        {dest:'field4',destLabel:'自由項目4'},
+      ]},
+    ];
+
+    var REFLECT_SOURCES=[
+      {key:'name',label:'商品名',req:true},
+      {key:'model',label:'型番',req:true},
+      {key:'unitPrice',label:'単価',req:true},
+      {key:'vendor',label:'販売会社',req:true},
+      {key:'qty',label:'数量',req:false},
+      {key:'amount',label:'金額',req:false},
+      {key:'maker',label:'メーカー',req:false},
+      {key:'category',label:'カテゴリ',req:false},
+      {key:'vendorTel',label:'販売会社TEL',req:false},
+      {key:'vendorAddress',label:'販売会社住所',req:false},
+    ];
+
+    var reflectConfig={};
+
+    function buildReflectPanel(){
+      // 必須項目ステータスチェック
+      var map=getMap();
+      var vi=getVendorFromUI();
+      var reqChecks=[
+        {label:'商品名',ok:map.name!==undefined},
+        {label:'型番',ok:map.model!==undefined},
+        {label:'単価',ok:map.unitPrice!==undefined},
+        {label:'販売会社',ok:!!(vi.name)},
+      ];
+      var allOk=reqChecks.every(function(r){return r.ok;});
+      var statusEl=document.getElementById('reqStatusBar');
+      statusEl.className='req-status '+(allOk?'complete':'incomplete');
+      var itemsH=reqChecks.map(function(r){
+        return '<span class="'+(r.ok?'mapped-ok':'mapped-ng')+'">'+(r.ok?'':'')+' '+r.label+'</span>';
+      }).join(' ');
+      document.getElementById('reqStatusItems').innerHTML=itemsH;
+
+      //  テンプレート選択肢を更新
+      buildTplSelect();
+
+      // 保存された設定を読み込み（テンプレート未適用時）
+      if(!reflectConfig||Object.keys(reflectConfig).length===0){
+        var saved=loadReflectConfig();
+        if(saved)reflectConfig=saved;
+      }
+
+      // 反映先カード
+      var h='';
+      REFLECT_TARGETS.forEach(function(target){
+        var cfg=reflectConfig[target.id]||{enabled:false,mapping:{}};
+        h+='<div class="ref-target" id="refTarget_'+target.id+'">';
+        h+='<div class="ref-target-hdr">';
+        h+='<input type="checkbox" class="ref-target-toggle" id="refToggle_'+target.id+'" '+(cfg.enabled?'checked':'')+' onchange="onReflectToggle(\''+target.id+'\',this.checked)">';
+        h+='<h4>'+target.icon+' '+esc(target.label)+'</h4>';
+        h+='</div>';
+        h+='<div id="refFields_'+target.id+'" style="'+(cfg.enabled?'':'display:none;')+'">';
+        target.fields.forEach(function(fld){
+          var curVal=cfg.mapping&&cfg.mapping[fld.dest]||'';
+          h+='<div class="ref-map-row">';
+          h+='<div class="ref-map-src">'+esc(fld.destLabel)+'</div>';
+          h+='<span class="ref-map-arrow">←</span>';
+          h+='<div class="ref-map-dest">';
+          h+='<select data-target="'+target.id+'" data-dest="'+fld.dest+'" onchange="onReflectMapChange()">';
+          h+='<option value="">（なし）</option>';
+          REFLECT_SOURCES.forEach(function(src){
+            var badge=src.req?' ':'';
+            h+='<option value="'+src.key+'"'+(curVal===src.key?' selected':'')+'>'+src.label+badge+'</option>';
+          });
+          h+='</select></div>';
+          h+='</div>';
+        });
+        h+='</div>';
+        h+='</div>';
+      });
+      document.getElementById('reflectTargets').innerHTML=h;
+      updateReflectSummary();
+    }
+
+    //  テンプレート選択UI
+    function buildTplSelect(){
+      var sel=document.getElementById('tplSelect');
+      if(!sel)return;
+      sel.innerHTML='<option value="">（手動設定）</option>';
+      allTemplates.forEach(function(tpl,idx){
+        var opt=document.createElement('option');
+        opt.value=String(idx);
+        opt.textContent=tpl.name+(tpl.vendorPattern?' ('+tpl.vendorPattern+')':'');
+        sel.appendChild(opt);
+      });
+    }
+
+    function onTplSelect(){
+      var sel=document.getElementById('tplSelect');
+      var idx=parseInt(sel.value);
+      var delBtn=document.getElementById('tplDelBtn');
+      if(isNaN(idx)||idx<0||idx>=allTemplates.length){
+        if(delBtn)delBtn.style.display='none';
+        return;
+      }
+      if(delBtn)delBtn.style.display='';
+      var tpl=allTemplates[idx];
+      applyTemplate(tpl);
+      // 反映先パネルを再構築
+      buildReflectPanel();
+    }
+
+    function deleteTplCurrent(){
+      var sel=document.getElementById('tplSelect');
+      var idx=parseInt(sel.value);
+      if(isNaN(idx)||idx<0)return;
+      var name=allTemplates[idx].name;
+      if(!confirm('テンプレート「'+name+'」を削除しますか？'))return;
+      deleteTemplate(name);
+      sel.value='';
+      document.getElementById('tplDelBtn').style.display='none';
+      buildTplSelect();
+    }
+
+    //  テンプレート自動適用（販売会社マッチ時）
+    function tryAutoApplyTemplate(){
+      var vi=getVendorFromUI();
+      if(!vi.name)return false;
+      var tpl=findTemplateByVendor(vi.name);
+      if(!tpl)return false;
+      applyTemplate(tpl);
+      document.getElementById('tplAutoApplied').style.display='';
+      // テンプレート選択を合わせる
+      var sel=document.getElementById('tplSelect');
+      if(sel){
+        for(var i=0;i<allTemplates.length;i++){
+          if(allTemplates[i].name===tpl.name){sel.value=String(i);break;}
+        }
+      }
+      return true;
+    }
+
+    function onReflectToggle(targetId,enabled){
+      if(!reflectConfig[targetId])reflectConfig[targetId]={enabled:false,mapping:{}};
+      reflectConfig[targetId].enabled=enabled;
+      var fieldsEl=document.getElementById('refFields_'+targetId);
+      if(fieldsEl)fieldsEl.style.display=enabled?'':'none';
+      updateReflectSummary();
+    }
+
+    function onReflectMapChange(){
+      // 全マッピングを収集
+      document.querySelectorAll('#panelReflect select[data-target]').forEach(function(sel){
+        var tid=sel.getAttribute('data-target');
+        var dest=sel.getAttribute('data-dest');
+        if(!reflectConfig[tid])reflectConfig[tid]={enabled:false,mapping:{}};
+        if(!reflectConfig[tid].mapping)reflectConfig[tid].mapping={};
+        reflectConfig[tid].mapping[dest]=sel.value;
+      });
+      updateReflectSummary();
+    }
+
+    function updateReflectSummary(){
+      var enabled=[];
+      var totalMaps=0;
+      REFLECT_TARGETS.forEach(function(t){
+        var cfg=reflectConfig[t.id];
+        if(cfg&&cfg.enabled){
+          enabled.push(t.label);
+          if(cfg.mapping){
+            for(var k in cfg.mapping){if(cfg.mapping[k])totalMaps++;}
+          }
+        }
+      });
+      var el=document.getElementById('reflectSummary');
+      if(enabled.length===0){
+        el.innerHTML='反映先が未設定です。上のチェックボックスで画面を選択してください。';
+      }else{
+        el.innerHTML='<b>'+enabled.length+'</b> 画面（'+enabled.join('、')+'）に <b>'+totalMaps+'</b> 項目を反映します。';
+      }
+    }
+
+    function getReflectConfig(){
+      return reflectConfig;
+    }
+
+    function saveReflectConfig(){
+      try{
+        var fid=demoGetFromLocalStorage(ONE.KEYS.facilityId)||'default';
+        demoSaveToLocalStorage('reflect.'+fid,JSON.stringify(reflectConfig));
+      }catch(e){}
+    }
+    function loadReflectConfig(){
+      try{
+        var fid=demoGetFromLocalStorage(ONE.KEYS.facilityId)||'default';
+        var s=demoGetFromLocalStorage('reflect.'+fid);
+        return s?JSON.parse(s):null;
+      }catch(e){return null;}
+    }
+
+    // ========================================================================
+    //  型番・メーカー補助抽出（既存を保持）
+    // ========================================================================
+    function extractModelFromName(name){
+      // 英数字+ハイフンで3文字以上、数字を含む → 型番
+      var parts=name.split(/[\s　]+/);
+      var modelParts=[],nameParts=[];
+      parts.forEach(function(p){
+        if(/^[A-Za-z0-9\-\/\.\(\)]+$/.test(p)&&p.length>=3&&/\d/.test(p)){
+          modelParts.push(p);
+        }else{
+          nameParts.push(p);
+        }
+      });
+      if(modelParts.length>0&&nameParts.length>0){
+        return {name:nameParts.join(' '),model:modelParts.join(' ')};
+      }
+      // JAN: パターン
+      var jan=name.match(/(?:JAN|EAN|UPC)[:：\s]*([\d\-]{8,14})/i);
+      if(jan)return {name:name.replace(jan[0],'').trim(),model:jan[1]};
+      return {name:name,model:''};
+    }
+
+    function extractMakerName(name){
+      for(var i=0;i<MAKERS.length;i++){
+        if(name.indexOf(MAKERS[i])>=0)return MAKERS[i];
+      }
+      var bm=name.match(/^([A-Za-zァ-ヶー]{2,8})\s/);
+      if(bm)return bm[1];
+      return '';
+    }
+
+    async function hashFile(f){
+      try{var b=await f.arrayBuffer();var h=await crypto.subtle.digest('SHA-256',b);return Array.from(new Uint8Array(h)).map(function(x){return x.toString(16).padStart(2,'0');}).join('').slice(0,16);}catch(e){return ONE.randId('H');}
+    }
+
+    // マッピング保存/読込
+    function mapKey(){
+      var fid=demoGetFromLocalStorage(ONE.KEYS.facilityId)||'default';
+      var hh=currentFile.parsed.headers.join('|').toLowerCase();
+      return 'mapping.'+fid+'.'+sHash(hh);
+    }
+    function sHash(s){var h=0;for(var i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return Math.abs(h).toString(36);}
+    function saveMap(hm){try{demoSaveToLocalStorage(mapKey(),JSON.stringify(hm));}catch(e){}}
+    function loadMap(headers){
+      try{
+        var saved=demoGetFromLocalStorage(mapKey());
+        if(!saved)return null;
+        var s=JSON.parse(saved);
+        var ok=Object.keys(s).every(function(h){return headers.indexOf(h)>=0;});
+        return ok?s:null;
+      }catch(e){return null;}
+    }
+
+    function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+
+    // ========================================================================
+    //  ローカルOCR削除済み — OCR処理はサーバ側 GCP Vision API で実行
+    // Tesseract.js 完全除去。PDF/画像は /api/import/extract で一括処理。
+    // handleFile() → callExtractAPI() → サーバ(L1直接パース/L2 OCR/L3構造化)
+    // ========================================================================
+
+  </script>
+
+    <script>
+    // 統一ヘッダー初期化
+    UnifiedHeader.init({
+        icon: '',
+        title: 'インポート',
+        backButton: true
+    });
+    </script>
+</body>
+</html>

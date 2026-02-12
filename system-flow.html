@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ワンタッチ管理システム 遷移図</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans CJK JP", sans-serif;
+            background: #fafafa;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 40px;
+            font-size: 28px;
+        }
+
+        .flow {
+            margin-bottom: 60px;
+        }
+
+        .flow-title {
+            background: #E53935;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+
+        .box {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin: 12px 0;
+            position: relative;
+        }
+
+        .box-title {
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .box-file {
+            font-size: 12px;
+            color: #666;
+            font-family: monospace;
+        }
+
+        .box-desc {
+            font-size: 14px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .arrow {
+            text-align: center;
+            color: #E53935;
+            font-size: 24px;
+            margin: 8px 0;
+        }
+
+        .branch {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .branch-item {
+            background: #e3f2fd;
+            border: 2px solid #1976d2;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .branch-label {
+            font-weight: 700;
+            color: #1976d2;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .menu-box {
+            background: #fff3e0;
+            border: 2px solid #f57c00;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 12px 0;
+        }
+
+        .menu-title {
+            font-weight: 700;
+            color: #f57c00;
+            margin-bottom: 8px;
+        }
+
+        .menu-item {
+            font-size: 14px;
+            color: #666;
+            padding: 4px 0;
+            padding-left: 16px;
+        }
+
+        .note {
+            background: #fffbf0;
+            border-left: 4px solid #f59e0b;
+            padding: 16px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .note-title {
+            font-weight: 700;
+            color: #f59e0b;
+            margin-bottom: 8px;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+            }
+        }
+    </style>
+    <script src="demo-mode.js"></script>
+    <script src="unified-header.js"></script>
+</head>
+<body>
+    <!-- 統一ヘッダー -->
+    <div id="unified-header-mount"></div>
+    <div class="container">
+        <h1>📊 ワンタッチ管理システム 遷移図 v1.2</h1>
+
+        <!-- 新規登録フロー -->
+        <div class="flow">
+            <div class="flow-title">🆕 新規登録フロー（3段階）</div>
+            
+            <div class="box">
+                <div class="box-title">Phase 1: システム管理者（運営元）</div>
+                <div class="box-file">company-master.html</div>
+                <div class="box-desc">会社を登録 → 本社管理者ID自動生成</div>
+            </div>
+
+            <div class="note">
+                <div class="note-title">✨ 自動生成される情報</div>
+                <div style="font-size: 14px; color: #666;">
+                    • 本社管理者ID: 会社コード-H001（例: TAMJ-H001）<br>
+                    • 初期パスワード: ランダム8文字（例: Xy7#mK9p）<br>
+                    • 権限: company_admin（会社全体を管理）<br>
+                    → この情報を会社に通知
+                </div>
+            </div>
+
+            <div class="arrow">↓</div>
+
+            <div class="box">
+                <div class="box-title">Phase 2: 本社管理者</div>
+                <div class="box-file">master-top.html</div>
+                <div class="box-desc">本社IDでログイン → 事業所と事業所管理者を登録</div>
+            </div>
+
+            <div class="menu-box">
+                <div class="menu-title">本社管理者がやること</div>
+                <div class="menu-item">1. 初期パスワードを変更（セキュリティ）</div>
+                <div class="menu-item">2. 必要なら本社担当者を追加（H002, H003...）</div>
+                <div class="menu-item">3. 事業所マスタで各事業所を登録</div>
+                <div class="menu-item">4. アカウントマスタで各事業所管理者IDを発行</div>
+                <div class="menu-item">5. 事業所管理者にIDとパスワードを通知</div>
+            </div>
+
+            <div class="arrow">↓</div>
+
+            <div class="box">
+                <div class="box-title">Phase 3: 事業所管理者</div>
+                <div class="box-file">master-top.html → account-master.html</div>
+                <div class="box-desc">事業所管理者IDでログイン → スタッフIDを発行</div>
+            </div>
+
+            <div class="menu-box">
+                <div class="menu-title">事業所管理者がやること</div>
+                <div class="menu-item">1. アカウントマスタで自事業所のスタッフIDを発行</div>
+                <div class="menu-item">2. スタッフにIDとパスワードを配布</div>
+            </div>
+
+            <div class="arrow">↓</div>
+
+            <div class="box">
+                <div class="box-title">Phase 4: スタッフ</div>
+                <div class="box-file">report.html</div>
+                <div class="box-desc">スタッフIDでログイン → 通報業務</div>
+            </div>
+        </div>
+
+        <!-- ログインフロー -->
+        <div class="flow">
+            <div class="flow-title">🔐 ログインフロー</div>
+            
+            <div class="box">
+                <div class="box-title">ログイン画面</div>
+                <div class="box-file">login.html</div>
+                <div class="box-desc">会社コード・ユーザーID・パスワードを入力</div>
+            </div>
+
+            <div class="arrow">↓</div>
+
+            <div class="note">
+                <div class="note-title">💡 認証とロール判定</div>
+                <div style="font-size: 14px; color: #666;">
+                    - 会社コード + ユーザーID + パスワードで認証<br>
+                    - ロールに応じて遷移先を決定：<br>
+                    　• <strong>system_admin</strong>: システム管理者（運営元）<br>
+                    　• <strong>company_admin</strong>: 会社管理者（本社）<br>
+                    　• <strong>office_admin</strong>: 事業所管理者<br>
+                    　• <strong>staff</strong>: スタッフ
+                </div>
+            </div>
+
+            <div class="arrow">↓</div>
+
+            <div class="branch">
+                <div class="branch-item">
+                    <div class="branch-label">システム管理者</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 8px;">
+                        system_admin<br>
+                        → system-admin.html
+                    </div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-label">会社管理者（本社）</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 8px;">
+                        company_admin<br>
+                        → master-top.html
+                    </div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-label">事業所管理者</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 8px;">
+                        office_admin<br>
+                        → master-top.html
+                    </div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-label">スタッフ</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 8px;">
+                        staff<br>
+                        → report.html
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- システム管理者フロー -->
+        <div class="flow">
+            <div class="flow-title">👑 システム管理者フロー</div>
+            
+            <div class="box">
+                <div class="box-title">システム管理画面</div>
+                <div class="box-file">system-admin.html</div>
+                <div class="box-desc">3つのカードから選択</div>
+            </div>
+
+            <div class="menu-box">
+                <div class="menu-title">📢 通報画面カード</div>
+                <div class="menu-item">→ report.html（スタッフと同じ画面）</div>
+            </div>
+
+            <div class="menu-box">
+                <div class="menu-title">⚙️ 管理画面カード</div>
+                <div class="menu-item">→ master-top.html</div>
+                <div class="menu-item" style="padding-left: 32px;">→ 会社マスタ（company-master.html）</div>
+                <div class="menu-item" style="padding-left: 32px;">→ アカウントマスタ（account-master.html）</div>
+                <div class="menu-item" style="padding-left: 32px;">→ 事業所マスタ（office-master.html）</div>
+                <div class="menu-item" style="padding-left: 32px;">→ 取引先マスタ（partner-master.html）</div>
+                <div class="menu-item" style="padding-left: 32px;">→ 通報履歴（report-history.html）</div>
+                <div class="menu-item" style="padding-left: 32px;">→ データインポート（import.html）</div>
+            </div>
+
+            <div class="menu-box">
+                <div class="menu-title">🔧 システム設定カード</div>
+                <div class="menu-item">→ system-settings.html</div>
+                <div class="menu-item" style="padding-left: 32px;">→ 監査ログ閲覧（audit-log.html）</div>
+                <div class="menu-item" style="padding-left: 32px;">→ 利用規約編集（terms.html）</div>
+                <div class="menu-item" style="padding-left: 32px;">→ プライバシーポリシー編集（privacy.html）</div>
+            </div>
+        </div>
+
+        <!-- 会社管理者フロー -->
+        <div class="flow">
+            <div class="flow-title">🏢 会社管理者（本社）フロー</div>
+            
+            <div class="box">
+                <div class="box-title">管理画面</div>
+                <div class="box-file">master-top.html</div>
+                <div class="box-desc">自社の全データを管理</div>
+            </div>
+
+            <div class="note">
+                <div class="note-title">📊 表示範囲</div>
+                <div style="font-size: 14px; color: #666;">
+                    - scope: <strong>company</strong><br>
+                    - 自分の会社（companyCode）の全事業所データを表示・編集可能<br>
+                    - 他社のデータは見えない・触れない
+                </div>
+            </div>
+
+            <div class="menu-box">
+                <div class="menu-title">管理画面のカード一覧</div>
+                <div class="menu-item">→ 会社マスタ（閲覧のみ）</div>
+                <div class="menu-item">→ アカウントマスタ（自社の全アカウント）</div>
+                <div class="menu-item">→ 事業所マスタ（自社の全事業所）</div>
+                <div class="menu-item">→ 取引先マスタ（自社の全取引先）</div>
+                <div class="menu-item">→ 通報履歴（自社の全事業所の通報）</div>
+                <div class="menu-item">→ データインポート</div>
+            </div>
+        </div>
+
+        <!-- 事業所管理者フロー -->
+        <div class="flow">
+            <div class="flow-title">🏪 事業所管理者フロー</div>
+            
+            <div class="box">
+                <div class="box-title">管理画面</div>
+                <div class="box-file">master-top.html</div>
+                <div class="box-desc">自事業所のデータのみ管理</div>
+            </div>
+
+            <div class="note">
+                <div class="note-title">📊 表示範囲</div>
+                <div style="font-size: 14px; color: #666;">
+                    - scope: <strong>office</strong><br>
+                    - 自分の事業所（officeCode）のデータのみ表示・編集可能<br>
+                    - 他事業所のデータは見えない・触れない
+                </div>
+            </div>
+
+            <div class="menu-box">
+                <div class="menu-title">管理画面のカード一覧</div>
+                <div class="menu-item">→ アカウントマスタ（自事業所のみ、新規登録は自動で自事業所）</div>
+                <div class="menu-item">→ 事業所マスタ（自事業所の情報閲覧・編集）</div>
+                <div class="menu-item">→ 取引先マスタ（自事業所のみ）</div>
+                <div class="menu-item">→ 通報履歴（自事業所のみ）</div>
+                <div class="menu-item">→ データインポート</div>
+            </div>
+        </div>
+
+        <!-- スタッフフロー -->
+        <div class="flow">
+            <div class="flow-title">👤 スタッフフロー</div>
+            
+            <div class="box">
+                <div class="box-title">通報画面</div>
+                <div class="box-file">report.html</div>
+                <div class="box-desc">通報の投稿と自分の通報履歴閲覧</div>
+            </div>
+
+            <div class="note">
+                <div class="note-title">🔒 アクセス制限</div>
+                <div style="font-size: 14px; color: #666;">
+                    - 自分の事業所（officeCode）の通報のみ閲覧可能<br>
+                    - 他事業所の通報は見えない
+                </div>
+            </div>
+        </div>
+
+        <!-- アカウントメニュー -->
+        <div class="flow">
+            <div class="flow-title">👥 アカウントメニュー（全ロール共通）</div>
+            
+            <div class="box">
+                <div class="box-title">ユーザー名クリック → ドロップダウン</div>
+                <div class="box-desc">全画面のヘッダーに表示</div>
+            </div>
+
+            <div class="menu-box">
+                <div class="menu-title">メニュー内容</div>
+                <div class="menu-item">🔔 通知設定（notification-settings.html）</div>
+                <div class="menu-item">🔒 パスワード変更（change-password.html）</div>
+                <div class="menu-item">🚪 ログアウト</div>
+            </div>
+        </div>
+
+        <!-- 商品マスタフロー -->
+        <div class="flow">
+            <div class="flow-title">📦 商品マスタフロー（ハイブリッドストレージ）</div>
+            
+            <div class="box">
+                <div class="box-title">ログイン → 商品マスタ</div>
+                <div class="box-file">items.html</div>
+                <div class="box-desc">master-top.html の「📦 商品マスタ」カードから遷移</div>
+            </div>
+
+            <div class="arrow">↓</div>
+
+            <div class="note">
+                <div class="note-title">🔍 companyCode チェック</div>
+                <div style="font-size: 14px; color: #666;">
+                    companyCode === 'TAMJ'?（DEMOモード判定）
+                </div>
+            </div>
+
+            <div class="arrow">↓</div>
+
+            <div class="branch">
+                <div class="branch-item" style="background: #fff3e0; border-color: #f57c00;">
+                    <div class="branch-label">🎭 DEMOモード (TAMJ)</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 8px;">
+                        <strong>ストレージ:</strong> sessionStorage<br>
+                        <strong>データ永続性:</strong> ブラウザを閉じたら消える<br>
+                        <strong>初期データ:</strong> サンプル100件自動生成<br>
+                        　・食品: 30件<br>
+                        　・日用品: 30件<br>
+                        　・医療用具: 20件<br>
+                        　・その他: 20件
+                    </div>
+                </div>
+                <div class="branch-item" style="background: #e8f5e9; border-color: #2e7d32;">
+                    <div class="branch-label">🏢 本番モード</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 8px;">
+                        <strong>ストレージ:</strong> IndexedDB<br>
+                        <strong>データ永続性:</strong> 永続的<br>
+                        <strong>初期データ:</strong> 空（手動登録）<br>
+                        <strong>想定件数:</strong> 2,000件以上対応
+                    </div>
+                </div>
+            </div>
+
+            <div class="arrow">↓</div>
+
+            <div class="note">
+                <div class="note-title">🔐 scope別フィルタリング</div>
+                <div style="font-size: 14px; color: #666;">
+                    <strong>system_admin:</strong> 全会社の商品を表示<br>
+                    <strong>company_admin:</strong> 自社（companyCode）の全商品を表示<br>
+                    <strong>office_admin:</strong> 自事業所（officeCode）の商品を表示<br>
+                    <strong>staff:</strong> 自事業所の商品を表示（閲覧のみ）
+                </div>
+            </div>
+
+            <div class="arrow">↓</div>
+
+            <div class="box">
+                <div class="box-title">商品一覧画面</div>
+                <div class="box-file">items.html</div>
+                <div class="box-desc">検索・フィルター・仮想スクロール対応</div>
+            </div>
+
+            <div class="menu-box">
+                <div class="menu-title">機能一覧</div>
+                <div class="menu-item">✅ 商品検索（商品名/型番/メーカー）</div>
+                <div class="menu-item">✅ カテゴリーフィルター</div>
+                <div class="menu-item">✅ 商品登録（管理者のみ）</div>
+                <div class="menu-item">✅ 商品編集（管理者のみ）</div>
+                <div class="menu-item">✅ 商品削除（管理者のみ）</div>
+                <div class="menu-item">🚫 エクスポート（DEMOモードではNG）</div>
+                <div class="menu-item">🚫 インポート（DEMOモードではNG / OCRコスト保護）</div>
+            </div>
+
+            <div class="note" style="margin-top: 20px;">
+                <div class="note-title">💰 ビジネスモデル</div>
+                <div style="font-size: 14px; color: #666;">
+                    <strong>system_admin（運営元）の役割:</strong><br>
+                    - 初期設定代行として商品データを一括登録<br>
+                    - カテゴリー設定、事業所別設定も対応<br>
+                    → <strong>初期費用</strong>として収益化
+                </div>
+            </div>
+        </div>
+
+        <!-- 更新履歴 -->
+        <div class="note" style="margin-top: 60px;">
+            <div class="note-title">📝 更新履歴</div>
+            <div style="font-size: 14px; color: #666;">
+                <strong>v1.2</strong> (2026/02/09) - 最新版<br>
+                - 商品マスタフロー追加<br>
+                - ハイブリッドストレージ（IndexedDB + sessionStorage）<br>
+                - DEMOモード vs 本番モードの説明<br>
+                - scope別フィルタリング詳細<br>
+                <br>
+                <strong>v1.1</strong> (2026/02/07)<br>
+                - 新規登録フロー（3段階）を追加<br>
+                - 本社管理者ID自動生成機能<br>
+                - 会社コードベースのマルチテナント構造完成<br>
+                <br>
+                <strong>v1.0</strong> (2026/02/07)<br>
+                - 初版作成<br>
+                - 基本的な遷移図
+            </div>
+        </div>
+    </div>
+
+    <script>
+    UnifiedHeader.init({
+        icon: '📊',
+        title: '遷移図',
+        backButton: true
+    });
+    </script>
+</body>
+</html>

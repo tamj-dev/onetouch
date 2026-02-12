@@ -1,0 +1,1885 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品一覧 | ワンタッチ管理</title>
+    <script src="demo-mode.js"></script>
+    <script>
+        // item-storage.js を直接埋め込み
+        const DB_NAME = 'OneTouchDB';
+        const DB_VERSION = 1;
+        let db = null;
+
+        async function openDB() {
+          return new Promise((resolve, reject) => {
+            if (db) return resolve(db);
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => { db = request.result; resolve(db); };
+            request.onupgradeneeded = (event) => {
+              const database = event.target.result;
+              if (!database.objectStoreNames.contains('items')) {
+                const itemStore = database.createObjectStore('items', { keyPath: 'itemId' });
+                itemStore.createIndex('companyCode', 'companyCode', { unique: false });
+                itemStore.createIndex('officeCode', 'officeCode', { unique: false });
+              }
+            };
+          });
+        }
+
+        function isDemoMode() {
+          try {
+            const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+            console.log('[isDemoMode] currentUser:', currentUser);
+            console.log('[isDemoMode] companyCode:', currentUser?.companyCode);
+            const result = currentUser && currentUser.companyCode === 'TAMJ';
+            console.log('[isDemoMode] result:', result);
+            return result;
+          } catch (e) { 
+            console.log('[isDemoMode] error:', e);
+            return false; 
+          }
+        }
+
+        async function initDemoItems() {
+          if (!isDemoMode() || sessionStorage.getItem('demo.items')) return;
+          sessionStorage.setItem('demo.items', JSON.stringify([]));
+        }
+
+        async function getItems() {
+          const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+          if (!currentUser) return [];
+          if (isDemoMode()) {
+            return JSON.parse(sessionStorage.getItem('demo.items') || '[]');
+          }
+          // 本番モード: localStorageから取得（scope別フィルタ）
+          const allItems = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
+          if (currentUser.role === 'system_admin') return allItems;
+          if (currentUser.role === 'company_admin') return allItems.filter(i => i.companyCode === currentUser.companyCode);
+          return allItems.filter(i => i.officeCode === currentUser.officeCode);
+        }
+
+        // 商品ナンバー生成: 業者コード + yymm + 4桁連番
+        // 例: P001250200001
+        function generateItemNumber(assignedPartnerId) {
+          // 業者コードを取得
+          var partnerCode = '';
+          if (assignedPartnerId) {
+            var partners = [];
+            try { partners = JSON.parse(sessionStorage.getItem('partners') || '[]'); } catch(e) {}
+            try { var pl = JSON.parse(localStorage.getItem('partners') || '[]'); pl.forEach(function(p){ if(!partners.find(function(m){return m.id===p.id;})) partners.push(p); }); } catch(e) {}
+            var partner = partners.find(function(p) { return p.id === assignedPartnerId; });
+            if (partner && partner.partnerCode) partnerCode = partner.partnerCode;
+          }
+          if (!partnerCode) partnerCode = 'P000';
+
+          // yymm
+          var now = new Date();
+          var yy = String(now.getFullYear()).slice(-2);
+          var mm = String(now.getMonth() + 1).padStart(2, '0');
+          var prefix = partnerCode + yy + mm;
+
+          // 既存の同プレフィックス最大連番を取得
+          var maxSeq = 0;
+          allItems.forEach(function(item) {
+            if (item.itemId && item.itemId.startsWith(prefix)) {
+              var seqPart = item.itemId.substring(prefix.length);
+              var num = parseInt(seqPart, 10);
+              if (!isNaN(num) && num > maxSeq) maxSeq = num;
+            }
+          });
+
+          return prefix + String(maxSeq + 1).padStart(4, '0');
+        }
+
+        async function addItem(item) {
+          const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+          console.log('[addItem] currentUser:', currentUser);
+          console.log('[addItem] isDemoMode():', isDemoMode());
+          
+          if (!item.itemId) {
+            item.itemId = generateItemNumber(item.assignedPartnerId);
+          }
+          item.createdAt = item.createdAt || new Date().toISOString();
+          item.updatedAt = new Date().toISOString();
+          item.companyCode = item.companyCode || currentUser.companyCode;
+          item.officeCode = item.officeCode || currentUser.officeCode;
+          
+          if (isDemoMode()) {
+            console.log('[addItem] DEMOモードで保存');
+            const items = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
+            items.push(item);
+            sessionStorage.setItem('demo.items', JSON.stringify(items));
+            console.log('[addItem] 保存後のdemo.items:', sessionStorage.getItem('demo.items'));
+            return item;
+          }
+          console.log('[addItem] 通常モード（localStorageに保存）');
+          const items = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
+          items.push(item);
+          localStorage.setItem('onetouch.items', JSON.stringify(items));
+          return item;
+        }
+
+        async function updateItem(item) {
+          item.updatedAt = new Date().toISOString();
+          if (isDemoMode()) {
+            const items = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
+            const index = items.findIndex(i => i.itemId === item.itemId);
+            if (index !== -1) {
+              items[index] = item;
+              sessionStorage.setItem('demo.items', JSON.stringify(items));
+            }
+            return item;
+          }
+          // 本番モード
+          const items = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
+          const index = items.findIndex(i => i.itemId === item.itemId);
+          if (index !== -1) {
+            items[index] = item;
+            localStorage.setItem('onetouch.items', JSON.stringify(items));
+          }
+          return item;
+        }
+
+        async function deleteItem(itemId) {
+          if (isDemoMode()) {
+            const items = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
+            const filtered = items.filter(i => i.itemId !== itemId);
+            sessionStorage.setItem('demo.items', JSON.stringify(filtered));
+            return true;
+          }
+          // 本番モード
+          const items = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
+          const filtered = items.filter(i => i.itemId !== itemId);
+          localStorage.setItem('onetouch.items', JSON.stringify(filtered));
+          return true;
+        }
+
+        window.ItemStorage = { isDemoMode, initDemoItems, getItems, addItem, updateItem, deleteItem };
+
+        // ログインチェック
+        const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = 'login.html';
+        }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        /* 統一ヘッダー */
+        .unified-header {
+            background: white;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .header-center {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .demo-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .back-btn:hover {
+            background: #f5f5f5;
+            color: #1a1a1a;
+        }
+
+        .header-icon {
+            font-size: 24px;
+            line-height: 1;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-info-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            background: none;
+            border: none;
+        }
+
+        .user-info-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #1a1a1a;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .user-name {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+        }
+
+
+        /* ドロップダウンメニュー */
+        .dropdown-menu {
+            position: absolute;
+            top: 60px;
+            right: 24px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 220px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #333;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .menu-item:hover {
+            background: #f5f5f5;
+        }
+
+        .menu-item:first-child {
+            border-radius: 8px 8px 0 0;
+        }
+
+        .menu-item:last-child {
+            border-radius: 0 0 8px 8px;
+        }
+
+        .menu-item.user-info-detail {
+            cursor: default;
+            background: #fafafa;
+        }
+
+        .menu-item.user-info-detail:hover {
+            background: #fafafa;
+        }
+
+        .menu-icon {
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .menu-text {
+            flex: 1;
+        }
+
+        .menu-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .menu-detail {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: #e0e0e0;
+            margin: 4px 0;
+        }
+
+        .menu-item.logout {
+            color: #d32f2f;
+        }
+
+        .menu-item.logout:hover {
+            background: #ffebee;
+        }
+
+        /* 検索・フィルターエリア */
+        .header {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 16px 24px;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #1a1a1a;
+        }
+
+        h1 {
+            font-size: 20px;
+            color: #333;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: white;
+            border: 1px solid #e0e0e0;
+            color: #333;
+        }
+
+        .btn-primary:hover {
+            background: #f5f5f5;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-secondary {
+            background: white;
+            border: 1px solid #e0e0e0;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #f5f5f5;
+        }
+
+        .btn-save {
+            background: #1a1a1a;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #333;
+        }
+
+        .filters {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .filter-label {
+            font-size: 14px;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #1a1a1a;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .stats {
+            background: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .stat-item {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-left: 8px;
+        }
+
+        .items-grid {
+            /* テーブル表示 */
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .items-table thead th {
+            background: #f8f9fa;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 2px solid #e0e0e0;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+        }
+
+        .items-table tbody tr {
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.15s;
+        }
+
+        .items-table tbody tr:hover {
+            background: #fafafa;
+        }
+
+        .items-table td {
+            padding: 10px 12px;
+            color: #333;
+            vertical-align: middle;
+        }
+
+        .items-table .col-name {
+            font-weight: 600;
+            max-width: 180px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .items-table .col-price {
+            font-weight: 600;
+            color: #1a1a1a;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .items-table .col-actions {
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        .items-table .col-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            padding: 4px 6px;
+            border-radius: 4px;
+            transition: background 0.15s;
+        }
+
+        .items-table .col-actions button:hover {
+            background: #f0f0f0;
+        }
+
+        .badge-partner {
+            display: inline-block;
+            padding: 2px 6px;
+            background: #e3f2fd;
+            color: #1565c0;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            max-width: 140px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .badge-category {
+            display: inline-block;
+            padding: 2px 6px;
+            background: #f3e5f5;
+            color: #7b1fa2;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        /* モーダル */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+
+        .close-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .form-label.required::after {
+            content: " *";
+            color: #e53935;
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #1a1a1a;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .unified-header {
+                padding: 12px 16px;
+            }
+            
+            .header-title {
+                font-size: 16px;
+            }
+            
+            .user-name {
+                display: none; /* モバイルではアバターのみ */
+            }
+            
+            .header-icon {
+                font-size: 20px;
+            }
+            
+            .dropdown-menu {
+                right: 16px;
+            }
+            
+            .header {
+                padding: 12px 16px;
+            }
+
+            .container {
+                padding: 16px;
+            }
+
+            .items-grid {
+                /* テーブルはoverflow-xでスクロール対応 */
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+        }
+        
+        /* ページネーション */
+        .pagination-btn {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            color: #333;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .pagination-btn:hover:not(:disabled) {
+            background: #f5f5f5;
+            border-color: #1a1a1a;
+        }
+        
+        .pagination-btn.active {
+            background: #1a1a1a;
+            color: white;
+            border-color: #1a1a1a;
+            font-weight: 600;
+        }
+        
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+    <meta name="theme-color" content="#1a1a1a">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon-192.png">
+</head>
+<body>
+    <!-- 統一ヘッダー -->
+    <div class="unified-header">
+        <div class="header-left">
+            <button class="back-btn" onclick="goBack()">← 戻る</button>
+            <span class="header-icon">📦</span>
+            <h1 class="header-title">商品マスタ</h1>
+        </div>
+        <div class="header-center" id="demoModeBadge" style="display: none;">
+            <span class="demo-badge">🔥 DEMOモード</span>
+        </div>
+        <div class="header-right">
+            <button class="user-info-btn" onclick="toggleUserMenu()">
+                <div class="user-avatar" id="userAvatar">-</div>
+                <span class="user-name" id="userName">ユーザー</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ドロップダウンメニュー -->
+    <div class="dropdown-menu" id="dropdownMenu">
+        <div class="menu-item user-info-detail">
+            <div class="menu-icon">👤</div>
+            <div class="menu-text">
+                <div class="menu-name" id="menuUserName">ユーザー</div>
+                <div class="menu-detail" id="menuUserDetail">-</div>
+            </div>
+        </div>
+        <div class="menu-divider"></div>
+        <a href="#" onclick="openPasswordChangeModal(); return false;" class="menu-item">
+            <div class="menu-icon">🔑</div>
+            <span class="menu-text">パスワード変更</span>
+        </a>
+        <div class="menu-divider"></div>
+        <a href="#" onclick="logout(); return false;" class="menu-item logout">
+            <div class="menu-icon">🚪</div>
+            <span class="menu-text">ログアウト</span>
+        </a>
+    </div>
+
+    <!-- 検索・フィルターエリア -->
+    <div class="header">
+        <div class="search-bar">
+            <input type="text" class="search-input" id="searchInput" placeholder="商品名・型番・メーカーで検索" onkeypress="if(event.key==='Enter') applyFilters()">
+            <button class="btn btn-primary" onclick="applyFilters()">検索</button>
+            <button class="btn btn-secondary" onclick="clearSearch()" style="margin-left: 4px;">クリア</button>
+        </div>
+
+        <div class="filters">
+            <span class="filter-label">担当業者:</span>
+            <select class="filter-select" id="partnerFilter" onchange="applyFilters()">
+                <option value="">全て</option>
+            </select>
+            
+            <div style="margin-left: auto; display: flex; gap: 8px;">
+                <button class="btn btn-secondary" onclick="openImport()">インポート</button>
+                <button class="btn btn-secondary" onclick="exportItems()">エクスポート</button>
+                <button class="btn btn-primary" onclick="openCreateModal()">新規登録</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 検索前のガイド表示 -->
+        <div id="searchGuide" style="text-align: center; padding: 60px 20px; color: #999;">
+            <div style="margin-bottom: 16px; color: #ccc;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+            <div style="font-size: 16px; font-weight: 600; color: #666; margin-bottom: 8px;">検索条件を入力してください</div>
+            <div style="font-size: 13px;">商品名・型番・メーカーで検索、または担当業者・メーカーで絞り込みできます</div>
+            <button class="btn btn-primary" onclick="showAllItems()" style="margin-top: 20px; padding: 10px 24px;">全件表示</button>
+        </div>
+
+        <!-- 検索結果エリア（初期非表示） -->
+        <div id="resultsSection" style="display: none;">
+            <div class="stats">
+                <div class="stat-item">
+                    全<span class="stat-value" id="totalCount">0</span>件
+                </div>
+                <div class="stat-item">
+                    表示中<span class="stat-value" id="displayCount">0</span>件
+                </div>
+            </div>
+
+            <div class="items-grid" id="itemsGrid"></div>
+            
+            <!-- ページネーション -->
+            <div id="pagination" style="display: none; justify-content: center; align-items: center; gap: 8px; margin-top: 24px; padding: 20px;"></div>
+        </div>
+    </div>
+
+    <!-- 新規登録/編集モーダル -->
+    <div class="modal" id="itemModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">新規商品登録</h2>
+                <button class="close-btn" onclick="closeModal()">×</button>
+            </div>
+
+            <form id="itemForm" onsubmit="saveItem(event)">
+                <!-- 業者ログイン時のみ表示: 納品先会社選択 -->
+                <div class="form-group" id="contractorCompanyGroup" style="display: none;">
+                    <label class="form-label required">納品先会社</label>
+                    <select class="form-input" id="itemDeliveryCompany">
+                        <option value="">選択してください</option>
+                    </select>
+                    <div style="font-size: 12px; color: #666; margin-top: 4px;">
+                        ※ この商品を納品する会社を選択してください
+                    </div>
+                </div>
+                
+                <div class="form-group" id="itemNumberGroup" style="display: none;">
+                    <label class="form-label">商品No.</label>
+                    <input type="text" class="form-input" id="itemNumberDisplay" readonly style="background: #f5f5f5; color: #666; font-family: monospace;">
+                    <div style="font-size: 12px; color: #888; margin-top: 4px;">保存時に自動採番されます</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">商品名</label>
+                    <input type="text" class="form-input" id="itemName" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">担当業者</label>
+                    <select class="form-input" id="itemAssignedPartner" required>
+                        <option value="">選択してください</option>
+                    </select>
+                    <div style="font-size: 12px; color: #888; margin-top: 4px;">
+                        ※ トラブル時、この業者に自動で通知されます
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">メーカー</label>
+                        <input type="text" class="form-input" id="itemMaker">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">型番</label>
+                        <input type="text" class="form-input" id="itemModel">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">単価（円）</label>
+                        <input type="number" class="form-input" id="itemPrice" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">在庫数</label>
+                        <input type="number" class="form-input" id="itemStock" value="0">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">単位</label>
+                        <input type="text" class="form-input" id="itemUnit" value="個">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">カテゴリー（任意）</label>
+                        <select class="form-input" id="itemCategory">
+                            <option value="">未設定</option>
+                            <option value="空調">空調</option>
+                            <option value="給湯">給湯</option>
+                            <option value="電気">電気</option>
+                            <option value="水道">水道</option>
+                            <option value="ガス">ガス</option>
+                            <option value="設備">設備</option>
+                            <option value="その他">その他</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">備考</label>
+                    <textarea class="form-textarea" id="itemDescription"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">終了日</label>
+                    <input type="date" class="form-input" id="itemEndDate">
+                </div>
+
+                <input type="hidden" id="itemId">
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">キャンセル</button>
+                    <button type="submit" class="btn btn-save">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let allItems = [];
+        let filteredItems = [];
+        let currentEditId = null;
+        let currentPage = 1;
+        const itemsPerPage = 50;
+
+        // 初期化
+        async function init() {
+            await ItemStorage.initDemoItems();
+            await loadItems();
+            initUserInfo();
+        }
+
+        // ユーザー情報表示
+        function initUserInfo() {
+            const userName = currentUser.userName || currentUser.name || currentUser.userId || 'ユーザー';
+            const officeName = currentUser.officeName || '';
+            
+            // ヘッダーのユーザー名
+            document.getElementById('userName').textContent = userName;
+            
+            // アバター（名前の最初の1文字）
+            document.getElementById('userAvatar').textContent = userName.charAt(0);
+            
+            // メニュー内のユーザー情報
+            document.getElementById('menuUserName').textContent = userName;
+            document.getElementById('menuUserDetail').textContent = officeName || currentUser.companyName || '-';
+        }
+        
+        // ユーザーメニューのトグル
+        function toggleUserMenu() {
+            const menu = document.getElementById('dropdownMenu');
+            menu.classList.toggle('show');
+        }
+        
+        // メニュー外をクリックしたら閉じる
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('dropdownMenu');
+            const userBtn = document.querySelector('.user-info-btn');
+            
+            if (!menu.contains(event.target) && !userBtn.contains(event.target)) {
+                menu.classList.remove('show');
+            }
+        });
+
+        // 業者一覧を読み込む
+        function loadPartners() {
+            console.log('[loadPartners] 開始');
+            
+            try {
+                // 業者ログインの場合
+                if (currentUser.role === 'contractor') {
+                    console.log('[loadPartners] 業者ログイン: 自社のみ表示');
+                    const currentContractor = JSON.parse(sessionStorage.getItem('currentContractor'));
+                    
+                    if (!currentContractor) {
+                        console.error('[loadPartners] 業者情報が見つかりません');
+                        return;
+                    }
+                    
+                    const select = document.getElementById('itemAssignedPartner');
+                    select.innerHTML = `<option value="${currentContractor.id}" data-partner-name="${currentContractor.name}" selected>${currentContractor.name}</option>`;
+                    select.disabled = true; // 業者は変更できない
+                    
+                    console.log('[loadPartners] 業者モード完了:', currentContractor.name);
+                    return;
+                }
+                
+                let partners = [];
+                try { partners = JSON.parse(sessionStorage.getItem('partners') || '[]'); } catch(e) {}
+                let partnersLocal = [];
+                try { partnersLocal = JSON.parse(localStorage.getItem('partners') || '[]'); } catch(e) {}
+                partnersLocal.forEach(p => { if (!partners.find(m => m.id === p.id)) partners.push(p); });
+                
+                // DEMOモードで業者データが空の場合、デフォルトデータを使用
+                if (partners.length === 0 && currentUser.companyCode === 'TAMJ') {
+                    console.log('[loadPartners] DEMOモード: デフォルト業者データを使用');
+                    partners = [
+                        {
+                            id: 'PARTNER-001',
+                            name: '東京設備工業株式会社',
+                            partnerCode: 'P001',
+                            categories: ['空調', '給湯', '電気'],
+                            assignedCompanies: ['TAMJ'],
+                            status: 'active'
+                        },
+                        {
+                            id: 'PARTNER-002',
+                            name: '関東水道サービス',
+                            partnerCode: 'P002',
+                            categories: ['水道', '給湯', '排水'],
+                            assignedCompanies: ['TAMJ'],
+                            status: 'active'
+                        },
+                        {
+                            id: 'PARTNER-003',
+                            name: '日本電気工事',
+                            partnerCode: 'P003',
+                            categories: ['電気', '照明', '設備'],
+                            assignedCompanies: ['TAMJ'],
+                            status: 'active'
+                        }
+                    ];
+                }
+                
+                console.log('[loadPartners] partners総数:', partners.length);
+                
+                // 現在の会社に紐付いている業者のみフィルター
+                const filteredPartners = partners.filter(p => {
+                    const companies = p.assignedCompanies || [];
+                    const isAssigned = Array.isArray(companies) && companies.includes(currentUser.companyCode);
+                    const sameCompany = p.companyCode === currentUser.companyCode;
+                    const isActive = p.status !== 'inactive';
+                    return (isAssigned || sameCompany) && isActive;
+                });
+                
+                console.log('[loadPartners] フィルタ後の業者数:', filteredPartners.length);
+                
+                // セレクトボックスに追加
+                const select = document.getElementById('itemAssignedPartner');
+                select.innerHTML = '<option value="">選択してください</option>';
+                
+                filteredPartners.forEach(partner => {
+                    const option = document.createElement('option');
+                    option.value = partner.id;
+                    option.textContent = partner.name;
+                    option.dataset.partnerName = partner.name;
+                    select.appendChild(option);
+                });
+                
+                console.log('[loadPartners] 完了');
+            } catch (e) {
+                console.error('[loadPartners] エラー:', e);
+            }
+        }
+
+        // 商品読み込み
+        async function loadItems(showResults = false) {
+            console.log('[loadItems] 開始, showResults:', showResults);
+            console.log('[loadItems] isDemoMode:', ItemStorage.isDemoMode());
+            console.log('[loadItems] sessionStorage demo.items:', sessionStorage.getItem('demo.items'));
+            
+            try {
+                allItems = await ItemStorage.getItems();
+                console.log('[loadItems] 取得した商品数:', allItems.length);
+                console.log('[loadItems] 商品リスト:', allItems);
+                
+                // DEMOモード（TAMJ）で商品が0件の場合、ダミー商品を自動生成
+                if (allItems.length === 0 && currentUser?.companyCode === 'TAMJ') {
+                    console.log('[loadItems] DEMOモード: ダミー商品を自動生成');
+                    const demoItems = [
+                        {
+                            itemId: 'P00125020001',
+                            companyCode: 'TAMJ',
+                            officeCode: 'TAMJ-J0001',
+                            name: 'エアコン 1号機',
+                            maker: 'ダイキン',
+                            model: 'AN22XRS-W',
+                            category: '空調',
+                            assignedPartnerId: 'PARTNER-001',
+                            assignedPartnerName: '東京設備工業株式会社',
+                            unit: '台',
+                            price: 150000,
+                            stock: 1,
+                            description: '2F 会議室に設置',
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString()
+                        },
+                        {
+                            itemId: 'P00125020002',
+                            companyCode: 'TAMJ',
+                            officeCode: 'TAMJ-J0001',
+                            name: '給湯器 A',
+                            maker: 'リンナイ',
+                            model: 'RUX-A1615W-E',
+                            category: '給湯',
+                            assignedPartnerId: 'PARTNER-001',
+                            assignedPartnerName: '東京設備工業株式会社',
+                            unit: '台',
+                            price: 80000,
+                            stock: 1,
+                            description: '1F 給湯室',
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString()
+                        },
+                        {
+                            itemId: 'P00325020001',
+                            companyCode: 'TAMJ',
+                            officeCode: 'TAMJ-J0001',
+                            name: '照明器具 LED-01',
+                            maker: 'パナソニック',
+                            model: 'LGB51210',
+                            category: '電気',
+                            assignedPartnerId: 'PARTNER-003',
+                            assignedPartnerName: '日本電気工事',
+                            unit: '個',
+                            price: 12000,
+                            stock: 10,
+                            description: '各フロア共通',
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString()
+                        },
+                        {
+                            itemId: 'P00225020001',
+                            companyCode: 'TAMJ',
+                            officeCode: 'TAMJ-J0001',
+                            name: 'トイレ 1F',
+                            maker: 'TOTO',
+                            model: 'CES9788F',
+                            category: '水道',
+                            assignedPartnerId: 'PARTNER-002',
+                            assignedPartnerName: '関東水道サービス',
+                            unit: '台',
+                            price: 180000,
+                            stock: 1,
+                            description: '1F 男子トイレ',
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString()
+                        },
+                        {
+                            itemId: 'P00125020003',
+                            companyCode: 'TAMJ',
+                            officeCode: 'TAMJ-J0001',
+                            name: 'エレベーター',
+                            maker: '三菱電機',
+                            model: 'NEXIEZ-MR',
+                            category: '設備',
+                            assignedPartnerId: 'PARTNER-003',
+                            assignedPartnerName: '日本電気工事',
+                            unit: '台',
+                            price: 5000000,
+                            stock: 1,
+                            description: '1F-5F',
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString()
+                        }
+                    ];
+                    
+                    // sessionStorageに保存
+                    const storageKey = isDemoMode() ? 'demo.items' : 'items';
+                    const storage = isDemoMode() ? sessionStorage : localStorage;
+                    storage.setItem(storageKey, JSON.stringify(demoItems));
+                    
+                    allItems = demoItems;
+                    console.log('[loadItems] ダミー商品を生成・保存しました:', allItems.length);
+                }
+                
+                allItems.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                
+                console.log('[loadItems] updateFilters呼び出し');
+                updateFilters();
+                if (showResults) {
+                    console.log('[loadItems] applyFilters呼び出し（結果表示）');
+                    applyFilters();
+                }
+                console.log('[loadItems] 完了');
+            } catch (e) {
+                console.error('商品読み込みエラー:', e);
+                alert('商品の読み込みに失敗しました');
+            }
+        }
+
+        // フィルター更新
+        function updateFilters() {
+            // 担当業者
+            const partners = [...new Set(allItems.map(item => item.assignedPartnerName).filter(Boolean))];
+            const partnerFilter = document.getElementById('partnerFilter');
+            partnerFilter.innerHTML = '<option value="">全て</option>' + 
+                partners.map(p => `<option value="${p}">${p}</option>`).join('');
+        }
+
+        // フィルター適用
+        function applyFilters() {
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            const partnerFilter = document.getElementById('partnerFilter').value;
+
+            filteredItems = allItems.filter(item => {
+                // 業者ログインの場合: 自社が担当している商品のみ表示
+                if (currentUser.role === 'contractor') {
+                    const currentContractor = JSON.parse(sessionStorage.getItem('currentContractor'));
+                    if (currentContractor && item.assignedPartnerId !== currentContractor.id) {
+                        return false;
+                    }
+                }
+                
+                // 検索
+                const matchSearch = !searchQuery || 
+                    (item.name && item.name.toLowerCase().includes(searchQuery)) ||
+                    (item.model && item.model.toLowerCase().includes(searchQuery)) ||
+                    (item.maker && item.maker.toLowerCase().includes(searchQuery));
+
+                // 担当業者
+                const matchPartner = !partnerFilter || item.assignedPartnerName === partnerFilter;
+
+                return matchSearch && matchPartner;
+            });
+
+            // 検索・フィルタ時はページを1に戻す
+            currentPage = 1;
+            // 検索結果エリアを表示、ガイドを非表示
+            document.getElementById('resultsSection').style.display = 'block';
+            document.getElementById('searchGuide').style.display = 'none';
+            renderItems();
+        }
+
+        // 全件表示
+        function showAllItems() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('partnerFilter').value = '';
+            
+            applyFilters();
+        }
+
+        // 検索条件クリア（初期状態に戻す）
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('partnerFilter').value = '';
+            
+            document.getElementById('resultsSection').style.display = 'none';
+            document.getElementById('searchGuide').style.display = 'block';
+        }
+
+        // 商品表示
+        function renderItems() {
+            const grid = document.getElementById('itemsGrid');
+            const totalCount = document.getElementById('totalCount');
+            const displayCount = document.getElementById('displayCount');
+
+            totalCount.textContent = allItems.length;
+            displayCount.textContent = filteredItems.length;
+
+            if (filteredItems.length === 0) {
+                grid.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">商品がありません</div>';
+                document.getElementById('pagination').style.display = 'none';
+                return;
+            }
+
+            // ページネーション計算
+            const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageItems = filteredItems.slice(startIndex, endIndex);
+
+            console.log(`[renderItems] ページ ${currentPage}/${totalPages}, 表示: ${startIndex}-${endIndex} / 全${filteredItems.length}件`);
+
+            grid.innerHTML = `
+            <div class="table-container">
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th>商品No.</th>
+                            <th>商品名</th>
+                            <th>メーカー</th>
+                            <th>型番</th>
+                            <th>担当業者</th>
+                            <th>在庫</th>
+                            <th>単価</th>
+                            <th>編集</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${pageItems.map(item => `
+                        <tr style="${item.endDate ? 'background: #f0f0f0; color: #aaa;' : ''}">
+                            <td style="font-family: monospace; font-size: 12px; color: ${item.endDate ? '#ccc' : '#888'};">${item.itemId || '-'}</td>
+                            <td class="col-name" title="${item.name || ''}">${item.name || '-'}${item.endDate ? ' <span style="font-size:11px;color:#bbb;">（終了）</span>' : ''}</td>
+                            <td>${item.maker || '-'}</td>
+                            <td>${item.model || '-'}</td>
+                            <td>${item.assignedPartnerName ? `<span class="badge-partner" title="${item.assignedPartnerName}" style="${item.endDate ? 'opacity:0.5;' : ''}">${item.assignedPartnerName}</span>` : '-'}</td>
+                            <td>${item.stock || 0} ${item.unit || '個'}</td>
+                            <td class="col-price">¥${(item.price || 0).toLocaleString()}</td>
+                            <td class="col-actions">
+                                <button onclick="editItem('${item.itemId}')" title="編集">編集</button>
+                            </td>
+                        </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>`;
+            
+            // ページネーション表示を更新
+            renderPagination(totalPages);
+        }
+        
+        // ページネーション表示
+        function renderPagination(totalPages) {
+            const pagination = document.getElementById('pagination');
+            
+            if (totalPages <= 1) {
+                pagination.style.display = 'none';
+                return;
+            }
+            
+            pagination.style.display = 'flex';
+            
+            let html = '';
+            
+            // 前へボタン
+            html += `<button class="pagination-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(${currentPage - 1})">← 前へ</button>`;
+            
+            // ページ番号
+            html += '<div style="display: flex; gap: 4px;">';
+            
+            // 最初のページ
+            if (currentPage > 3) {
+                html += `<button class="pagination-btn" onclick="changePage(1)">1</button>`;
+                if (currentPage > 4) {
+                    html += '<span style="padding: 8px;">...</span>';
+                }
+            }
+            
+            // 現在のページ周辺
+            for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+                html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+            }
+            
+            // 最後のページ
+            if (currentPage < totalPages - 2) {
+                if (currentPage < totalPages - 3) {
+                    html += '<span style="padding: 8px;">...</span>';
+                }
+                html += `<button class="pagination-btn" onclick="changePage(${totalPages})">${totalPages}</button>`;
+            }
+            
+            html += '</div>';
+            
+            // 次へボタン
+            html += `<button class="pagination-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage(${currentPage + 1})">次へ →</button>`;
+            
+            pagination.innerHTML = html;
+        }
+        
+        // ページ変更
+        function changePage(page) {
+            currentPage = page;
+            renderItems();
+            // ページトップにスクロール
+            document.querySelector('.header').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 日付フォーマット
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        // 検索
+        // モーダル開く（新規）
+        function openCreateModal() {
+            currentEditId = null;
+            document.getElementById('modalTitle').textContent = '新規商品登録';
+            document.getElementById('itemForm').reset();
+            document.getElementById('itemId').value = '';
+            document.getElementById('itemNumberGroup').style.display = 'none';
+            loadPartners(); // 業者一覧を読み込む
+            
+            // 業者ログインの場合、納品先会社を選択
+            if (currentUser.role === 'contractor') {
+                const currentContractor = JSON.parse(sessionStorage.getItem('currentContractor'));
+                const companyGroup = document.getElementById('contractorCompanyGroup');
+                companyGroup.style.display = 'block';
+                
+                // 契約会社一覧を表示
+                const select = document.getElementById('itemDeliveryCompany');
+                select.innerHTML = '<option value="">選択してください</option>';
+                
+                if (currentContractor && currentContractor.assignedCompanies) {
+                    // 会社マスタを取得
+                    let companies = [];
+                    try { companies = JSON.parse(sessionStorage.getItem('companies') || '[]'); } catch(e) {}
+                    try { var cl = JSON.parse(localStorage.getItem('companies') || '[]'); cl.forEach(function(c){ if(!companies.find(function(m){return m.companyCode===c.companyCode;})) companies.push(c); }); } catch(e) {}
+                    
+                    currentContractor.assignedCompanies.forEach(companyCode => {
+                        const company = companies.find(c => c.companyCode === companyCode);
+                        const companyName = company ? company.companyName : companyCode;
+                        
+                        const option = document.createElement('option');
+                        option.value = companyCode;
+                        option.textContent = companyName;
+                        select.appendChild(option);
+                    });
+                    
+                    // 1社のみなら自動選択
+                    if (currentContractor.assignedCompanies.length === 1) {
+                        select.value = currentContractor.assignedCompanies[0];
+                    }
+                }
+            } else {
+                document.getElementById('contractorCompanyGroup').style.display = 'none';
+            }
+            
+            document.getElementById('itemModal').classList.add('show');
+        }
+
+        // モーダル開く（編集）
+        function editItem(itemId) {
+            const item = allItems.find(i => i.itemId === itemId);
+            if (!item) return;
+
+            loadPartners(); // 業者一覧を読み込む
+            
+            currentEditId = itemId;
+            document.getElementById('modalTitle').textContent = '商品編集';
+            document.getElementById('itemId').value = item.itemId;
+            document.getElementById('itemNumberGroup').style.display = 'block';
+            document.getElementById('itemNumberDisplay').value = item.itemId || '';
+            document.getElementById('itemName').value = item.name || '';
+            document.getElementById('itemMaker').value = item.maker || '';
+            document.getElementById('itemModel').value = item.model || '';
+            document.getElementById('itemCategory').value = item.category || '';
+            document.getElementById('itemAssignedPartner').value = item.assignedPartnerId || '';
+            document.getElementById('itemUnit').value = item.unit || '個';
+            document.getElementById('itemPrice').value = item.price || 0;
+            document.getElementById('itemStock').value = item.stock || 0;
+            document.getElementById('itemDescription').value = item.description || '';
+            document.getElementById('itemEndDate').value = item.endDate || '';
+
+            document.getElementById('itemModal').classList.add('show');
+        }
+
+        // モーダル閉じる
+        function closeModal() {
+            document.getElementById('itemModal').classList.remove('show');
+        }
+
+        // 保存
+        // 監査ログ記録
+        function logItemEvent(type, detail) {
+            try {
+                var logs = JSON.parse(demoGetFromLocalStorage('audit.logs') || '[]');
+                logs.push({
+                    timestamp: new Date().toISOString(),
+                    type: type,
+                    screen: 'items',
+                    user: currentUser?.name || '',
+                    userId: currentUser?.userId || currentUser?.id || '',
+                    companyCode: currentUser?.companyCode || '',
+                    details: typeof detail === 'string' ? detail : JSON.stringify(detail)
+                });
+                demoSaveToLocalStorage('audit.logs', JSON.stringify(logs));
+            } catch(e) { console.error('監査ログエラー:', e); }
+        }
+
+        async function saveItem(e) {
+            e.preventDefault();
+            console.log('[saveItem] 開始');
+
+            // currentUserを取得（スコープ問題対策）
+            const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+            console.log('[saveItem] currentUser:', currentUser);
+            
+            if (!currentUser) {
+                alert('エラー: ログイン情報が見つかりません');
+                return;
+            }
+
+            const partnerSelect = document.getElementById('itemAssignedPartner');
+            const selectedOption = partnerSelect.options[partnerSelect.selectedIndex];
+            
+            // 業者ログイン時は納品先会社を使用
+            let companyCode = currentUser.companyCode;
+            let officeCode = currentUser.officeCode;
+            
+            if (currentUser.role === 'contractor') {
+                const deliveryCompany = document.getElementById('itemDeliveryCompany').value;
+                if (!deliveryCompany) {
+                    alert('納品先会社を選択してください');
+                    return;
+                }
+                companyCode = deliveryCompany;
+                // 業者が登録する場合、事業所は未設定
+                officeCode = '';
+            }
+            
+            const item = {
+                itemId: document.getElementById('itemId').value || null,
+                companyCode: companyCode,
+                officeCode: officeCode,
+                name: document.getElementById('itemName').value,
+                maker: document.getElementById('itemMaker').value,
+                model: document.getElementById('itemModel').value,
+                category: document.getElementById('itemCategory').value,
+                assignedPartnerId: partnerSelect.value,
+                assignedPartnerName: selectedOption.dataset.partnerName || selectedOption.textContent || '',
+                unit: document.getElementById('itemUnit').value,
+                price: parseFloat(document.getElementById('itemPrice').value) || 0,
+                stock: parseFloat(document.getElementById('itemStock').value) || 0,
+                description: document.getElementById('itemDescription').value,
+                endDate: document.getElementById('itemEndDate').value
+            };
+            
+            console.log('[saveItem] item:', item);
+
+            try {
+                if (currentEditId) {
+                    // 更新時: 業者変更履歴を記録
+                    const oldItem = allItems.find(i => i.itemId === currentEditId);
+                    
+                    if (oldItem && oldItem.assignedPartnerId !== item.assignedPartnerId) {
+                        console.log('[saveItem] 業者変更を検出');
+                        
+                        // 業者変更履歴を初期化（存在しない場合）
+                        if (!item.partnerHistory) {
+                            item.partnerHistory = oldItem.partnerHistory || [];
+                        }
+                        
+                        // 変更履歴を追加
+                        item.partnerHistory.push({
+                            changedAt: new Date().toISOString(),
+                            changedBy: currentUser.userId || currentUser.id,
+                            changedByName: currentUser.userName || currentUser.name,
+                            oldPartnerId: oldItem.assignedPartnerId,
+                            oldPartnerName: oldItem.assignedPartnerName,
+                            newPartnerId: item.assignedPartnerId,
+                            newPartnerName: item.assignedPartnerName
+                        });
+                        
+                        console.log('[saveItem] 業者変更履歴を追加:', item.partnerHistory);
+                    } else {
+                        // 業者変更がない場合は既存の履歴を保持
+                        item.partnerHistory = oldItem?.partnerHistory || [];
+                    }
+                    
+                    // 更新者情報を追加
+                    item.updatedBy = currentUser.userId || currentUser.id;
+                    item.updatedByRole = currentUser.role;
+                    item.updatedAt = new Date().toISOString();
+                    
+                    console.log('[saveItem] 更新モード');
+                    await ItemStorage.updateItem(item);
+                    logItemEvent('update_item', { itemId: item.itemId, itemName: item.name });
+                    alert('商品を更新しました');
+                } else {
+                    // 新規登録: 登録者情報を追加
+                    item.createdBy = currentUser.userId || currentUser.id;
+                    item.createdByRole = currentUser.role;
+                    item.createdAt = new Date().toISOString();
+                    item.updatedAt = new Date().toISOString();
+                    item.partnerHistory = []; // 履歴を初期化
+                    
+                    console.log('[saveItem] 新規登録モード');
+                    await ItemStorage.addItem(item);
+                    logItemEvent('add_item', { itemId: item.itemId, itemName: item.name });
+                    console.log('[saveItem] addItem完了');
+                    alert('商品を登録しました');
+                }
+
+                console.log('[saveItem] closeModal呼び出し');
+                closeModal();
+                console.log('[saveItem] loadItems呼び出し');
+                await loadItems(true);
+                console.log('[saveItem] 完了');
+            } catch (e) {
+                console.error('[saveItem] エラー:', e);
+                alert('エラーが発生しました:\n\n' + e.message + '\n\n' + e.stack);
+            }
+        }
+
+        // 削除
+        // エクスポート
+        function exportItems() {
+            if (ItemStorage.isDemoMode()) {
+                alert('DEMOモードではエクスポートできません');
+                return;
+            }
+
+            const csv = [
+                ['商品No.', '商品名', '担当業者', 'メーカー', '型番', 'カテゴリー', '単価', '在庫', '単位', '備考', '終了日', '登録日', '更新日'].join(','),
+                ...allItems.map(item => [
+                    item.itemId || '',
+                    item.name || '',
+                    item.assignedPartnerName || '',
+                    item.maker || '',
+                    item.model || '',
+                    item.category || '',
+                    item.price || 0,
+                    item.stock || 0,
+                    item.unit || '個',
+                    item.description || '',
+                    item.endDate || '',
+                    formatDate(item.createdAt),
+                    formatDate(item.updatedAt)
+                ].join(','))
+            ].join('\n');
+
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `items-${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        // インポート
+        function openImport() {
+            window.location.href = 'import.html';
+        }
+
+        // 戻る
+        // 戻る（ロールに応じたホームに遷移）
+        function goBack() {
+            try {
+                const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+                
+                if (!currentUser || !currentUser.role) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                // ロール別のホーム画面
+                const homePages = {
+                    'system_admin': 'system-admin.html',
+                    'company_admin': 'master-top.html',
+                    'office_admin': 'master-top.html',
+                    'staff': 'report.html',
+                    'contractor': 'contractor-dashboard.html'
+                };
+
+                const homePage = homePages[currentUser.role] || 'master-top.html';
+                window.location.href = homePage;
+            } catch (e) {
+                console.error('goBack error:', e);
+                window.location.href = 'master-top.html';
+            }
+        }
+
+        // ログアウト
+        function logout() {
+            if (confirm('ログアウトしますか？')) {
+                sessionStorage.clear();
+                localStorage.removeItem('currentUser');
+                window.location.href = 'login.html';
+            }
+        }
+        
+        // 初回ログインバナー表示
+        function showFirstLoginBanner() {
+            if (currentUser && currentUser.isFirstLogin && !sessionStorage.getItem('firstLoginBannerDismissed')) {
+                document.getElementById('firstLoginBanner').style.display = 'block';
+            }
+        }
+        
+        // 初回ログインバナーを閉じる
+        function dismissFirstLoginBanner() {
+            document.getElementById('firstLoginBanner').style.display = 'none';
+            sessionStorage.setItem('firstLoginBannerDismissed', 'true');
+        }
+        
+        // バナーからパスワード変更モーダルを開く
+        function openPasswordChangeFromBanner() {
+            dismissFirstLoginBanner();
+            openPasswordChangeModal();
+        }
+        
+        // 初期化実行
+        init();
+        
+        // DEMOモード表示
+        if (currentUser && currentUser.companyCode === 'TAMJ') {
+            document.getElementById('demoModeBadge').style.display = 'block';
+        }
+        
+        // 初回ログインバナー表示
+        showFirstLoginBanner();
+        
+        // パスワード変更モーダル
+        function openPasswordChangeModal() {
+            document.getElementById('passwordChangeModal').style.display = 'flex';
+            document.getElementById('dropdownMenu').classList.remove('show');
+        }
+        
+        function closePasswordChangeModal() {
+            document.getElementById('passwordChangeModal').style.display = 'none';
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+        }
+        
+        function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                alert('すべての項目を入力してください。');
+                return;
+            }
+            
+            // 新しいパスワードの確認
+            if (newPassword !== confirmPassword) {
+                alert('新しいパスワードが一致しません。');
+                return;
+            }
+            
+            // パスワードの長さチェック
+            if (newPassword.length < 6) {
+                alert('パスワードは6文字以上で設定してください。');
+                return;
+            }
+            
+            // 現在のパスワード確認
+            if (currentUser.password !== currentPassword) {
+                alert('現在のパスワードが正しくありません。');
+                return;
+            }
+            
+            // パスワード更新
+            try {
+                const isDemoMode = currentUser.companyCode === 'TAMJ';
+                
+                if (isDemoMode) {
+                    // DEMOモード: currentUserのみ更新（セッション中のみ有効）
+                    currentUser.password = newPassword;
+                    currentUser.isFirstLogin = false;  // 初回ログインフラグをfalseに
+                    sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    
+                    alert('パスワードを変更しました。\n※ DEMOモードのため、ログアウト後は元に戻ります。');
+                    closePasswordChangeModal();
+                } else {
+                    // 本番モード: localStorageのaccountsを更新
+                    let accounts = JSON.parse(localStorage.getItem('accounts') || '[]');
+                    const accountIndex = accounts.findIndex(a => a.userId === currentUser.userId);
+                    
+                    if (accountIndex !== -1) {
+                        accounts[accountIndex].password = newPassword;
+                        accounts[accountIndex].isFirstLogin = false;  // 初回ログインフラグをfalseに
+                        accounts[accountIndex].passwordChangedAt = new Date().toISOString();
+                        localStorage.setItem('accounts', JSON.stringify(accounts));
+                        
+                        // currentUserも更新
+                        currentUser.password = newPassword;
+                        currentUser.isFirstLogin = false;
+                        sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+                        
+                        alert('パスワードを変更しました。');
+                        closePasswordChangeModal();
+                    } else {
+                        alert('アカウント情報の更新に失敗しました。');
+                    }
+                }
+            } catch (e) {
+                console.error('パスワード変更エラー:', e);
+                alert('パスワード変更に失敗しました。');
+            }
+        }
+    </script>
+    
+    <!-- パスワード変更モーダル -->
+    <div id="passwordChangeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 12px; padding: 24px; width: 90%; max-width: 400px; box-shadow: 0 8px 24px rgba(0,0,0,0.2);">
+            <h2 style="margin: 0 0 20px 0; font-size: 20px; color: #333;">🔑 パスワード変更</h2>
+            
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 14px; color: #666; margin-bottom: 6px;">現在のパスワード</label>
+                <input type="password" id="currentPassword" style="width: 100%; padding: 10px; border: 1px solid #e0e0e0; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+            </div>
+            
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 14px; color: #666; margin-bottom: 6px;">新しいパスワード</label>
+                <input type="password" id="newPassword" style="width: 100%; padding: 10px; border: 1px solid #e0e0e0; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+                <div style="font-size: 12px; color: #666; margin-top: 4px;">※ 6文字以上で入力してください</div>
+            </div>
+            
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; font-size: 14px; color: #666; margin-bottom: 6px;">新しいパスワード（確認）</label>
+                <input type="password" id="confirmPassword" style="width: 100%; padding: 10px; border: 1px solid #e0e0e0; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+            </div>
+            
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button onclick="closePasswordChangeModal()" style="padding: 10px 20px; background: #f5f5f5; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; color: #666;">キャンセル</button>
+                <button onclick="changePassword()" style="padding: 10px 20px; background: #1a1a1a; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; color: white;">変更する</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 初回ログイン推奨バナー -->
+    <div id="firstLoginBanner" style="display: none; position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px 24px; border-radius: 12px; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4); z-index: 9999; max-width: 500px; width: 90%;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="font-size: 32px;">🔐</div>
+            <div style="flex: 1;">
+                <div style="font-weight: 600; margin-bottom: 4px;">パスワードの変更をおすすめします</div>
+                <div style="font-size: 13px; opacity: 0.9;">セキュリティ向上のため、初期パスワードを変更することを推奨します。</div>
+            </div>
+            <button onclick="dismissFirstLoginBanner()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 20px; line-height: 1;">×</button>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 12px;">
+            <button onclick="openPasswordChangeFromBanner()" style="flex: 1; padding: 8px 16px; background: white; color: #1a1a1a; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">今すぐ変更</button>
+            <button onclick="dismissFirstLoginBanner()" style="flex: 1; padding: 8px 16px; background: rgba(255,255,255,0.2); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">後で変更</button>
+        </div>
+    </div>
+</body>
+</html>

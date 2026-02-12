@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>テストデータ作成 | ワンタッチ管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 32px;
+        }
+
+        .section {
+            margin-bottom: 32px;
+            padding: 24px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .section h2 {
+            font-size: 18px;
+            color: #9B2335;
+            margin-bottom: 16px;
+        }
+
+        .btn {
+            background: #9B2335;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            margin-right: 12px;
+            margin-bottom: 8px;
+        }
+
+        .btn:hover {
+            background: #7a1c2a;
+        }
+
+        .btn-secondary {
+            background: #757575;
+        }
+
+        .btn-secondary:hover {
+            background: #616161;
+        }
+
+        .result {
+            margin-top: 16px;
+            padding: 16px;
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .result.error {
+            background: #ffebee;
+            border-left-color: #f44336;
+        }
+
+        pre {
+            background: #263238;
+            color: #aed581;
+            padding: 16px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 テストデータ作成</h1>
+
+        <div class="section">
+            <h2>1. 業者データ（Partners）</h2>
+            <button class="btn" onclick="createPartners()">業者データを作成</button>
+            <button class="btn-secondary btn" onclick="clearPartners()">業者データを削除</button>
+            <div id="partnerResult" class="result"></div>
+        </div>
+
+        <div class="section">
+            <h2>2. 通報データ（Reports）</h2>
+            <button class="btn" onclick="createReports()">通報データを作成</button>
+            <button class="btn-secondary btn" onclick="clearReports()">通報データを削除</button>
+            <div id="reportResult" class="result"></div>
+        </div>
+
+        <div class="section">
+            <h2>3. データ確認</h2>
+            <button class="btn" onclick="viewData()">現在のデータを確認</button>
+            <pre id="dataView" style="display: none;"></pre>
+        </div>
+
+        <div class="section">
+            <h2>4. すべてクリア</h2>
+            <button class="btn-secondary btn" onclick="clearAll()">全データを削除</button>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // 業者データ作成
+        // ========================================
+        function createPartners() {
+            const partners = [
+                {
+                    id: 'PARTNER-001',
+                    companyCode: 'TAMJ',
+                    officeCode: '',
+                    type1: 'building',
+                    type2: 'hvac',
+                    name: '東京設備工業株式会社',
+                    contactName: '山田太郎',
+                    postalCode: '100-0001',
+                    prefecture: '東京都',
+                    address: '千代田区千代田1-1',
+                    building: '設備ビル5F',
+                    phone: '03-1234-5678',
+                    contactPhone: '090-1234-5678',
+                    fax: '03-1234-5679',
+                    email: 'contact@tokyo-setubi.co.jp',
+                    notes: 'TAMJ社の主要設備業者',
+                    // 業者ログイン情報
+                    partnerCode: 'P001',
+                    loginId: 'p001-yamada',
+                    password: 'password123',
+                    categories: ['空調', '給湯', '電気'],
+                    assignedCompanies: ['TAMJ'],
+                    status: 'active',
+                    createdAt: '2026/02/09'
+                },
+                {
+                    id: 'PARTNER-002',
+                    companyCode: 'TAMJ',
+                    officeCode: '',
+                    type1: 'building',
+                    type2: 'plumbing',
+                    name: '関東水道サービス株式会社',
+                    contactName: '佐藤次郎',
+                    postalCode: '100-0002',
+                    prefecture: '東京都',
+                    address: '千代田区丸の内2-2',
+                    building: '水道ビル3F',
+                    phone: '03-2345-6789',
+                    contactPhone: '080-2345-6789',
+                    fax: '03-2345-6790',
+                    email: 'info@kanto-suido.co.jp',
+                    notes: '水道関連専門',
+                    // 業者ログイン情報
+                    partnerCode: 'P002',
+                    loginId: 'p002-sato',
+                    password: 'password456',
+                    categories: ['水道', '給湯'],
+                    assignedCompanies: ['TAMJ'],
+                    status: 'active',
+                    createdAt: '2026/02/09'
+                },
+                {
+                    id: 'PARTNER-003',
+                    companyCode: 'TAMJ',
+                    officeCode: '',
+                    type1: 'building',
+                    type2: 'electrical',
+                    name: '日本電気工事株式会社',
+                    contactName: '鈴木三郎',
+                    postalCode: '100-0003',
+                    prefecture: '東京都',
+                    address: '千代田区大手町3-3',
+                    building: '電気ビル7F',
+                    phone: '03-3456-7890',
+                    contactPhone: '090-3456-7890',
+                    fax: '03-3456-7891',
+                    email: 'suzuki@nihon-denki.co.jp',
+                    notes: '電気設備専門',
+                    // 業者ログイン情報
+                    partnerCode: 'P003',
+                    loginId: 'p003-suzuki',
+                    password: 'password789',
+                    categories: ['電気', '設備'],
+                    assignedCompanies: ['TAMJ'],
+                    status: 'active',
+                    createdAt: '2026/02/09'
+                }
+            ];
+
+            localStorage.setItem('partners', JSON.stringify(partners));
+            
+            const result = document.getElementById('partnerResult');
+            result.style.display = 'block';
+            result.className = 'result';
+            result.innerHTML = `
+                ✅ 業者データを作成しました！<br>
+                <strong>${partners.length}件</strong> の業者を登録<br><br>
+                <small>
+                業者1: 東京設備工業 (空調/給湯/電気) - ログインID: p001-yamada<br>
+                業者2: 関東水道サービス (水道/給湯) - ログインID: p002-sato<br>
+                業者3: 日本電気工事 (電気/設備) - ログインID: p003-suzuki
+                </small>
+            `;
+        }
+
+        function clearPartners() {
+            localStorage.removeItem('partners');
+            const result = document.getElementById('partnerResult');
+            result.style.display = 'block';
+            result.className = 'result';
+            result.innerHTML = '🗑️ 業者データを削除しました';
+        }
+
+        // ========================================
+        // 通報データ作成
+        // ========================================
+        function createReports() {
+            const now = new Date();
+            const dateStr = now.getFullYear() + 
+                          String(now.getMonth() + 1).padStart(2, '0') + 
+                          String(now.getDate()).padStart(2, '0');
+
+            const reports = [
+                {
+                    id: 'RPT-' + dateStr + '-001',
+                    userId: 'TAMJ-S001',
+                    reporter: '田中花子',
+                    companyCode: 'TAMJ',
+                    officeCode: 'TAMJ-J0001',
+                    officeName: '〇〇事業所',
+                    title: '特浴A',
+                    category: '空調',
+                    priority: '高',
+                    location: '1F 浴室',
+                    description: '異音がして冷房が効かない',
+                    timestamp: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(), // 2時間前
+                    emergency: false,
+                    // 業者情報（自動割り当て済み）
+                    assignedPartnerId: 'PARTNER-001',
+                    assignedPartnerName: '東京設備工業株式会社',
+                    assignedAt: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
+                    contractorStatus: '未対応',
+                    contractorComments: []
+                },
+                {
+                    id: 'RPT-' + dateStr + '-002',
+                    userId: 'TAMJ-S002',
+                    reporter: '山本太郎',
+                    companyCode: 'TAMJ',
+                    officeCode: 'TAMJ-J0001',
+                    officeName: '〇〇事業所',
+                    title: '給湯器①',
+                    category: '給湯',
+                    priority: '中',
+                    location: '2F 厨房',
+                    description: 'お湯が出ない',
+                    timestamp: new Date(now.getTime() - 5 * 60 * 60 * 1000).toISOString(), // 5時間前
+                    emergency: false,
+                    // 業者情報（自動割り当て済み）
+                    assignedPartnerId: 'PARTNER-001',
+                    assignedPartnerName: '東京設備工業株式会社',
+                    assignedAt: new Date(now.getTime() - 5 * 60 * 60 * 1000).toISOString(),
+                    contractorStatus: '対応中',
+                    contractorComments: [
+                        {
+                            text: '現場確認に向かいます',
+                            status: '対応中',
+                            timestamp: new Date(now.getTime() - 4 * 60 * 60 * 1000).toISOString()
+                        }
+                    ]
+                },
+                {
+                    id: 'RPT-' + dateStr + '-003',
+                    userId: 'TAMJ-S001',
+                    reporter: '田中花子',
+                    companyCode: 'TAMJ',
+                    officeCode: 'TAMJ-J0001',
+                    officeName: '〇〇事業所',
+                    title: '照明器具③',
+                    category: '電気',
+                    priority: '低',
+                    location: '3F 廊下',
+                    description: '電球が切れている',
+                    timestamp: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(), // 1日前
+                    emergency: false,
+                    // 業者情報（自動割り当て済み）
+                    assignedPartnerId: 'PARTNER-003',
+                    assignedPartnerName: '日本電気工事株式会社',
+                    assignedAt: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(),
+                    contractorStatus: '完了',
+                    contractorComments: [
+                        {
+                            text: '電球を交換しました',
+                            status: '完了',
+                            timestamp: new Date(now.getTime() - 20 * 60 * 60 * 1000).toISOString()
+                        }
+                    ],
+                    resolvedAt: new Date(now.getTime() - 20 * 60 * 60 * 1000).toISOString()
+                }
+            ];
+
+            localStorage.setItem('onetouch.reports', JSON.stringify(reports));
+            
+            const result = document.getElementById('reportResult');
+            result.style.display = 'block';
+            result.className = 'result';
+            result.innerHTML = `
+                ✅ 通報データを作成しました！<br>
+                <strong>${reports.length}件</strong> の通報を登録<br><br>
+                <small>
+                通報1: 特浴A（空調/高） - 未対応<br>
+                通報2: 給湯器①（給湯/中） - 対応中<br>
+                通報3: 照明器具③（電気/低） - 完了
+                </small>
+            `;
+        }
+
+        function clearReports() {
+            localStorage.removeItem('onetouch.reports');
+            const result = document.getElementById('reportResult');
+            result.style.display = 'block';
+            result.className = 'result';
+            result.innerHTML = '🗑️ 通報データを削除しました';
+        }
+
+        // ========================================
+        // データ確認
+        // ========================================
+        function viewData() {
+            const partners = JSON.parse(localStorage.getItem('partners') || '[]');
+            const reports = JSON.parse(localStorage.getItem('onetouch.reports') || '[]');
+
+            const data = {
+                partners: {
+                    count: partners.length,
+                    data: partners
+                },
+                reports: {
+                    count: reports.length,
+                    data: reports
+                }
+            };
+
+            const view = document.getElementById('dataView');
+            view.style.display = 'block';
+            view.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // ========================================
+        // 全削除
+        // ========================================
+        function clearAll() {
+            if (!confirm('本当に全データを削除しますか？')) return;
+
+            localStorage.removeItem('partners');
+            localStorage.removeItem('onetouch.reports');
+
+            alert('✅ 全データを削除しました');
+            location.reload();
+        }
+    </script>
+</body>
+</html>

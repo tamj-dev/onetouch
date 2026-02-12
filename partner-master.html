@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>取引先マスタ管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans CJK JP", sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .main-container {
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* 旧ヘッダーCSS削除済み */
+
+        .btn-add {
+            background: #1a1a1a;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-add:hover {
+            background: #333;
+        }
+
+        .btn-add::before {
+            content: "+";
+            font-size: 14px;
+        }
+
+        .search-panel {
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            padding: 24px;
+            border-radius: 14px;
+            margin-bottom: 20px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .search-row {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+
+        .search-label {
+            font-weight: 600;
+            color: #555;
+            background: #f5f5f5;
+            padding: 8px 12px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .search-input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        select.search-input {
+            cursor: pointer;
+        }
+
+        .search-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn-search {
+            background: #1a1a1a;
+            color: white;
+            border: none;
+            padding: 10px 32px;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-search:hover {
+            background: #f57c00;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+        }
+
+        .btn-clear {
+            background: #9e9e9e;
+            color: white;
+            border: none;
+            padding: 10px 32px;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-clear:hover {
+            background: #757575;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(158, 158, 158, 0.4);
+        }
+
+        .result-header {
+            background: #f5f5f5;
+            padding: 12px 20px;
+            border-radius: 14px 8px 0 0;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .results-section {
+            display: none;
+        }
+
+        .results-section.visible {
+            display: block;
+        }
+
+        .table-container {
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        thead {
+            background: #fff;
+            border: 1px solid #e8e8e8;
+        }
+
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 2px solid #e0e0e0;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            white-space: nowrap;
+        }
+
+        tbody tr:hover {
+            background: #fafafa;
+        }
+
+        .btn-edit {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        /* モーダル */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+            font-size: 24px;
+        }
+
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+            line-height: 1;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+        }
+
+        .btn-close:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+            white-space: nowrap;
+        }
+
+        .form-group label .required {
+            color: #f44336;
+            margin-left: 4px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #1a1a1a;
+            box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 32px;
+        }
+
+        .btn-primary {
+            background: #1a1a1a;
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background: #f57c00;
+        }
+
+        .btn-secondary {
+            background: #9e9e9e;
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background: #757575;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .search-row {
+                grid-template-columns: 1fr;
+            }
+
+            .main-container { padding: 16px; }
+
+            .modal-content {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+    <script src="demo-mode.js"></script>
+    <script src="unified-header.js"></script>
+    <meta name="theme-color" content="#1a1a1a">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon-192.png">
+</head>
+<body>
+    <!-- 統一ヘッダー -->
+    <div id="unified-header-mount"></div>
+    <div class="main-container">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+            <button class="btn-add" onclick="openModal()">新規追加</button>
+        </div>
+
+        <div class="search-panel">
+            <div class="search-row">
+                <div class="search-label">取引先ID</div>
+                <input type="text" id="searchId" class="search-input" placeholder="取引先IDを入力">
+            </div>
+
+            <div class="search-row">
+                <div class="search-label">会社名</div>
+                <input type="text" id="searchName" class="search-input" placeholder="会社名を入力">
+            </div>
+
+            <div class="search-buttons">
+                <button class="btn-search" onclick="searchPartners()">検索</button>
+                <button class="btn-clear" onclick="clearSearch()">クリア</button>
+            </div>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <div class="result-header">
+                検索結果: <span id="displayCount">0</span>件 / 全 <span id="totalCount">0</span>件
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>取引先ID</th>
+                            <th>会社名</th>
+                            <th>担当者名</th>
+                            <th>電話番号</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="partnerList"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- モーダル -->
+    <div class="modal" id="partnerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">取引先設定</h2>
+                <button class="btn-close" onclick="closeModal()">×</button>
+            </div>
+            <form id="partnerForm">
+                <input type="hidden" id="editIndex">
+
+                <div class="form-group">
+                    <label>取引先ID</label>
+                    <input type="text" id="partnerId" readonly style="background: #f5f5f5; cursor: not-allowed;" placeholder="自動付与されます">
+                    <small style="color: #666; font-size: 12px; margin-top: 4px; display: block;">※取引先IDは保存時に自動的に付与されます</small>
+                </div>
+
+                <div class="form-group">
+                    <label>会社名 <span class="required">*</span></label>
+                    <input type="text" id="companyName" required placeholder="例: 株式会社〇〇商事">
+                </div>
+
+                <div class="form-group">
+                    <label>担当者名 <span class="required">*</span></label>
+                    <input type="text" id="contactName" required placeholder="例: 山田太郎">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>郵便番号 <span class="required">*</span></label>
+                        <input type="text" id="postalCode" required placeholder="例: 100-0001" pattern="\d{3}-?\d{4}" maxlength="8">
+                        <small style="color: #666; font-size: 12px; margin-top: 4px; display: block;">※ハイフンあり・なし両方OK</small>
+                    </div>
+                    <div class="form-group">
+                        <label>都道府県 <span class="required">*</span></label>
+                        <select id="prefecture" required>
+                            <option value="">選択してください</option>
+                            <option value="北海道">北海道</option>
+                            <option value="青森県">青森県</option>
+                            <option value="岩手県">岩手県</option>
+                            <option value="宮城県">宮城県</option>
+                            <option value="秋田県">秋田県</option>
+                            <option value="山形県">山形県</option>
+                            <option value="福島県">福島県</option>
+                            <option value="茨城県">茨城県</option>
+                            <option value="栃木県">栃木県</option>
+                            <option value="群馬県">群馬県</option>
+                            <option value="埼玉県">埼玉県</option>
+                            <option value="千葉県">千葉県</option>
+                            <option value="東京都">東京都</option>
+                            <option value="神奈川県">神奈川県</option>
+                            <option value="新潟県">新潟県</option>
+                            <option value="富山県">富山県</option>
+                            <option value="石川県">石川県</option>
+                            <option value="福井県">福井県</option>
+                            <option value="山梨県">山梨県</option>
+                            <option value="長野県">長野県</option>
+                            <option value="岐阜県">岐阜県</option>
+                            <option value="静岡県">静岡県</option>
+                            <option value="愛知県">愛知県</option>
+                            <option value="三重県">三重県</option>
+                            <option value="滋賀県">滋賀県</option>
+                            <option value="京都府">京都府</option>
+                            <option value="大阪府">大阪府</option>
+                            <option value="兵庫県">兵庫県</option>
+                            <option value="奈良県">奈良県</option>
+                            <option value="和歌山県">和歌山県</option>
+                            <option value="鳥取県">鳥取県</option>
+                            <option value="島根県">島根県</option>
+                            <option value="岡山県">岡山県</option>
+                            <option value="広島県">広島県</option>
+                            <option value="山口県">山口県</option>
+                            <option value="徳島県">徳島県</option>
+                            <option value="香川県">香川県</option>
+                            <option value="愛媛県">愛媛県</option>
+                            <option value="高知県">高知県</option>
+                            <option value="福岡県">福岡県</option>
+                            <option value="佐賀県">佐賀県</option>
+                            <option value="長崎県">長崎県</option>
+                            <option value="熊本県">熊本県</option>
+                            <option value="大分県">大分県</option>
+                            <option value="宮崎県">宮崎県</option>
+                            <option value="鹿児島県">鹿児島県</option>
+                            <option value="沖縄県">沖縄県</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>住所 <span class="required">*</span></label>
+                    <input type="text" id="address" required placeholder="例: 千代田区千代田1-1">
+                </div>
+
+                <div class="form-group">
+                    <label>建物名・部屋番号</label>
+                    <input type="text" id="building" placeholder="例: 千代田ビル5F">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>会社電話番号 <span class="required">*</span></label>
+                        <input type="tel" id="phone" required placeholder="例: 03-1234-5678" pattern="[0-9\-]+">
+                    </div>
+                    <div class="form-group">
+                        <label>担当者電話番号</label>
+                        <input type="tel" id="contactPhone" placeholder="例: 090-1234-5678" pattern="[0-9\-]+">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>FAX番号</label>
+                    <input type="tel" id="fax" placeholder="例: 03-1234-5679" pattern="[0-9\-]+">
+                </div>
+
+                <div class="form-group">
+                    <label>メールアドレス</label>
+                    <input type="email" id="email" placeholder="例: info@example.com">
+                </div>
+
+                <!-- 業者ログイン情報 -->
+                <div class="form-section">
+                    <h3 style="color: #1a1a1a; font-size: 15px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid #e0e0e0;">
+                        業者ログイン情報
+                    </h3>
+                    
+                    <div class="form-group">
+                        <label>業者コード</label>
+                        <input type="text" id="partnerCode" readonly style="background: #f5f5f5; color: #333;">
+                        <small style="color: #888; font-size: 12px; margin-top: 4px; display: block;">自動発行（業者がログイン時に使用）</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>担当者名ローマ字 <span class="required">*</span></label>
+                        <input type="text" id="loginRomaji" required placeholder="例: yamada" pattern="[a-zA-Z]+" oninput="updateLoginIdPreview()">
+                        <small style="color: #888; font-size: 12px; margin-top: 4px; display: block;">半角英字で入力 → ログインIDが自動生成されます</small>
+                        <div id="loginIdPreview" style="margin-top: 8px; padding: 8px 12px; background: #f5f5f5; border-radius: 8px; font-size: 13px; color: #666; display: none;">
+                            ログインID: <strong id="loginIdPreviewText"></strong>
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="loginId">
+                    <input type="hidden" id="password">
+                    <input type="hidden" id="assignedCompanies">
+                </div>
+
+                <!-- system_admin用：紐づけ会社管理 -->
+                <div class="form-section" id="assignedCompaniesSection" style="display: none;">
+                    <h3 style="color: #1a1a1a; font-size: 15px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid #e0e0e0;">
+                        紐づけ会社（契約先）
+                    </h3>
+                    <div id="companyCheckboxes" style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- JSで動的に生成 -->
+                    </div>
+                    <small style="color: #888; font-size: 12px; margin-top: 8px; display: block;">この業者が対応する会社にチェックを入れてください</small>
+                </div>
+
+                <div class="form-group">
+                    <label>備考</label>
+                    <textarea id="notes" placeholder="備考があれば入力してください"></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button type="button" class="btn-secondary" onclick="closeModal()">キャンセル</button>
+                    <button type="submit" class="btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ログインチェックと権限確認
+        const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = 'login.html';
+        } else if (currentUser.role !== 'system_admin' && currentUser.role !== 'company_admin' && currentUser.role !== 'office_admin') {
+            alert('この画面は管理者のみアクセスできます。');
+            window.location.href = 'login.html';
+        }
+
+        // 取引先データ（LocalStorageから読み込み + フィルタリング）
+        let allPartners = JSON.parse(localStorage.getItem('partners')) || [];
+        let partners = filterPartnersByScope(allPartners);
+        let partnerCounter = parseInt(localStorage.getItem('partnerCounter')) || 1;
+
+        // スコープに応じて取引先をフィルタリング
+        function filterPartnersByScope(partnerList) {
+            if (currentUser.role === 'system_admin') {
+                return partnerList;
+            } else if (currentUser.scope === 'company') {
+                return partnerList.filter(p => p.companyCode === currentUser.companyCode);
+            } else if (currentUser.scope === 'office') {
+                return partnerList.filter(p => p.officeCode === currentUser.officeCode);
+            }
+            return [];
+        }
+
+        // LocalStorageに保存
+        function saveToLocalStorage() {
+            // 全データに保存（DEMOモード時はsessionStorageにも保存）
+            localStorage.setItem('partners', JSON.stringify(allPartners));
+            localStorage.setItem('partnerCounter', partnerCounter.toString());
+            sessionStorage.setItem('partners', JSON.stringify(allPartners));
+            sessionStorage.setItem('partnerCounter', partnerCounter.toString());
+            // 表示用データを再フィルタリング
+            partners = filterPartnersByScope(allPartners);
+        }
+
+        // 監査ログ記録関数
+        function logEvent(type, detail = {}) {
+            try {
+                const logs = JSON.parse(localStorage.getItem('audit.logs') || '[]');
+                const logEntry = {
+                    timestamp: new Date().toISOString(),
+                    type: type,
+                    screen: 'partner-master',
+                    user: currentUser.name || currentUser.id,
+                    userId: currentUser.id,
+                    companyCode: currentUser.companyCode,
+                    detail: detail
+                };
+                logs.push(logEntry);
+                localStorage.setItem('audit.logs', JSON.stringify(logs));
+            } catch (e) {
+                console.error('監査ログの記録に失敗:', e);
+            }
+        }
+
+        // 取引先IDを自動生成
+        function generatePartnerId() {
+            const id = 'PTN' + String(partnerCounter).padStart(4, '0');
+            partnerCounter++;
+            return id;
+        }
+
+        // 業者コード自動生成（P001, P002, ...）
+        function generatePartnerCode() {
+            const existingCodes = allPartners
+                .map(p => p.partnerCode || '')
+                .filter(c => /^P\d+$/.test(c))
+                .map(c => parseInt(c.replace('P', ''), 10));
+            const nextNum = existingCodes.length > 0 ? Math.max(...existingCodes) + 1 : 1;
+            return 'P' + String(nextNum).padStart(3, '0');
+        }
+
+        // パスワード自動生成（8文字: 英大小+数字）
+        function generatePassword() {
+            var chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
+            var pw = '';
+            for (var i = 0; i < 8; i++) pw += chars.charAt(Math.floor(Math.random() * chars.length));
+            return pw;
+        }
+
+        // 紐づけ会社チェックボックス描画（system_adminのみ表示）
+        function renderCompanyCheckboxes(checkedCodes) {
+            var section = document.getElementById('assignedCompaniesSection');
+            if (currentUser.role !== 'system_admin') {
+                section.style.display = 'none';
+                return;
+            }
+            section.style.display = 'block';
+
+            // 会社マスタを取得
+            var companies = [];
+            try { companies = JSON.parse(sessionStorage.getItem('companies') || '[]'); } catch(e) {}
+            try { var cl = JSON.parse(localStorage.getItem('companies') || '[]'); cl.forEach(function(c){ if(!companies.find(function(m){return m.companyCode===c.companyCode;})) companies.push(c); }); } catch(e) {}
+            // デモ用
+            if (companies.length === 0) {
+                companies = [
+                    { companyCode: 'TAMJ', companyName: '田村ビルメンテナンス' },
+                    { companyCode: 'COMP2', companyName: 'テスト会社B' }
+                ];
+            }
+
+            var container = document.getElementById('companyCheckboxes');
+            container.innerHTML = companies.map(function(c) {
+                var checked = checkedCodes && checkedCodes.includes(c.companyCode) ? 'checked' : '';
+                return '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px 8px;border-radius:8px;border:1px solid #e8e8e8;background:#fff;">' +
+                    '<input type="checkbox" class="company-assign-cb" value="' + c.companyCode + '" ' + checked + '>' +
+                    '<span style="font-size:14px;">' + c.companyName + '</span>' +
+                    '<span style="font-size:12px;color:#aaa;margin-left:auto;">' + c.companyCode + '</span>' +
+                '</label>';
+            }).join('');
+        }
+
+        // ローマ字入力→ログインIDプレビュー
+        function updateLoginIdPreview() {
+            var romaji = (document.getElementById('loginRomaji').value || '').trim().toLowerCase().replace(/[^a-z]/g, '');
+            var code = document.getElementById('partnerCode').value || '';
+            var preview = document.getElementById('loginIdPreview');
+            var previewText = document.getElementById('loginIdPreviewText');
+            if (romaji && code) {
+                previewText.textContent = code.toLowerCase() + '-' + romaji;
+                preview.style.display = 'block';
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+
+        // 会社種別のラベル
+
+        // モーダル開閉
+        function openModal() {
+            document.getElementById('modalTitle').textContent = '取引先設定';
+            document.getElementById('partnerModal').classList.add('active');
+            document.getElementById('partnerForm').reset();
+            document.getElementById('editIndex').value = '';
+            document.getElementById('partnerId').value = '';
+            // 業者コードを自動発行
+            document.getElementById('partnerCode').value = generatePartnerCode();
+            // 新規時は自社を初期チェック
+            renderCompanyCheckboxes([currentUser.companyCode]);
+        }
+
+        function openEditModal(index) {
+            const partner = partners[index];
+            document.getElementById('modalTitle').textContent = '取引先編集';
+            document.getElementById('partnerModal').classList.add('active');
+            document.getElementById('editIndex').value = index;
+            
+            // フォームにデータを設定
+            document.getElementById('partnerId').value = partner.id;
+            document.getElementById('companyName').value = partner.name;
+            document.getElementById('contactName').value = partner.contactName;
+            document.getElementById('postalCode').value = partner.postalCode;
+            document.getElementById('prefecture').value = partner.prefecture;
+            document.getElementById('address').value = partner.address;
+            document.getElementById('building').value = partner.building || '';
+            document.getElementById('phone').value = partner.phone;
+            document.getElementById('contactPhone').value = partner.contactPhone || '';
+            document.getElementById('fax').value = partner.fax || '';
+            document.getElementById('email').value = partner.email || '';
+            document.getElementById('notes').value = partner.notes || '';
+            
+            // 業者ログイン情報を設定
+            document.getElementById('partnerCode').value = partner.partnerCode || '';
+            document.getElementById('loginId').value = partner.loginId || '';
+            document.getElementById('password').value = partner.password || '';
+            document.getElementById('assignedCompanies').value = partner.assignedCompanies ? partner.assignedCompanies.join(',') : '';
+            document.getElementById('loginRomaji').value = partner.loginRomaji || '';
+            updateLoginIdPreview();
+            renderCompanyCheckboxes(partner.assignedCompanies || []);
+        }
+
+        function closeModal() {
+            document.getElementById('partnerModal').classList.remove('active');
+        }
+
+        // フォーム送信
+        document.getElementById('partnerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const editIndex = document.getElementById('editIndex').value;
+            let partnerId;
+            
+            if (editIndex !== '') {
+                partnerId = partners[editIndex].id;
+            } else {
+                partnerId = generatePartnerId();
+            }
+            
+            // ログインID自動生成（業者コード + ローマ字）
+            var partnerCode = document.getElementById('partnerCode').value;
+            var romaji = (document.getElementById('loginRomaji').value || '').trim().toLowerCase();
+            var loginId = partnerCode && romaji ? partnerCode.toLowerCase() + '-' + romaji : document.getElementById('loginId').value;
+            
+            // パスワード自動生成（新規時のみ）
+            var password = document.getElementById('password').value;
+            if (!password && editIndex === '') {
+                password = generatePassword();
+            }
+            
+            // 紐付け会社コード
+            var assignedCompanies;
+            if (currentUser.role === 'system_admin') {
+                // system_admin: チェックボックスから取得
+                var cbs = document.querySelectorAll('.company-assign-cb:checked');
+                assignedCompanies = Array.from(cbs).map(function(cb) { return cb.value; });
+                if (assignedCompanies.length === 0) assignedCompanies = [currentUser.companyCode || 'DEMO'];
+            } else {
+                // 本社管理者: 自社を自動設定
+                assignedCompanies = [currentUser.companyCode || 'DEMO'];
+            }
+            
+            const partnerData = {
+                id: partnerId,
+                companyCode: currentUser.companyCode || 'DEMO',
+                officeCode: currentUser.officeCode || '',
+                name: document.getElementById('companyName').value,
+                contactName: document.getElementById('contactName').value,
+                postalCode: document.getElementById('postalCode').value,
+                prefecture: document.getElementById('prefecture').value,
+                address: document.getElementById('address').value,
+                building: document.getElementById('building').value,
+                phone: document.getElementById('phone').value,
+                contactPhone: document.getElementById('contactPhone').value,
+                fax: document.getElementById('fax').value,
+                email: document.getElementById('email').value,
+                notes: document.getElementById('notes').value,
+                partnerCode: partnerCode,
+                loginId: loginId,
+                loginRomaji: romaji,
+                password: password,
+                categories: [],
+                assignedCompanies: assignedCompanies,
+                status: 'active',
+                createdAt: new Date().toLocaleDateString('ja-JP')
+            };
+
+            if (editIndex !== '') {
+                const targetId = partners[editIndex].id;
+                const allIndex = allPartners.findIndex(p => p.id === targetId);
+                if (allIndex !== -1) {
+                    allPartners[allIndex] = {
+                        ...partnerData,
+                        createdAt: allPartners[allIndex].createdAt,
+                        password: allPartners[allIndex].password || partnerData.password
+                    };
+                }
+                logEvent('update_partner', { partnerId: partnerId, partnerName: partnerData.name });
+                alert('取引先情報を更新しました');
+            } else {
+                allPartners.push(partnerData);
+                logEvent('add_partner', { partnerId: partnerId, partnerName: partnerData.name });
+                // 登録完了時にログイン情報を表示
+                alert('取引先を登録しました\n\n【業者ログイン情報】\n業者コード: ' + partnerCode + '\nログインID: ' + loginId + '\nパスワード: ' + password + '\n\n※この情報を業者にお伝えください');
+            }
+
+            // LocalStorageに保存
+            saveToLocalStorage();
+
+            // 検索結果を表示
+            document.getElementById('resultsSection').classList.add('visible');
+            renderPartners();
+            closeModal();
+        });
+
+        // 取引先一覧を表示
+        function renderPartners(filteredPartners = null) {
+            const partnerList = document.getElementById('partnerList');
+            const displayPartners = filteredPartners || partners;
+            const isSystemAdmin = currentUser.role === 'system_admin';
+            const colSpan = isSystemAdmin ? 6 : 5;
+            
+            // テーブルヘッダーに紐づけ会社列を追加（system_adminのみ）
+            var thRow = document.querySelector('#partnerList')?.closest('table')?.querySelector('thead tr');
+            if (thRow && isSystemAdmin && !thRow.querySelector('.th-assigned')) {
+                var th = document.createElement('th');
+                th.textContent = '契約会社';
+                th.className = 'th-assigned';
+                th.style.cssText = 'font-size:13px;';
+                thRow.insertBefore(th, thRow.lastElementChild);
+            }
+            
+            if (displayPartners.length === 0) {
+                partnerList.innerHTML = `
+                    <tr>
+                        <td colspan="${colSpan}" style="text-align: center; padding: 40px; color: #999;">
+                            ${filteredPartners ? '該当する取引先がありません' : '取引先がありません。新規追加ボタンから登録してください。'}
+                        </td>
+                    </tr>
+                `;
+            } else {
+                partnerList.innerHTML = displayPartners.map((partner, index) => {
+                    const originalIndex = partners.indexOf(partner);
+                    var assignedCol = '';
+                    if (isSystemAdmin) {
+                        var companies = partner.assignedCompanies || [];
+                        assignedCol = '<td style="font-size:12px;">' + companies.map(function(c) {
+                            return '<span style="display:inline-block;padding:2px 8px;background:#f0f0f0;border-radius:4px;margin:2px;font-size:11px;">' + c + '</span>';
+                        }).join('') + '</td>';
+                    }
+                    return `
+                    <tr>
+                        <td>${partner.id}</td>
+                        <td>${partner.name}</td>
+                        <td>${partner.contactName}</td>
+                        <td>${partner.phone}</td>
+                        ${assignedCol}
+                        <td><button class="btn-edit" onclick="openEditModal(${originalIndex})">編集</button></td>
+                    </tr>
+                `;
+                }).join('');
+            }
+            
+            document.getElementById('totalCount').textContent = partners.length;
+            document.getElementById('displayCount').textContent = displayPartners.length;
+        }
+
+        // 検索
+        function searchPartners() {
+            const searchId = document.getElementById('searchId').value.toLowerCase();
+            const searchName = document.getElementById('searchName').value.toLowerCase();
+
+            const filtered = partners.filter(partner => {
+                const matchId = !searchId || partner.id.toLowerCase().includes(searchId);
+                const matchName = !searchName || partner.name.toLowerCase().includes(searchName);
+                return matchId && matchName;
+            });
+
+            document.getElementById('resultsSection').classList.add('visible');
+            renderPartners(filtered);
+        }
+
+        // 検索条件クリア
+        function clearSearch() {
+            document.getElementById('searchId').value = '';
+            document.getElementById('searchName').value = '';
+            document.getElementById('resultsSection').classList.remove('visible');
+        }
+
+        // 郵便番号から住所を自動取得
+        document.getElementById('postalCode').addEventListener('blur', async function() {
+            let postalCode = this.value.replace(/-/g, '');
+            
+            if (postalCode.length !== 7 || !/^\d{7}$/.test(postalCode)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${postalCode}`);
+                const data = await response.json();
+
+                if (data.status === 200 && data.results) {
+                    const result = data.results[0];
+                    document.getElementById('prefecture').value = result.address1;
+                    const addressValue = result.address2 + result.address3;
+                    document.getElementById('address').value = addressValue;
+                    this.value = postalCode.substring(0, 3) + '-' + postalCode.substring(3);
+                }
+            } catch (error) {
+                console.error('住所の取得に失敗しました:', error);
+            }
+        });
+
+        // モーダル外クリックで閉じる
+        document.getElementById('partnerModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    </script>
+
+    <script>
+    // 統一ヘッダー初期化
+    UnifiedHeader.init({
+        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
+        title: '取引先マスタ',
+        backButton: true
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プライバシーポリシー | ワンタッチ管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans CJK JP", sans-serif;
+            background: #fafafa;
+            color: #333;
+            line-height: 1.8;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+.demo-badge {
+            background: #E9A825;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .notice {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 16px 20px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .notice::before {
+            content: "ℹ️ ";
+            margin-right: 8px;
+        }
+
+        .content {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section h2 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 16px;
+            padding-left: 12px;
+            border-left: 4px solid #E9A825;
+        }
+
+        .section p {
+            margin-bottom: 12px;
+            color: #555;
+        }
+
+        .section ul {
+            margin-left: 20px;
+            margin-bottom: 16px;
+        }
+
+        .section li {
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        .important-note {
+            background: #fff3e0;
+            border-left: 4px solid #E9A825;
+            padding: 16px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .important-note::before {
+            content: "⚠️ ";
+            margin-right: 8px;
+            font-size: 16px;
+        }
+
+        .important-note p {
+            color: #e65100;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .important-note ul {
+            margin-top: 12px;
+        }
+
+        .important-note li {
+            color: #e65100;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .footer-copyright {
+            color: #999;
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .footer-links a {
+            color: #666;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: #E53935;
+            text-decoration: underline;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            transition: all 0.2s;
+        }
+
+        .back-link:hover {
+            background: #f9fafb;
+            border-color: #E53935;
+            color: #E53935;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 30px 20px;
+            }
+}
+    </style>
+    <script src="demo-mode.js"></script>
+    <script src="unified-header.js"></script>
+</head>
+<body>
+    <!-- 統一ヘッダー -->
+    <div id="unified-header-mount"></div>
+    <div class="container">
+        
+        <div class="notice">
+            本ポリシーはデモ版での最低限の方針です。正式公開前に実際に合わせて更新してください。
+        </div>
+
+        <div class="content">
+            <div class="section">
+                <h2>1. 収集する情報</h2>
+                <p>本デモでは、以下の情報を収集する場合があります：</p>
+                <ul>
+                    <li>メールアドレス（任意入力の場合）</li>
+                    <li>アクセス情報（IPアドレスのハッシュ値、ユーザーエージェント）</li>
+                    <li>利用状況（アップロード回数、操作ログ）</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>2. 情報の利用目的</h2>
+                <p>収集した情報は、以下の目的で利用します：</p>
+                <ul>
+                    <li>デモの利用制限の管理</li>
+                    <li>不正利用の検知・防止</li>
+                    <li>サービスの改善・分析</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>3. アップロードデータについて</h2>
+                <div class="important-note">
+                    <p>重要なお願い</p>
+                    <ul>
+                        <li>個人情報を含むデータはアップロードしないでください</li>
+                        <li>機密情報、顧客データ、患者情報等の取り扱いには十分ご注意ください</li>
+                        <li>デモ用のサンプルデータやダミーデータをご利用ください</li>
+                    </ul>
+                </div>
+                <p>アップロードされたファイルは、解析・表示の目的で一時的に処理されます。デモ終了後、データは速やかに削除されます。</p>
+            </div>
+
+            <div class="section">
+                <h2>4. 第三者への提供</h2>
+                <p>収集した情報は、法令に基づく場合を除き、第三者に提供することはありません。</p>
+            </div>
+
+            <div class="section">
+                <h2>5. Cookieの使用</h2>
+                <p>本デモでは、セッション管理のためにローカルストレージおよびCookieを使用する場合があります。</p>
+            </div>
+
+            <div class="section">
+                <h2>6. お問い合わせ</h2>
+                <p>プライバシーに関するお問い合わせは、当社までご連絡ください。</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="footer-copyright">
+                © TAMJ / OneTouch Management. All rights reserved.
+            </div>
+            <div class="footer-links">
+                <a href="javascript:history.back()">← 戻る</a>
+                <span style="color: #ddd;">|</span>
+                <a href="terms.html">利用規約</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    UnifiedHeader.init({
+        icon: '🔏',
+        title: 'プライバシーポリシー',
+        backButton: true
+    });
+    </script>
+</body>
+</html>

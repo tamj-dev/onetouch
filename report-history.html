@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通報履歴 | ワンタッチ管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans CJK JP", sans-serif;
+            background: #fafafa;
+            min-height: 100vh;
+        }
+.container {
+            max-width: 1200px;
+            margin: 16px auto;
+            padding: 0 20px;
+        }
+
+        .filter-panel {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .filter-input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #fafafa;
+        }
+
+        th {
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 2px solid #ddd;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+            white-space: nowrap;
+        }
+
+        tbody tr:hover {
+            background: #fafafa;
+            cursor: pointer;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-pending { background: #fff3e0; color: #e65100; }
+        .status-processing { background: #e3f2fd; color: #1976d2; }
+        .status-completed { background: #c8e6c9; color: #2e7d32; }
+        .status-unavailable { background: #ffebee; color: #c62828; }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        /* ステータスタブ */
+        .status-tabs {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+        .status-tab {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 12px 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .status-tab:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+        }
+        .status-tab.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        .status-tab-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .status-tab.active .status-tab-label {
+            color: white;
+            font-weight: 600;
+        }
+        .status-tab-count {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+        .status-tab.active .status-tab-count {
+            color: white;
+        }
+        @media (max-width: 480px) {
+            .status-tabs { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        /* スマホ用カード */
+        .mobile-cards { display: none; }
+        .report-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .report-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .report-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        .report-card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+        .report-card-date {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 8px;
+        }
+        .report-card-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 6px;
+        }
+        .report-card-info span {
+            background: #f5f5f5;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .report-card-partner {
+            font-size: 12px;
+            color: #1e40af;
+            font-weight: 600;
+        }
+
+        /* PC: テーブル表示 / スマホ: カード表示 */
+        @media (max-width: 768px) {
+            .table-container { display: none; }
+            .mobile-cards { display: block; }
+            .filter-panel { padding: 16px; }
+            .filter-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 768px) {
+.filter-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <script src="demo-mode.js"></script>
+    <script src="unified-header.js"></script>
+    <meta name="theme-color" content="#1a1a1a">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon-192.png">
+</head>
+<body>
+    <!-- 統一ヘッダー -->
+    <div id="unified-header-mount"></div>
+
+    <div class="container">
+        <div class="filter-panel">
+            <!-- システム管理者のみ: 会社フィルタ -->
+            <div class="filter-row" id="companyFilterRow" style="display: none;">
+                <div class="filter-label">会社</div>
+                <div>
+                    <select id="companyFilter" class="filter-input" onchange="onCompanyFilterChange()">
+                        <option value="">-- 全会社 --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-label">事業所</div>
+                <div id="officeFilterArea">
+                    <div id="officeInfo" style="color: #666; font-size: 14px;">読み込み中...</div>
+                </div>
+            </div>
+
+            <!-- システム管理者のみ: 業者フィルタ -->
+            <div class="filter-row" id="partnerFilterRow" style="display: none;">
+                <div class="filter-label">業者</div>
+                <div>
+                    <select id="partnerFilter" class="filter-input">
+                        <option value="">-- 全業者 --</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 全ロール共通: ステータスタブ -->
+            <div style="grid-column: 1 / -1;">
+                <div class="filter-label" style="margin-bottom: 8px;">ステータス</div>
+                <div class="status-tabs">
+                    <div class="status-tab active" onclick="filterByContractorStatus('', this)">
+                        <div class="status-tab-label">すべて</div>
+                        <div class="status-tab-count" id="countAll">0</div>
+                    </div>
+                    <div class="status-tab" onclick="filterByContractorStatus('未対応', this)">
+                        <div class="status-tab-label">未対応</div>
+                        <div class="status-tab-count" id="countPending">0</div>
+                    </div>
+                    <div class="status-tab" onclick="filterByContractorStatus('対応中', this)">
+                        <div class="status-tab-label">対応中</div>
+                        <div class="status-tab-count" id="countProgress">0</div>
+                    </div>
+                    <div class="status-tab" onclick="filterByContractorStatus('完了', this)">
+                        <div class="status-tab-label">完了</div>
+                        <div class="status-tab-count" id="countComplete">0</div>
+                    </div>
+                    <div class="status-tab" onclick="filterByContractorStatus('対応不可', this)">
+                        <div class="status-tab-label">対応不可</div>
+                        <div class="status-tab-count" id="countUnavailable">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-row" style="margin-top: 20px;">
+                <div class="filter-label">期間</div>
+                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    <input type="date" id="startDate" class="filter-input">
+                    <span>〜</span>
+                    <input type="date" id="endDate" class="filter-input">
+                    <button onclick="filterReports()" style="padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-left: 12px;">検索</button>
+                    <button onclick="exportCSV()" style="padding: 8px 20px; background: #43a047; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">CSVエクスポート</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>通報日時</th>
+                        <th>通報者</th>
+                        <th>事業所</th>
+                        <th>カテゴリ</th>
+                        <th>内容</th>
+                        <th>ステータス</th>
+                        <th>対応時間</th>
+                        <th>対応者</th>
+                    </tr>
+                </thead>
+                <tbody id="reportList">
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <div class="empty-icon">📋</div>
+                            <div>通報履歴がありません</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- スマホ用カード表示 -->
+        <div id="reportCards" class="mobile-cards"></div>
+    </div>
+
+    <!-- 通報詳細モーダル -->
+    <div class="overlay" id="detailOverlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000;">
+        <div class="modal" style="background: white; border-radius: 12px; padding: 32px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h2 id="detailTitle" style="font-size: 20px; font-weight: 700; color: #333;">通報詳細</h2>
+                <button onclick="closeDetail()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999; padding: 0; width: 32px; height: 32px;">&times;</button>
+            </div>
+            <div id="detailContent" style="line-height: 1.8;">
+                <!-- 詳細内容がここに表示される -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ログインチェック
+        const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = 'login.html';
+        } else if (currentUser.role !== 'system_admin' && currentUser.role !== 'company_admin' && currentUser.role !== 'office_admin') {
+            alert('この画面は管理者のみアクセスできます。');
+            window.location.href = 'report.html';
+        }
+
+        // グローバル変数
+        let selectedOfficeCode = '';
+        let allReports = []; // フィルタリング前の全通報を保持
+
+        // 通報詳細を表示
+        function showDetail(index) {
+            const report = allReports[index];
+            if (!report) return;
+
+            const datetime = new Date(report.timestamp);
+            const dateStr = datetime.toLocaleDateString('ja-JP') + ' ' + 
+                           datetime.toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+            
+            const typeLabels = {
+                wholesale: '卸業者',
+                building: 'ビルメン業者',
+                welfare: '福祉用具業者',
+                emergency: '緊急'
+            };
+
+            const statusLabels = {
+                pending: '未対応',
+                processing: '対応中',
+                completed: '完了'
+            };
+
+            const label = report.emergency ? '🚨 緊急通報' : '📢 通報';
+            document.getElementById('detailTitle').innerHTML = label;
+
+            let content = '';
+            
+            // 通報ID
+            content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
+            content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">通報ID</div>';
+            content += '<div style="font-size: 15px; color: #333;">' + (report.id || '-') + '</div>';
+            content += '</div>';
+
+            // 日時
+            content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
+            content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">日時</div>';
+            content += '<div style="font-size: 15px; color: #333;">' + dateStr + '</div>';
+            content += '</div>';
+
+            // 種別
+            content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
+            content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">種別</div>';
+            const chipClass = report.emergency ? 'status-pending' : 'status-processing';
+            const chipLabel = report.emergency ? '緊急' : '通報';
+            content += '<div><span class="status-badge ' + chipClass + '">' + chipLabel + '</span></div>';
+            content += '</div>';
+
+            // 通報者
+            content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
+            content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">通報者</div>';
+            content += '<div style="font-size: 15px; color: #333;">' + (report.reporter || '-') + '</div>';
+            content += '</div>';
+
+            // 事業所
+            if (report.officeName) {
+                content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
+                content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">事業所</div>';
+                content += '<div style="font-size: 15px; color: #333;">' + report.officeName + '</div>';
+                content += '</div>';
+            }
+
+            // 対象業者
+            content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
+            content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">対象業者</div>';
+            content += '<div style="font-size: 15px; color: #333;">' + (typeLabels[report.type] || report.category || '-') + '</div>';
+            content += '</div>';
+
+            // 場所
+            if (report.location) {
+                content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
+                content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">場所</div>';
+                content += '<div style="font-size: 15px; color: #333;">' + report.location + '</div>';
+                content += '</div>';
+            }
+
+            // 詳細内容
+            content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
+            content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">詳細内容</div>';
+            content += '<div style="background: #f9fafb; padding: 16px; border-radius: 8px; font-size: 14px; line-height: 1.8; white-space: pre-wrap;">' + (report.description || '-') + '</div>';
+            content += '</div>';
+            
+            // 割当業者（追加）
+            if (report.assignedPartnerName || report.assignedPartnerId) {
+                content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
+                content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">割当業者</div>';
+                const partnerName = report.assignedPartnerName || '業者ID: ' + report.assignedPartnerId;
+                content += '<div style="font-size: 15px; color: #333;">🏢 ' + partnerName + '</div>';
+                content += '</div>';
+            }
+            
+            // ステータス変更履歴（追加）
+            if (report.statusHistory && report.statusHistory.length > 0) {
+                content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
+                content += '<div style="font-size: 12px; color: #999; margin-bottom: 12px;">📋 ステータス変更履歴</div>';
+                
+                report.statusHistory.forEach(function(history, idx) {
+                    const historyTime = new Date(history.timestamp);
+                    const historyDateStr = historyTime.toLocaleDateString('ja-JP') + ' ' + 
+                                          historyTime.toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'});
+                    
+                    const statusFromClass = history.from === '未対応' ? 'status-pending' :
+                                           history.from === '対応中' ? 'status-processing' :
+                                           'status-completed';
+                    const statusToClass = history.to === '未対応' ? 'status-pending' :
+                                         history.to === '対応中' ? 'status-processing' :
+                                         'status-completed';
+                    
+                    content += '<div style="display: flex; gap: 12px; margin-bottom: ' + (idx === report.statusHistory.length - 1 ? '0' : '12px') + '; padding: 12px; background: #f8f9fa; border-radius: 8px;">';
+                    content += '<div style="flex-shrink: 0; width: 4px; background: #E53935; border-radius: 2px;"></div>';
+                    content += '<div style="flex: 1;">';
+                    content += '<div style="font-size: 11px; color: #666; margin-bottom: 6px;">' + historyDateStr + ' • ' + (history.changedBy || '不明') + '</div>';
+                    content += '<div style="display: flex; align-items: center; gap: 8px;">';
+                    content += '<span class="status-badge ' + statusFromClass + '" style="font-size: 12px;">' + history.from + '</span>';
+                    content += '<span style="color: #666;">→</span>';
+                    content += '<span class="status-badge ' + statusToClass + '" style="font-size: 12px;">' + history.to + '</span>';
+                    content += '</div>';
+                    if (history.note) {
+                        content += '<div style="font-size: 12px; color: #666; margin-top: 4px;">💬 ' + history.note + '</div>';
+                    }
+                    content += '</div>';
+                    content += '</div>';
+                });
+                
+                content += '</div>';
+            }
+            
+            // ステータス（追加）
+            if (report.contractorStatus) {
+                content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
+                content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">ステータス</div>';
+                const contractorStatusClass = report.contractorStatus === '未対応' ? 'status-pending' :
+                                              report.contractorStatus === '対応中' ? 'status-processing' :
+                                              report.contractorStatus === '完了' ? 'status-completed' :
+                                              'status-unavailable';
+                content += '<div><span class="status-badge ' + contractorStatusClass + '">' + report.contractorStatus + '</span></div>';
+                content += '</div>';
+            }
+            
+            // 業者コメント履歴（追加・タイムライン形式）
+            if (report.contractorComments && report.contractorComments.length > 0) {
+                content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
+                content += '<div style="font-size: 12px; color: #999; margin-bottom: 12px;">💬 業者コメント履歴（' + report.contractorComments.length + '件）</div>';
+                
+                // タイムライン形式で表示
+                report.contractorComments.forEach(function(comment, idx) {
+                    const commentTime = new Date(comment.timestamp);
+                    const commentDateStr = commentTime.toLocaleDateString('ja-JP') + ' ' + 
+                                          commentTime.toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'});
+                    
+                    content += '<div style="display: flex; gap: 12px; margin-bottom: ' + (idx === report.contractorComments.length - 1 ? '0' : '16px') + ';">';
+                    // 業者アイコン
+                    content += '<div style="flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%); display: flex; align-items: center; justify-content: center; font-size: 20px;">🏢</div>';
+                    // コメント内容
+                    content += '<div style="flex: 1; background: #fef3c7; border: 1px solid #fde047; border-radius: 12px; padding: 12px;">';
+                    content += '<div style="font-size: 11px; color: #78350f; margin-bottom: 4px; font-weight: 600;">' + (report.assignedPartnerName || '業者') + ' • ' + commentDateStr + '</div>';
+                    content += '<div style="font-size: 14px; color: #333; line-height: 1.6;">' + comment.text + '</div>';
+                    content += '</div>';
+                    content += '</div>';
+                });
+                
+                content += '</div>';
+            }
+
+            document.getElementById('detailContent').innerHTML = content;
+            document.getElementById('detailOverlay').style.display = 'flex';
+        }
+
+        // 詳細を閉じる
+        function closeDetail() {
+            document.getElementById('detailOverlay').style.display = 'none';
+        }
+
+        // オーバーレイクリックで閉じる
+        document.getElementById('detailOverlay').addEventListener('click', function(e) {
+            if (e.target.id === 'detailOverlay') {
+                closeDetail();
+            }
+        });
+
+        // 事業所選択UIを初期化
+        function initOfficeFilter() {
+            const officeFilterArea = document.getElementById('officeFilterArea');
+            
+            if (currentUser.role === 'system_admin') {
+                // システム管理者専用フィルタを表示
+                document.getElementById('companyFilterRow').style.display = '';
+                document.getElementById('partnerFilterRow').style.display = '';
+                
+                // 会社フィルタ初期化
+                initCompanyFilter();
+                // 業者フィルタ初期化
+                initPartnerFilter();
+                
+                // 事業所：全事業所を表示（会社選択で絞り込み）
+                initOfficeSelect('');
+                
+            } else if (currentUser.role === 'company_admin') {
+                selectedOfficeCode = 'all_company';
+                initOfficeSelectForCompany(currentUser.companyCode);
+                filterReports();
+            } else {
+                selectedOfficeCode = currentUser.officeCode || '';
+                officeFilterArea.innerHTML = `<div id="officeInfo" style="color: #666; font-size: 14px;">${currentUser.officeName || '全事業所'}</div>`;
+                filterReports();
+            }
+        }
+
+        // 会社フィルタ初期化
+        function initCompanyFilter() {
+            const companyFilter = document.getElementById('companyFilter');
+            let companies = [];
+            try { companies = JSON.parse(sessionStorage.getItem('companies') || '[]'); } catch(e) {}
+            let companiesLocal = [];
+            try { companiesLocal = JSON.parse(localStorage.getItem('companies') || '[]'); } catch(e) {}
+            companiesLocal.forEach(c => { if (!companies.find(m => m.code === c.code)) companies.push(c); });
+            
+            companies.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.code;
+                opt.textContent = c.name;
+                companyFilter.appendChild(opt);
+            });
+        }
+
+        // 会社フィルタ変更時 → 事業所ドロップダウンを連動更新
+        function onCompanyFilterChange() {
+            const companyCode = document.getElementById('companyFilter').value;
+            initOfficeSelect(companyCode);
+        }
+
+        // 事業所セレクト初期化（会社コードで絞り込み）
+        function initOfficeSelect(companyCode) {
+            const officeFilterArea = document.getElementById('officeFilterArea');
+            let offices = [];
+            try { offices = JSON.parse(sessionStorage.getItem('offices') || '[]'); } catch(e) {}
+            let officesLocal = [];
+            try { officesLocal = JSON.parse(localStorage.getItem('offices') || '[]'); } catch(e) {}
+            officesLocal.forEach(o => { if (!offices.find(m => m.code === o.code)) offices.push(o); });
+            
+            if (companyCode) {
+                offices = offices.filter(o => o.companyCode === companyCode);
+            }
+            
+            let optionsHTML = '<option value="">-- 事業所を選択 --</option>';
+            optionsHTML += '<option value="all">全事業所</option>';
+            offices.forEach(office => {
+                optionsHTML += `<option value="${office.code}">${office.name}</option>`;
+            });
+            
+            officeFilterArea.innerHTML = `
+                <select id="officeSelect" class="filter-input" style="width: 300px;">
+                    ${optionsHTML}
+                </select>
+            `;
+        }
+
+        // 本社管理者用：自社の事業所セレクトボックス
+        function initOfficeSelectForCompany(companyCode) {
+            const officeFilterArea = document.getElementById('officeFilterArea');
+            let offices = [];
+            try { offices = JSON.parse(sessionStorage.getItem('offices') || '[]'); } catch(e) {}
+            let officesLocal = [];
+            try { officesLocal = JSON.parse(localStorage.getItem('offices') || '[]'); } catch(e) {}
+            officesLocal.forEach(o => { if (!offices.find(m => m.code === o.code)) offices.push(o); });
+
+            if (companyCode) {
+                offices = offices.filter(o => o.companyCode === companyCode);
+            }
+
+            let optionsHTML = '<option value="all_company">全事業所</option>';
+            offices.forEach(office => {
+                optionsHTML += `<option value="${office.code}">${office.name}</option>`;
+            });
+
+            officeFilterArea.innerHTML = `
+                <select id="companyOfficeSelect" class="filter-input" style="width: 300px;">
+                    ${optionsHTML}
+                </select>
+            `;
+
+            document.getElementById('companyOfficeSelect').addEventListener('change', function() {
+                selectedOfficeCode = this.value;
+                filterReports();
+            });
+        }
+
+        // 業者フィルタ初期化
+        function initPartnerFilter() {
+            const partnerFilter = document.getElementById('partnerFilter');
+            let partners = [];
+            try { partners = JSON.parse(sessionStorage.getItem('partners') || '[]'); } catch(e) {}
+            let partnersLocal = [];
+            try { partnersLocal = JSON.parse(localStorage.getItem('partners') || '[]'); } catch(e) {}
+            partnersLocal.forEach(p => { if (!partners.find(m => m.id === p.id)) partners.push(p); });
+            
+            partners.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.companyName || p.name || p.id;
+                partnerFilter.appendChild(opt);
+            });
+        }
+
+        // 戻る機能
+        // 戻る（ロールに応じたホームに遷移）
+        function goBack() {
+            try {
+                const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+                
+                if (!currentUser || !currentUser.role) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                // ロール別のホーム画面
+                const homePages = {
+                    'system_admin': 'system-admin.html',
+                    'company_admin': 'master-top.html',
+                    'office_admin': 'master-top.html',
+                    'staff': 'report.html',
+                    'contractor': 'contractor-dashboard.html'
+                };
+
+                const homePage = homePages[currentUser.role] || 'master-top.html';
+                window.location.href = homePage;
+            } catch (e) {
+                console.error('goBack error:', e);
+                window.location.href = 'master-top.html';
+            }
+        }
+
+        // 通報履歴をフィルタリングして表示
+        function filterReports() {
+            // システム管理者の場合は選択された事業所を取得
+            if (currentUser.role === 'system_admin') {
+                const officeSelect = document.getElementById('officeSelect');
+                selectedOfficeCode = officeSelect ? officeSelect.value : '';
+            }
+
+            // LocalStorage/SessionStorageから通報データを取得（DEMO対応）
+            let reportsFromSession = [];
+            let reportsFromLocal = [];
+            try { reportsFromSession = JSON.parse(sessionStorage.getItem('onetouch.reports') || '[]'); } catch(e) {}
+            try { reportsFromLocal = JSON.parse(localStorage.getItem('onetouch.reports') || '[]'); } catch(e) {}
+            let reports = [...reportsFromSession];
+            reportsFromLocal.forEach(r => { if (!reports.find(m => m.id === r.id)) reports.push(r); });
+            console.log('[report-history] 全通報数:', reports.length, '(session:', reportsFromSession.length, '/ local:', reportsFromLocal.length, ')');
+            console.log('[report-history] currentUser:', currentUser.role, currentUser.companyCode, 'selectedOffice:', selectedOfficeCode);
+            
+            // 会社フィルタ（システム管理者のみ）
+            if (currentUser.role === 'system_admin') {
+                const companyCode = document.getElementById('companyFilter') ? document.getElementById('companyFilter').value : '';
+                if (companyCode) {
+                    reports = reports.filter(r => r.companyCode === companyCode);
+                }
+            }
+
+            // 事業所でフィルタリング
+            if (selectedOfficeCode === 'all_company') {
+                reports = reports.filter(r => r.companyCode === currentUser.companyCode);
+                console.log('[report-history] all_company フィルタ後:', reports.length, '件 (companyCode:', currentUser.companyCode, ')');
+            } else if (selectedOfficeCode && selectedOfficeCode !== 'all' && selectedOfficeCode !== '') {
+                reports = reports.filter(r => r.officeCode === selectedOfficeCode);
+            }
+
+            // 業者フィルタ（システム管理者のみ）
+            if (currentUser.role === 'system_admin') {
+                const partnerId = document.getElementById('partnerFilter') ? document.getElementById('partnerFilter').value : '';
+                if (partnerId) {
+                    reports = reports.filter(r => r.assignedPartnerId === partnerId);
+                }
+            }
+
+            // ステータスカウント更新（ステータスフィルタ適用前）
+            updateStatusCounts(reports);
+
+            // ステータスフィルタ（タブ方式）
+            if (currentContractorStatusFilter) {
+                reports = reports.filter(r => (r.contractorStatus || '未対応') === currentContractorStatusFilter);
+            }
+            
+            // 日付でフィルタリング
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            if (startDate) {
+                const startTime = new Date(startDate + 'T00:00:00').getTime();
+                reports = reports.filter(r => new Date(r.timestamp).getTime() >= startTime);
+            }
+            
+            if (endDate) {
+                const endTime = new Date(endDate + 'T23:59:59').getTime();
+                reports = reports.filter(r => new Date(r.timestamp).getTime() <= endTime);
+            }
+            
+            renderReports(reports);
+        }
+
+        var currentContractorStatusFilter = '';
+
+        function filterByContractorStatus(status, el) {
+            currentContractorStatusFilter = status;
+            document.querySelectorAll('.status-tab').forEach(function(t) { t.classList.remove('active'); });
+            if (el) el.classList.add('active');
+            filterReports();
+        }
+
+        function updateStatusCounts(reports) {
+            var counts = { all: reports.length, '未対応': 0, '対応中': 0, '完了': 0, '対応不可': 0 };
+            reports.forEach(function(r) {
+                var s = r.contractorStatus || '未対応';
+                if (counts[s] !== undefined) counts[s]++;
+            });
+            document.getElementById('countAll').textContent = counts.all;
+            document.getElementById('countPending').textContent = counts['未対応'];
+            document.getElementById('countProgress').textContent = counts['対応中'];
+            document.getElementById('countComplete').textContent = counts['完了'];
+            document.getElementById('countUnavailable').textContent = counts['対応不可'];
+        }
+
+        // 通報履歴を表示
+        function renderReports(reports) {
+            const reportList = document.getElementById('reportList');
+            
+            // フィルタリング後の通報をグローバル変数に保存
+            allReports = reports;
+            
+            if (reports.length === 0) {
+                reportList.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="empty-state">
+                            <div class="empty-icon">📋</div>
+                            <div>通報履歴がありません</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const statusLabels = {
+                pending: '未対応',
+                processing: '対応中',
+                completed: '完了'
+            };
+            
+            const contractorStatusLabels = {
+                '未対応': '未対応',
+                '対応中': '対応中',
+                '完了': '完了',
+                '対応不可': '対応不可'
+            };
+
+            const typeLabels = {
+                wholesale: '卸業者',
+                building: 'ビルメン業者',
+                welfare: '福祉用具業者',
+                emergency: '緊急'
+            };
+            
+            // 業者マスタを読み込み
+            const partners = JSON.parse(localStorage.getItem('partners') || '[]');
+
+            reportList.innerHTML = reports.map((report, index) => {
+                const datetime = new Date(report.timestamp);
+                const dateStr = datetime.toLocaleDateString('ja-JP') + ' ' + 
+                               datetime.toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'});
+                const status = report.status || 'pending';
+                const category = report.emergency ? '緊急通報' : (typeLabels[report.type] || report.category || '-');
+                const officeName = report.officeName || '-';
+                
+                // 割当業者名を取得
+                let assignedPartnerName = '-';
+                let assignedPartnerWarning = '';
+                if (report.assignedPartnerId) {
+                    const partner = partners.find(p => p.id === report.assignedPartnerId);
+                    assignedPartnerName = partner ? partner.name : '不明';
+                } else {
+                    assignedPartnerWarning = ' style="color: #f59e0b; font-weight: 600;"';
+                }
+                
+                // ステータス
+                const contractorStatus = report.contractorStatus || '-';
+                const contractorStatusClass = contractorStatus === '未対応' ? 'status-pending' : 
+                                              contractorStatus === '対応中' ? 'status-processing' :
+                                              contractorStatus === '完了' ? 'status-completed' :
+                                              contractorStatus === '対応不可' ? 'status-unavailable' : '';
+                
+                // 対応時間を計算
+                let responseTime = '-';
+                if (report.assignedAt && report.firstResponseAt) {
+                    const assigned = new Date(report.assignedAt);
+                    const responded = new Date(report.firstResponseAt);
+                    const diffMs = responded - assigned;
+                    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                    
+                    if (diffHours > 0) {
+                        responseTime = `${diffHours}時間${diffMinutes}分`;
+                    } else {
+                        responseTime = `${diffMinutes}分`;
+                    }
+                }
+                
+                return `
+                    <tr onclick="showDetail(${index})" style="cursor: pointer;">
+                        <td>${dateStr}</td>
+                        <td>${report.reporter || '-'}</td>
+                        <td>${officeName}</td>
+                        <td>${category}</td>
+                        <td>${(report.description || report.category || '-').length > 15 ? (report.description || report.category || '-').substring(0, 15) + '...' : (report.description || report.category || '-')}</td>
+                        <td>${contractorStatus !== '-' ? `<span class="status-badge ${contractorStatusClass}">${contractorStatus}</span>` : '-'}</td>
+                        <td>${responseTime}</td>
+                        <td>${report.handler || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            // スマホ用カード表示
+            const reportCards = document.getElementById('reportCards');
+            if (reports.length === 0) {
+                reportCards.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">📋 通報履歴がありません</div>';
+            } else {
+                reportCards.innerHTML = reports.map((report, index) => {
+                    const datetime = new Date(report.timestamp);
+                    const dateStr = datetime.toLocaleDateString('ja-JP') + ' ' + 
+                                   datetime.toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'});
+                    const category = report.emergency ? '緊急通報' : (typeLabels[report.type] || report.category || '-');
+                    const contractorStatus = report.contractorStatus || '未対応';
+                    const contractorStatusClass = contractorStatus === '未対応' ? 'status-pending' : 
+                                                  contractorStatus === '対応中' ? 'status-processing' :
+                                                  contractorStatus === '完了' ? 'status-completed' :
+                                                  contractorStatus === '対応不可' ? 'status-unavailable' : '';
+                    
+                    let assignedPartnerName = '';
+                    if (report.assignedPartnerId) {
+                        const partner = partners.find(p => p.id === report.assignedPartnerId);
+                        assignedPartnerName = partner ? partner.name : '不明';
+                    }
+
+                    return `
+                        <div class="report-card" onclick="showDetail(${index})">
+                            <div class="report-card-header">
+                                <div class="report-card-title">${(report.description || report.category || '通報').length > 15 ? (report.description || report.category || '通報').substring(0, 15) + '...' : (report.description || report.category || '通報')}</div>
+                                <span class="status-badge ${contractorStatusClass}">${contractorStatus}</span>
+                            </div>
+                            <div class="report-card-date">${dateStr}　${report.reporter || '-'}</div>
+                            <div class="report-card-info">
+                                <span>${report.officeName || '-'}</span>
+                                <span>${category}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // CSVエクスポート
+        function exportCSV() {
+            if (!allReports || allReports.length === 0) {
+                alert('エクスポートする通報データがありません。\n先に検索を実行してください。');
+                return;
+            }
+
+            // パートナー名のマッピング
+            let partners = [];
+            try { partners = JSON.parse(sessionStorage.getItem('partners') || '[]'); } catch(e) {}
+            let partnersLocal = [];
+            try { partnersLocal = JSON.parse(localStorage.getItem('partners') || '[]'); } catch(e) {}
+            partnersLocal.forEach(p => { if (!partners.find(m => m.id === p.id)) partners.push(p); });
+
+            const headers = ['通報日時','通報者','会社コード','事業所','カテゴリ','内容','ステータス','対応時間','対応者'];
+            const rows = allReports.map(r => {
+                const date = r.timestamp ? new Date(r.timestamp).toLocaleString('ja-JP') : '';
+                let responseTime = '';
+                if (r.assignedAt && r.firstResponseAt) {
+                    const diffMs = new Date(r.firstResponseAt) - new Date(r.assignedAt);
+                    const h = Math.floor(diffMs / 3600000);
+                    const m = Math.floor((diffMs % 3600000) / 60000);
+                    responseTime = h > 0 ? h + '時間' + m + '分' : m + '分';
+                }
+                return [
+                    date,
+                    r.reporter || '',
+                    r.companyCode || '',
+                    r.officeName || '',
+                    r.category || '',
+                    (r.description || r.category || '').replace(/,/g, '，'),
+                    r.contractorStatus || '',
+                    responseTime,
+                    r.handler || ''
+                ].map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',');
+            });
+
+            const bom = '\uFEFF';
+            const csv = bom + headers.join(',') + '\n' + rows.join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const dateStr = new Date().toISOString().split('T')[0];
+            a.href = url;
+            a.download = 'report-history-' + dateStr + '.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 初期化
+        initOfficeFilter();
+
+        // 日付フィルタ（今日の日付を設定）
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('endDate').value = today;
+        
+        // 1ヶ月前を開始日に設定
+        const monthAgo = new Date();
+        monthAgo.setMonth(monthAgo.getMonth() - 1);
+        document.getElementById('startDate').value = monthAgo.toISOString().split('T')[0];
+    </script>
+
+    <script>
+    // 統一ヘッダー初期化
+    UnifiedHeader.init({
+        icon: '📜',
+        title: '通報履歴',
+        backButton: true
+    });
+    </script>
+</body>
+</html>

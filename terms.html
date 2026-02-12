@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>利用規約 | ワンタッチ管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans CJK JP", sans-serif;
+            background: #fafafa;
+            color: #333;
+            line-height: 1.8;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+.notice {
+            background: #fff8e1;
+            border-left: 4px solid #E9A825;
+            padding: 16px 20px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .notice::before {
+            content: "⚠️ ";
+            margin-right: 8px;
+        }
+
+        .content {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section h2 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 16px;
+            padding-left: 12px;
+            border-left: 4px solid #E53935;
+        }
+
+        .section p {
+            margin-bottom: 12px;
+            color: #555;
+        }
+
+        .section ul {
+            margin-left: 20px;
+            margin-bottom: 16px;
+        }
+
+        .section li {
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        .important-note {
+            background: #ffebee;
+            border-left: 4px solid #c62828;
+            padding: 16px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .important-note::before {
+            content: "🚫 ";
+            margin-right: 8px;
+            font-size: 16px;
+        }
+
+        .important-note p {
+            color: #c62828;
+            font-weight: 600;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .footer-copyright {
+            color: #999;
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+
+        .footer-links a {
+            color: #666;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: #E53935;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 30px 20px;
+            }
+}
+    </style>
+    <script src="demo-mode.js"></script>
+    <script src="unified-header.js"></script>
+</head>
+<body>
+    <!-- 統一ヘッダー -->
+    <div id="unified-header-mount"></div>
+    <div class="container">
+        <div style="margin-bottom: 20px;">
+            <a href="javascript:history.back()" style="color: #E53935; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+                ← ログイン画面に戻る
+            </a>
+        </div>
+<div class="notice">
+            本規約の最終的な法務確認は弁護士への相談を推奨します。デモ公開時の助止力を優先した文面です。
+        </div>
+
+        <div class="content">
+            <div class="section">
+                <h2>第1条（目的）</h2>
+                <p>本デモは、ワンタッチ管理（以下「本サービス」）の機能体験を目的として提供します。</p>
+            </div>
+
+            <div class="section">
+                <h2>第2条（デモの制限）</h2>
+                <p>1. 本デモは、機能・回数・容量その他の利用制限を設ける場合があります。</p>
+                <p>2. 当社は、予告なく本デモの仕様変更、停止、中断を行うことがあります。</p>
+            </div>
+
+            <div class="section">
+                <h2>第3条（禁止事項）</h2>
+                <p>利用者は、以下の行為をしてはなりません。</p>
+                <ul>
+                    <li>解析、リバースエンジニアリング、逆コンパイル、ソースコード抽出に係る行為</li>
+                    <li>画面・構成・仕様・データ設計等を用いた模倣目的の利用、競合サービスの開発</li>
+                    <li>サーバまたはネットワークに過度な負荷を与える行為（連続アップロード、過剰アクセス等）</li>
+                    <li>不正アクセス、なりすまし、複数アカウントによる制限回避</li>
+                    <li>第三者の権利侵害、法令・公序良俗に反する行為</li>
+                </ul>
+
+                <div class="important-note">
+                    <p>本デモの設計・UIを参考にした競合サービスの開発は固く禁じます。</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>第4条（知的財産権）</h2>
+                <p>本デモおよび本サービスに関する著作権、商標権、ノウハウその他一切の権利は当社に帰属します。</p>
+                <p>利用者は、当社の事前承諾なく、本デモの全部または一部を複製、転載、公表送信、改変、二次利用してはなりません。</p>
+            </div>
+
+            <div class="section">
+                <h2>第5条（データの取扱い）</h2>
+                <p>1. 利用者が本デモにアップロードしたデータは、解析・表示・改善の目的で取り扱われる場合があります。</p>
+                <p>2. 利用者は、個人情報や機密情報を含むデータをアップロードしないものとします（デモ用途のため）。</p>
+            </div>
+
+            <div class="section">
+                <h2>第6条（利用停止）</h2>
+                <p>当社は、利用者が本規約に違反した場合、事前通知なく本デモの利用を停止し、またはアクセスを制限できます。</p>
+            </div>
+
+            <div class="section">
+                <h2>第7条（免責）</h2>
+                <p>1. 当社は、本デモの完全性、正確性、特定目的適合性を保証しません。</p>
+                <p>2. 本デモの利用により生じた損害について、当社は責任を負いません（故意または重過失を除く）。</p>
+            </div>
+
+            <div class="section">
+                <h2>第8条（準拠法・管轄）</h2>
+                <p>本規約は日本法に準拠し、本デモに関して紛争が生じた場合、当社所在地を管轄する裁判所を第一審の専属的合意管轄裁判所とします。</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="footer-copyright">
+                © TAMJ / OneTouch Management. All rights reserved.
+            </div>
+            <div style="margin-top: 12px; display: flex; justify-content: center; gap: 16px;">
+                <a href="javascript:history.back()">← 戻る</a>
+                <span style="color: #ddd;">|</span>
+                <a href="privacy.html" style="color: #666; text-decoration: none;">プライバシーポリシー</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    UnifiedHeader.init({
+        icon: '📄',
+        title: '利用規約',
+        backButton: true
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "タッチ",
+  "short_name": "タッチ",
+  "description": "ワンタッチ管理システム",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a1a1a",
+  "theme_color": "#1a1a1a",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

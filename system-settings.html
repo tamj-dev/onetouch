@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>システム設定 | ワンタッチ管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans CJK JP", sans-serif;
+            background: #fafafa;
+            min-height: 100vh;
+        }
+.container {
+            max-width: 640px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-size: 14px;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .info-value {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .link-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.2s;
+            border: 1px solid #e5e7eb;
+        }
+
+        .link-item:hover {
+            background: #f0f0f0;
+            border-color: #1a1a1a;
+        }
+
+        .link-item-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .link-icon {
+            font-size: 20px;
+        }
+
+        .link-label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .link-arrow {
+            color: #999;
+            font-size: 18px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        .btn-primary {
+            background: white;
+            border: 1px solid #e0e0e0;
+            color: #333;
+        }
+
+        .btn-primary:hover {
+            background: #fafafa;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+.stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .stat-card {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .stat-unit {
+            font-size: 14px;
+            color: #999;
+            margin-left: 4px;
+        }
+
+        @media (max-width: 768px) {
+.container {
+                padding: 0 16px;
+            }
+
+            .section {
+                padding: 24px 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <script src="demo-mode.js"></script>
+    <script src="unified-header.js"></script>
+    <meta name="theme-color" content="#1a1a1a">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon-192.png">
+</head>
+<body>
+    <!-- 統一ヘッダー -->
+    <div id="unified-header-mount"></div>
+
+    <div class="container">
+        <!-- システム情報（全ロール共通） -->
+        <div class="section">
+            <div class="section-title"> 統計情報</div>
+            
+            <div class="stats-grid" id="statsGrid">
+                <!-- JavaScriptで動的に生成 -->
+            </div>
+        </div>
+
+        <!-- 詳細統計・監視（system_admin専用） -->
+        <div class="section" id="advancedStats" style="display:none;">
+            <div class="section-title"> 詳細統計・監視</div>
+            
+            <!-- データベース使用量 -->
+            <div style="margin-bottom: 32px;">
+                <div style="font-weight: 600; margin-bottom: 16px; color: #333;"> データベース使用量</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">総使用容量</div>
+                        <div class="stat-value" id="totalStorage">0<span class="stat-unit">KB</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">会社データ</div>
+                        <div class="stat-value" id="companyStorage">0<span class="stat-unit">KB</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">事業所データ</div>
+                        <div class="stat-value" id="officeStorage">0<span class="stat-unit">KB</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">アカウントデータ</div>
+                        <div class="stat-value" id="accountStorage">0<span class="stat-unit">KB</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">通報データ</div>
+                        <div class="stat-value" id="reportStorage">0<span class="stat-unit">KB</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">監査ログ</div>
+                        <div class="stat-value" id="auditStorage">0<span class="stat-unit">KB</span></div>
+                    </div>
+                </div>
+                <div id="storageWarning" style="display:none; background: #fff8e1; color: #f57c00; padding: 12px; border-radius: 6px; margin-top: 12px; font-size: 14px;">
+                     LocalStorageの使用容量が多くなっています。古いデータの削除を検討してください。
+                </div>
+            </div>
+
+            <!-- アクティブユーザー数 -->
+            <div style="margin-bottom: 32px;">
+                <div style="font-weight: 600; margin-bottom: 16px; color: #333;">👥 アクティブユーザー数</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">今日</div>
+                        <div class="stat-value" id="todayActiveUsers">0<span class="stat-unit">人</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">今週</div>
+                        <div class="stat-value" id="weekActiveUsers">0<span class="stat-unit">人</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">今月（MAU）</div>
+                        <div class="stat-value" id="monthActiveUsers">0<span class="stat-unit">人</span></div>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="window.location.href='audit-log.html'" style="margin-top: 12px;">
+                     ユーザー別ログイン履歴を見る
+                </button>
+            </div>
+
+            <!-- 通報件数推移 -->
+            <div style="margin-bottom: 32px;">
+                <div style="font-weight: 600; margin-bottom: 16px; color: #333;">📈 通報件数推移</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">今日</div>
+                        <div class="stat-value" id="todayReports">0<span class="stat-unit">件</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">今週</div>
+                        <div class="stat-value" id="weekReports">0<span class="stat-unit">件</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">今月</div>
+                        <div class="stat-value" id="monthReports">0<span class="stat-unit">件</span></div>
+                    </div>
+                </div>
+                <div style="margin-top: 16px; padding: 16px; background: #f8f9fa; border-radius: 8px;">
+                    <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">カテゴリー別通報数</div>
+                    <div id="categoryBreakdown"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 事業所情報（office_admin専用） -->
+        <div class="section" id="officeInfo" style="display:none;">
+            <div class="section-title">🏪 事業所情報</div>
+            
+            <div class="info-row">
+                <div class="info-label">事業所名</div>
+                <div class="info-value" id="officeNameDisplay">-</div>
+            </div>
+
+            <div class="info-row">
+                <div class="info-label">事業所コード</div>
+                <div class="info-value">
+                    <span class="badge" id="officeCodeDisplay">-</span>
+                </div>
+            </div>
+
+            <div class="info-row">
+                <div class="info-label">所属会社</div>
+                <div class="info-value" id="officeCompanyDisplay">-</div>
+            </div>
+
+            <div class="info-row">
+                <div class="info-label">住所</div>
+                <div class="info-value" id="officeAddressDisplay">-</div>
+            </div>
+
+            <div class="info-row">
+                <div class="info-label">電話番号</div>
+                <div class="info-value" id="officePhoneDisplay">-</div>
+            </div>
+
+            <div style="margin-top: 16px; padding: 12px; background: #fafafa; border-radius: 6px; font-size: 13px; color: #666;">
+                ℹ️ 事業所情報の編集は本社管理者が行います。変更が必要な場合は本社管理者に連絡してください。
+            </div>
+        </div>
+
+        <!-- 監査ログへのリンク（company_admin / office_admin） -->
+        <div class="section" id="auditLogSection" style="display:none;">
+            <div class="section-title"> 操作履歴・監査ログ</div>
+            
+            <div class="info-row">
+                <div class="info-label">操作履歴の確認</div>
+                <div class="info-value">
+                    <a href="audit-log.html" class="btn btn-primary" style="display: inline-block; text-decoration: none;">
+                         監査ログを見る
+                    </a>
+                    <div style="font-size: 12px; color: #666; margin-top: 8px;">
+                        アカウント作成・編集・削除などの操作履歴を確認できます
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 会社設定（company_admin以上） -->
+        <div class="section" id="companySettings" style="display:none;">
+            <div class="section-title">🏢 会社設定</div>
+            
+            <!-- 会社ロゴ -->
+            <div class="info-row">
+                <div class="info-label">会社ロゴ</div>
+                <div class="info-value">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div id="currentLogo" style="width: 60px; height: 60px; background: #1a1a1a; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: bold;">
+                            T
+                        </div>
+                        <div>
+                            <input type="file" id="logoUpload" accept="image/*" style="display: none;" onchange="handleLogoUpload(event)">
+                            <button class="btn btn-primary" onclick="document.getElementById('logoUpload').click()">
+                                📷 ロゴを変更
+                            </button>
+                            <div style="font-size: 12px; color: #666; margin-top: 4px;">
+                                推奨: 正方形、PNG形式、200x200px以上
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 会社名 -->
+            <div class="info-row">
+                <div class="info-label">会社名</div>
+                <div class="info-value" id="companyNameDisplay">タムジ株式会社</div>
+            </div>
+
+            <!-- 会社コード -->
+            <div class="info-row">
+                <div class="info-label">会社コード</div>
+                <div class="info-value">
+                    <span class="badge" id="companyCodeDisplay">TAMJ</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 通報カテゴリー設定（company_admin以上） -->
+        <div class="section" id="categorySettings" style="display:none;">
+            <div class="section-title"> 通報カテゴリー設定</div>
+            
+            <div style="margin-bottom: 16px; padding: 12px; background: #fafafa; border-radius: 6px; font-size: 14px; color: #666;">
+                💡 標準カテゴリーは残しつつ、会社独自のカテゴリーを追加できます
+            </div>
+
+            <!-- 標準カテゴリー -->
+            <div style="margin-bottom: 20px;">
+                <div style="font-weight: 600; margin-bottom: 8px; color: #333;">標準カテゴリー（固定）</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    <span class="badge" style="background: #e3f2fd; color: #1976d2;">卸業者</span>
+                    <span class="badge" style="background: #e8f5e9; color: #388e3c;">ビルメン業者</span>
+                    <span class="badge" style="background: #fff8e1; color: #f57c00;">福祉用具業者</span>
+                    <span class="badge" style="background: #ffebee; color: #c62828;">緊急</span>
+                </div>
+            </div>
+
+            <!-- カスタムカテゴリー -->
+            <div style="margin-bottom: 20px;">
+                <div style="font-weight: 600; margin-bottom: 8px; color: #333;">カスタムカテゴリー</div>
+                <div id="customCategoriesList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+                    <!-- カスタムカテゴリーがここに表示される -->
+                </div>
+                <button class="btn btn-primary" onclick="addCustomCategory()">
+                    ➕ カテゴリーを追加
+                </button>
+            </div>
+        </div>
+
+        <!-- データエクスポート（管理者のみ） -->
+        <div class="section" id="dataExportSection" style="display:none;">
+            <div class="section-title">📥 データエクスポート</div>
+            
+            <div style="margin-bottom: 16px; padding: 12px; background: #fafafa; border-radius: 6px; font-size: 13px; color: #666;">
+                ℹ️ エクスポートするデータを選択してください。CSV形式でダウンロードされます。
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: flex; align-items: center; padding: 12px; border: 1px solid #e0e0e0; border-radius: 6px; cursor: pointer; margin-bottom: 8px;">
+                    <input type="checkbox" id="exportAccounts" style="margin-right: 12px; width: 18px; height: 18px;">
+                    <div>
+                        <div style="font-weight: 600;">アカウントマスタ</div>
+                        <div style="font-size: 12px; color: #666;">ユーザーID・名前・ロール等</div>
+                    </div>
+                </label>
+                
+                <label style="display: flex; align-items: center; padding: 12px; border: 1px solid #e0e0e0; border-radius: 6px; cursor: pointer; margin-bottom: 8px;" id="exportOfficesLabel">
+                    <input type="checkbox" id="exportOffices" style="margin-right: 12px; width: 18px; height: 18px;">
+                    <div>
+                        <div style="font-weight: 600;">事業所マスタ</div>
+                        <div style="font-size: 12px; color: #666;">事業所名・住所・連絡先等</div>
+                    </div>
+                </label>
+                
+                <label style="display: flex; align-items: center; padding: 12px; border: 1px solid #e0e0e0; border-radius: 6px; cursor: pointer; margin-bottom: 8px;" id="exportPartnersLabel">
+                    <input type="checkbox" id="exportPartners" style="margin-right: 12px; width: 18px; height: 18px;">
+                    <div>
+                        <div style="font-weight: 600;">業者マスタ</div>
+                        <div style="font-size: 12px; color: #666;">業者名・カテゴリー・連絡先等</div>
+                    </div>
+                </label>
+                
+                <label style="display: flex; align-items: center; padding: 12px; border: 1px solid #e0e0e0; border-radius: 6px; cursor: pointer; margin-bottom: 8px;">
+                    <input type="checkbox" id="exportItems" style="margin-right: 12px; width: 18px; height: 18px;">
+                    <div>
+                        <div style="font-weight: 600;">商品マスタ</div>
+                        <div style="font-size: 12px; color: #666;">商品名・メーカー・型番・担当業者等</div>
+                    </div>
+                </label>
+                
+                <label style="display: flex; align-items: center; padding: 12px; border: 1px solid #e0e0e0; border-radius: 6px; cursor: pointer; margin-bottom: 8px;">
+                    <input type="checkbox" id="exportReports" style="margin-right: 12px; width: 18px; height: 18px;">
+                    <div>
+                        <div style="font-weight: 600;">通報履歴</div>
+                        <div style="font-size: 12px; color: #666;">通報日時・カテゴリー・状況・対応状況等</div>
+                    </div>
+                </label>
+                
+                <label style="display: flex; align-items: center; padding: 12px; border: 1px solid #e0e0e0; border-radius: 6px; cursor: pointer;" id="exportAuditLabel">
+                    <input type="checkbox" id="exportAudit" style="margin-right: 12px; width: 18px; height: 18px;">
+                    <div>
+                        <div style="font-weight: 600;">監査ログ</div>
+                        <div style="font-size: 12px; color: #666;">操作履歴・日時・実行者等</div>
+                    </div>
+                </label>
+            </div>
+            
+            <button class="btn btn-primary" onclick="executeExport()" style="width: 100%;">
+                📥 選択したデータをエクスポート
+            </button>
+        </div>
+
+        <!-- データ削除（system_adminのみ） -->
+        <div class="section" id="dataDeleteSection" style="display:none;">
+            <div class="section-title">🗑️ データ管理</div>
+            
+            <div style="margin-bottom: 16px; padding: 12px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; font-size: 13px; color: #856404;">
+                 警告: この操作は取り消せません。全てのデータが完全に削除されます。
+            </div>
+            
+            <button class="btn btn-danger" onclick="clearAllData()">
+                🗑️ 全データを削除
+            </button>
+        </div>
+
+        <!-- リンク -->
+        <div class="section">
+            <div class="section-title">📄 規約・ポリシー</div>
+            
+            <a href="terms.html" class="link-item">
+                <div class="link-item-left">
+                    <span class="link-icon">📜</span>
+                    <span class="link-label">利用規約</span>
+                </div>
+                <span class="link-arrow">→</span>
+            </a>
+
+            <a href="privacy.html" class="link-item">
+                <div class="link-item-left">
+                    <span class="link-icon">🔒</span>
+                    <span class="link-label">プライバシーポリシー</span>
+                </div>
+                <span class="link-arrow">→</span>
+            </a>
+        </div>
+
+        <!-- ログアウト -->
+        <div class="section">
+            <button class="btn btn-logout" onclick="logout()">
+                🚪 ログアウト
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ログインチェック
+        const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = 'login.html';
+        } else if (currentUser.role !== 'company_admin' && currentUser.role !== 'office_admin' && currentUser.role !== 'system_admin') {
+            alert('この画面は管理者のみアクセスできます。');
+            window.location.href = 'master-top.html';
+        }
+
+        // 戻る機能
+        // 戻る（ロールに応じたホームに遷移）
+        function goBack() {
+            try {
+                const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+                
+                if (!currentUser || !currentUser.role) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                // ロール別のホーム画面
+                const homePages = {
+                    'system_admin': 'system-admin.html',
+                    'company_admin': 'master-top.html',
+                    'office_admin': 'master-top.html',
+                    'staff': 'report.html',
+                    'contractor': 'contractor-dashboard.html'
+                };
+
+                const homePage = homePages[currentUser.role] || 'master-top.html';
+                window.location.href = homePage;
+            } catch (e) {
+                console.error('goBack error:', e);
+                window.location.href = 'master-top.html';
+            }
+        }
+
+        // 統計情報を表示
+        function loadStats() {
+            try {
+                // 会社数
+                const companies = JSON.parse(localStorage.getItem('companies') || '[]');
+                document.getElementById('companyCount').innerHTML = companies.length + '<span class="stat-unit">件</span>';
+
+                // アカウント数
+                const accounts = JSON.parse(localStorage.getItem('accounts') || '[]');
+                document.getElementById('accountCount').innerHTML = accounts.length + '<span class="stat-unit">件</span>';
+
+                // 事業所数
+                const offices = JSON.parse(localStorage.getItem('offices') || '[]');
+                document.getElementById('officeCount').innerHTML = offices.length + '<span class="stat-unit">件</span>';
+
+                // 取引先数
+                const partners = JSON.parse(localStorage.getItem('partners') || '[]');
+                document.getElementById('partnerCount').innerHTML = partners.length + '<span class="stat-unit">件</span>';
+
+                // 通報数
+                const reports = JSON.parse(localStorage.getItem('onetouch.reports') || '[]');
+                document.getElementById('reportCount').innerHTML = reports.length + '<span class="stat-unit">件</span>';
+            } catch (e) {
+                console.error('統計情報の取得に失敗:', e);
+            }
+        }
+
+        // データエクスポート
+        // CSVエクスポート実行
+        function executeExport() {
+            try {
+                const exportAccounts = document.getElementById('exportAccounts').checked;
+                const exportOffices = document.getElementById('exportOffices').checked;
+                const exportPartners = document.getElementById('exportPartners').checked;
+                const exportItems = document.getElementById('exportItems').checked;
+                const exportReports = document.getElementById('exportReports').checked;
+                const exportAudit = document.getElementById('exportAudit').checked;
+                
+                if (!exportAccounts && !exportOffices && !exportPartners && !exportItems && !exportReports && !exportAudit) {
+                    alert('エクスポートするデータを選択してください。');
+                    return;
+                }
+                
+                const dateStr = new Date().toISOString().split('T')[0];
+                
+                if (exportAccounts) {
+                    let accounts = JSON.parse(demoGetFromLocalStorage('accounts') || '[]');
+                    accounts = filterByScope(accounts);
+                    exportToCSV(accounts, `accounts_${dateStr}.csv`, ['id', 'userId', 'name', 'companyCode', 'officeCode', 'role', 'status']);
+                }
+                
+                if (exportOffices) {
+                    let offices = JSON.parse(localStorage.getItem('offices') || '[]');
+                    offices = filterByScope(offices);
+                    exportToCSV(offices, `offices_${dateStr}.csv`, ['officeCode', 'officeName', 'companyCode', 'address', 'phone', 'status']);
+                }
+                
+                if (exportPartners) {
+                    let partners = JSON.parse(demoGetFromLocalStorage('partners') || '[]');
+                    partners = filterByScope(partners);
+                    exportToCSV(partners, `partners_${dateStr}.csv`, ['id', 'name', 'partnerCode', 'categories', 'assignedCompanies', 'contactName', 'status']);
+                }
+                
+                if (exportItems) {
+                    let items = JSON.parse(demoGetFromSessionOrLocalStorage('items') || '[]');
+                    items = filterByScope(items);
+                    exportToCSV(items, `items_${dateStr}.csv`, ['itemId', 'name', 'maker', 'model', 'category', 'assignedPartnerName', 'price', 'stock']);
+                }
+                
+                if (exportReports) {
+                    let reports = JSON.parse(demoGetFromLocalStorage('onetouch.reports') || '[]');
+                    reports = filterByScope(reports);
+                    exportToCSV(reports, `reports_${dateStr}.csv`, ['id', 'timestamp', 'category', 'title', 'priority', 'location', 'description', 'assignedPartnerName', 'contractorStatus']);
+                }
+                
+                if (exportAudit) {
+                    let logs = JSON.parse(localStorage.getItem('audit.logs') || '[]');
+                    logs = filterByScope(logs);
+                    exportToCSV(logs, `audit_logs_${dateStr}.csv`, ['timestamp', 'action', 'userId', 'userName', 'details']);
+                }
+                
+                alert('エクスポートが完了しました。');
+            } catch (e) {
+                console.error('エクスポートエラー:', e);
+                alert('エクスポートに失敗しました。');
+            }
+        }
+        
+        // スコープに応じたデータフィルタリング
+        function filterByScope(data) {
+            if (currentUser.role === 'system_admin') {
+                return data; // 全データ
+            } else if (currentUser.role === 'company_admin') {
+                return data.filter(item => item.companyCode === currentUser.companyCode);
+            } else if (currentUser.role === 'office_admin') {
+                return data.filter(item => item.officeCode === currentUser.officeCode || item.companyCode === currentUser.companyCode);
+            }
+            return data;
+        }
+        
+        // CSV変換＆ダウンロード
+        function exportToCSV(data, filename, columns) {
+            if (!data || data.length === 0) {
+                console.warn('エクスポートするデータがありません:', filename);
+                return;
+            }
+            
+            // BOM付きCSV（Excel対応）
+            const BOM = '\uFEFF';
+            
+            // ヘッダー行
+            const headers = columns.join(',');
+            
+            // データ行
+            const rows = data.map(item => {
+                return columns.map(col => {
+                    let value = item[col];
+                    
+                    // 配列の場合はカンマ区切りに変換
+                    if (Array.isArray(value)) {
+                        value = value.join(';');
+                    }
+                    
+                    // null/undefinedの場合は空文字
+                    if (value === null || value === undefined) {
+                        value = '';
+                    }
+                    
+                    // 文字列の場合、カンマ・改行・ダブルクォートをエスケープ
+                    value = String(value);
+                    if (value.includes(',') || value.includes('\n') || value.includes('"')) {
+                        value = '"' + value.replace(/"/g, '""') + '"';
+                    }
+                    
+                    return value;
+                }).join(',');
+            });
+            
+            const csv = BOM + headers + '\n' + rows.join('\n');
+            
+            // ダウンロード
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        }
+
+        // 全データ削除
+        function clearAllData() {
+            const confirmed = confirm('本当に全データを削除しますか？\nこの操作は取り消せません。');
+            if (!confirmed) return;
+
+            const doubleConfirm = confirm('削除すると、会社、アカウント、事業所、取引先、通報履歴の全データが削除されます。\n本当によろしいですか？');
+            if (!doubleConfirm) return;
+
+            try {
+                localStorage.removeItem('companies');
+                localStorage.removeItem('accounts');
+                localStorage.removeItem('offices');
+                localStorage.removeItem('partners');
+                localStorage.removeItem('onetouch.reports');
+                localStorage.removeItem('currentAccount');
+                localStorage.removeItem('audit.logs');
+
+                alert('全データを削除しました。ページを再読み込みしてください。');
+                loadStats();
+                
+                // 3秒後にログイン画面へ
+                setTimeout(() => {
+                    sessionStorage.clear();
+                    localStorage.clear();
+                    window.location.href = 'login.html';
+                }, 3000);
+            } catch (e) {
+                console.error('削除エラー:', e);
+                alert('削除に失敗しました。');
+            }
+        }
+
+        // ログアウト
+        function logout() {
+            const confirmed = confirm('ログアウトしますか？');
+            if (!confirmed) return;
+
+            sessionStorage.removeItem('currentUser');
+            localStorage.removeItem('currentAccount');
+            localStorage.removeItem('ONE_loggedIn');
+            localStorage.removeItem('ONE_userId');
+            localStorage.removeItem('ONE_userName');
+            window.location.href = 'login.html';
+        }
+
+        // 会社設定の表示制御
+        function initializeSettings() {
+            // 統計情報を生成
+            loadStats();
+            
+            if (currentUser.role === 'system_admin') {
+                // システム管理者
+                document.getElementById('dataExportSection').style.display = 'block';
+                document.getElementById('dataDeleteSection').style.display = 'block';
+            } else if (currentUser.role === 'company_admin') {
+                // 本社管理者
+                document.getElementById('companySettings').style.display = 'block';
+                document.getElementById('categorySettings').style.display = 'block';
+                document.getElementById('auditLogSection').style.display = 'block';
+                document.getElementById('dataExportSection').style.display = 'block';
+                loadCompanySettings();
+                loadCustomCategories();
+                // 事業所管理者には見せないオプションを非表示
+                document.getElementById('exportPartnersLabel').style.display = 'none';
+            } else if (currentUser.role === 'office_admin') {
+                // 事業所管理者
+                document.getElementById('officeInfo').style.display = 'block';
+                document.getElementById('auditLogSection').style.display = 'block';
+                document.getElementById('dataExportSection').style.display = 'block';
+                loadOfficeInfo();
+                // 事業所管理者には見せないオプションを非表示
+                document.getElementById('exportOfficesLabel').style.display = 'none';
+                document.getElementById('exportPartnersLabel').style.display = 'none';
+                document.getElementById('exportAuditLabel').style.display = 'none';
+            }
+        }
+
+        // 統計情報を読み込み
+        function loadStats() {
+            const statsGrid = document.getElementById('statsGrid');
+            statsGrid.innerHTML = '';
+            
+            try {
+                if (currentUser.role === 'system_admin') {
+                    // システム管理者: 全体の統計
+                    const companies = JSON.parse(localStorage.getItem('companies') || '[]');
+                    const offices = JSON.parse(localStorage.getItem('offices') || '[]');
+                    const accounts = JSON.parse(demoGetFromLocalStorage('accounts') || '[]');
+                    const partners = JSON.parse(demoGetFromLocalStorage('partners') || '[]');
+                    const reports = JSON.parse(demoGetFromLocalStorage('onetouch.reports') || '[]');
+                    
+                    statsGrid.innerHTML = `
+                        <div class="stat-card">
+                            <div class="stat-label">登録会社数</div>
+                            <div class="stat-value">${companies.length}<span class="stat-unit">社</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">登録事業所数</div>
+                            <div class="stat-value">${offices.length}<span class="stat-unit">箇所</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">登録アカウント数</div>
+                            <div class="stat-value">${accounts.length}<span class="stat-unit">件</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">登録業者数</div>
+                            <div class="stat-value">${partners.length}<span class="stat-unit">社</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">総通報数</div>
+                            <div class="stat-value">${reports.length}<span class="stat-unit">件</span></div>
+                        </div>
+                    `;
+                } else if (currentUser.role === 'company_admin') {
+                    // 本社管理者: 自社の統計
+                    const offices = JSON.parse(localStorage.getItem('offices') || '[]').filter(o => o.companyCode === currentUser.companyCode);
+                    const accounts = JSON.parse(demoGetFromLocalStorage('accounts') || '[]').filter(a => a.companyCode === currentUser.companyCode);
+                    const partners = JSON.parse(demoGetFromLocalStorage('partners') || '[]').filter(p => p.assignedCompanies && p.assignedCompanies.includes(currentUser.companyCode));
+                    const reports = JSON.parse(demoGetFromLocalStorage('onetouch.reports') || '[]').filter(r => r.companyCode === currentUser.companyCode);
+                    const items = JSON.parse(demoGetFromSessionOrLocalStorage('items') || '[]').filter(i => i.companyCode === currentUser.companyCode);
+                    
+                    statsGrid.innerHTML = `
+                        <div class="stat-card">
+                            <div class="stat-label">登録事業所数</div>
+                            <div class="stat-value">${offices.length}<span class="stat-unit">箇所</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">登録アカウント数</div>
+                            <div class="stat-value">${accounts.length}<span class="stat-unit">件</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">契約業者数</div>
+                            <div class="stat-value">${partners.length}<span class="stat-unit">社</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">登録商品数</div>
+                            <div class="stat-value">${items.length}<span class="stat-unit">件</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">総通報数</div>
+                            <div class="stat-value">${reports.length}<span class="stat-unit">件</span></div>
+                        </div>
+                    `;
+                } else if (currentUser.role === 'office_admin') {
+                    // 事業所管理者: 自事業所の統計
+                    const accounts = JSON.parse(demoGetFromLocalStorage('accounts') || '[]').filter(a => a.officeCode === currentUser.officeCode);
+                    const reports = JSON.parse(demoGetFromLocalStorage('onetouch.reports') || '[]').filter(r => r.officeCode === currentUser.officeCode);
+                    const items = JSON.parse(demoGetFromSessionOrLocalStorage('items') || '[]').filter(i => i.officeCode === currentUser.officeCode);
+                    
+                    statsGrid.innerHTML = `
+                        <div class="stat-card">
+                            <div class="stat-label">登録アカウント数</div>
+                            <div class="stat-value">${accounts.length}<span class="stat-unit">件</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">登録商品数</div>
+                            <div class="stat-value">${items.length}<span class="stat-unit">件</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">総通報数</div>
+                            <div class="stat-value">${reports.length}<span class="stat-unit">件</span></div>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                console.error('統計情報の読み込みエラー:', e);
+            }
+        }
+        
+        // sessionStorage/localStorage切り替え対応
+        function demoGetFromSessionOrLocalStorage(key) {
+            const isDemoMode = currentUser && currentUser.companyCode === 'TAMJ';
+            if (isDemoMode) {
+                const demoKey = 'demo.' + key;
+                return sessionStorage.getItem(demoKey) || localStorage.getItem(key);
+            }
+            return localStorage.getItem(key);
+        }
+
+        // 事業所情報を読み込み
+        function loadOfficeInfo() {
+            try {
+                // DEMOモードの場合
+                if (currentUser.companyCode === 'TAMJ') {
+                    document.getElementById('officeNameDisplay').textContent = currentUser.officeName || '東京事業所';
+                    document.getElementById('officeCodeDisplay').textContent = currentUser.officeCode || 'TAMJ-J0001';
+                    document.getElementById('officeCompanyDisplay').textContent = 'タムジ株式会社';
+                    document.getElementById('officeAddressDisplay').textContent = '東京都渋谷区1-2-3';
+                    document.getElementById('officePhoneDisplay').textContent = '03-1234-5678';
+                    return;
+                }
+                
+                // 通常モード: 事業所データを取得
+                const offices = JSON.parse(localStorage.getItem('offices') || '[]');
+                const office = offices.find(o => o.officeCode === currentUser.officeCode);
+                
+                if (office) {
+                    document.getElementById('officeNameDisplay').textContent = office.officeName || '-';
+                    document.getElementById('officeCodeDisplay').textContent = office.officeCode || '-';
+                    document.getElementById('officeCompanyDisplay').textContent = office.companyName || currentUser.companyName || '-';
+                    document.getElementById('officeAddressDisplay').textContent = office.address || '-';
+                    document.getElementById('officePhoneDisplay').textContent = office.phone || '-';
+                } else {
+                    console.warn('事業所情報が見つかりません:', currentUser.officeCode);
+                }
+            } catch (e) {
+                console.error('事業所情報の読み込みエラー:', e);
+            }
+        }
+
+        // 会社設定を読み込み
+        function loadCompanySettings() {
+            // DEMOモードの場合
+            if (currentUser.companyCode === 'TAMJ') {
+                document.getElementById('companyNameDisplay').textContent = 'タムジ株式会社';
+                document.getElementById('companyCodeDisplay').textContent = 'TAMJ';
+                
+                // DEMOモードのロゴを表示
+                const demoLogo = sessionStorage.getItem('demo.companyLogo');
+                if (demoLogo) {
+                    document.getElementById('currentLogo').innerHTML = `<img src="${demoLogo}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">`;
+                }
+                return;
+            }
+            
+            // 通常モード
+            const companies = JSON.parse(localStorage.getItem('companies') || '[]');
+            const company = companies.find(c => c.code === currentUser.companyCode);
+            
+            if (company) {
+                document.getElementById('companyNameDisplay').textContent = company.name;
+                document.getElementById('companyCodeDisplay').textContent = company.code;
+                
+                // ロゴがあれば表示
+                if (company.logoUrl) {
+                    document.getElementById('currentLogo').innerHTML = `<img src="${company.logoUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">`;
+                }
+            }
+        }
+
+        // ロゴアップロード処理
+        function handleLogoUpload(event) {
+            console.log('[handleLogoUpload] 開始');
+            const file = event.target.files[0];
+            if (!file) {
+                console.log('[handleLogoUpload] ファイルなし');
+                return;
+            }
+            
+            console.log('[handleLogoUpload] ファイル名:', file.name);
+            console.log('[handleLogoUpload] ファイルサイズ:', file.size);
+            console.log('[handleLogoUpload] ファイルタイプ:', file.type);
+
+            // ファイルサイズチェック（2MB以下）
+            if (file.size > 2 * 1024 * 1024) {
+                alert('ファイルサイズは2MB以下にしてください。');
+                return;
+            }
+
+            // 画像形式チェック
+            if (!file.type.startsWith('image/')) {
+                alert('画像ファイルを選択してください。');
+                return;
+            }
+
+            console.log('[handleLogoUpload] FileReader開始');
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                console.log('[handleLogoUpload] FileReader完了');
+                const logoUrl = e.target.result;
+                console.log('[handleLogoUpload] logoUrl長さ:', logoUrl.length);
+                
+                // DEMOモードの場合はsessionStorageに保存
+                if (currentUser.companyCode === 'TAMJ') {
+                    sessionStorage.setItem('demo.companyLogo', logoUrl);
+                    document.getElementById('currentLogo').innerHTML = `<img src="${logoUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">`;
+                    // ヘッダーアバターも即時更新
+                    const uhAvatar = document.getElementById('uhAvatar');
+                    if (uhAvatar) { uhAvatar.style.background='white'; uhAvatar.style.boxShadow='0 0 0 1px #e0e0e0'; uhAvatar.style.padding='3px'; uhAvatar.innerHTML = `<img src="${logoUrl}" style="width:100%;height:100%;object-fit:contain;border-radius:50%;">`; }
+                    alert('ロゴを更新しました。\n\n※ DEMOモードのため、ブラウザを閉じると削除されます。');
+                    return;
+                }
+                
+                // 通常モード：localStorageに保存
+                const companies = JSON.parse(localStorage.getItem('companies') || '[]');
+                console.log('[handleLogoUpload] companies数:', companies.length);
+                console.log('[handleLogoUpload] currentUser.companyCode:', currentUser.companyCode);
+                
+                const companyIndex = companies.findIndex(c => c.code === currentUser.companyCode);
+                console.log('[handleLogoUpload] companyIndex:', companyIndex);
+                
+                if (companyIndex !== -1) {
+                    companies[companyIndex].logoUrl = logoUrl;
+                    localStorage.setItem('companies', JSON.stringify(companies));
+                    console.log('[handleLogoUpload] localStorage更新完了');
+                    
+                    // 表示を更新
+                    document.getElementById('currentLogo').innerHTML = `<img src="${logoUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">`;
+                    // ヘッダーアバターも即時更新
+                    const uhAvatar = document.getElementById('uhAvatar');
+                    if (uhAvatar) { uhAvatar.style.background='white'; uhAvatar.style.boxShadow='0 0 0 1px #e0e0e0'; uhAvatar.style.padding='3px'; uhAvatar.innerHTML = `<img src="${logoUrl}" style="width:100%;height:100%;object-fit:contain;border-radius:50%;">`; }
+                    console.log('[handleLogoUpload] 表示更新完了');
+                    
+                    alert('ロゴを更新しました。');
+                } else {
+                    console.error('[handleLogoUpload] 会社が見つかりません');
+                    alert('エラー: 会社情報が見つかりません。\ncompanyCode: ' + currentUser.companyCode);
+                }
+            };
+            
+            reader.onerror = function(error) {
+                console.error('[handleLogoUpload] FileReaderエラー:', error);
+                alert('ファイル読み込みエラーが発生しました。');
+            };
+            
+            reader.readAsDataURL(file);
+            console.log('[handleLogoUpload] readAsDataURL実行');
+        }
+
+        // カスタムカテゴリーを読み込み
+        function loadCustomCategories() {
+            const categories = JSON.parse(localStorage.getItem('customCategories') || '{}');
+            const companyCategories = categories[currentUser.companyCode] || [];
+            
+            const container = document.getElementById('customCategoriesList');
+            container.innerHTML = '';
+            
+            if (companyCategories.length === 0) {
+                container.innerHTML = '<div style="color: #999; font-size: 14px;">カスタムカテゴリーはまだありません</div>';
+                return;
+            }
+            
+            companyCategories.forEach((category, index) => {
+                const badge = document.createElement('span');
+                badge.className = 'badge';
+                badge.style.background = '#f5f5f5';
+                badge.style.color = '#333';
+                badge.style.display = 'inline-flex';
+                badge.style.alignItems = 'center';
+                badge.style.gap = '8px';
+                badge.innerHTML = `
+                    ${category}
+                    <button onclick="deleteCustomCategory(${index})" style="background:none; border:none; cursor:pointer; color:#c62828; font-size:16px; padding:0; line-height:1;">×</button>
+                `;
+                container.appendChild(badge);
+            });
+        }
+
+        // カスタムカテゴリーを追加
+        function addCustomCategory() {
+            const categoryName = prompt('カテゴリー名を入力してください:');
+            if (!categoryName || categoryName.trim() === '') return;
+            
+            const categories = JSON.parse(localStorage.getItem('customCategories') || '{}');
+            if (!categories[currentUser.companyCode]) {
+                categories[currentUser.companyCode] = [];
+            }
+            
+            // 重複チェック
+            if (categories[currentUser.companyCode].includes(categoryName.trim())) {
+                alert('同じ名前のカテゴリーが既に存在します。');
+                return;
+            }
+            
+            categories[currentUser.companyCode].push(categoryName.trim());
+            localStorage.setItem('customCategories', JSON.stringify(categories));
+            
+            loadCustomCategories();
+            alert('カテゴリーを追加しました。');
+        }
+
+        // カスタムカテゴリーを削除
+        function deleteCustomCategory(index) {
+            const confirmed = confirm('このカテゴリーを削除しますか？');
+            if (!confirmed) return;
+            
+            const categories = JSON.parse(localStorage.getItem('customCategories') || '{}');
+            if (categories[currentUser.companyCode]) {
+                categories[currentUser.companyCode].splice(index, 1);
+                localStorage.setItem('customCategories', JSON.stringify(categories));
+                loadCustomCategories();
+                alert('カテゴリーを削除しました。');
+            }
+        }
+
+        // 初期化
+        loadStats();
+        initializeSettings();
+        if (currentUser.role === 'system_admin') {
+            calculateAdvancedStats();
+        }
+    </script>
+
+    <script>
+    // 統一ヘッダー初期化
+    UnifiedHeader.init({
+        icon: '',
+        title: 'システム設定',
+        backButton: true
+    });
+    </script>
+</body>
+</html>

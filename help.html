@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ヘルプ | ワンタッチ管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", sans-serif;
+            background: #fafafa;
+            min-height: 100vh;
+        }
+.header-content {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+.container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .help-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .help-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .help-card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .help-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .help-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .help-desc {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .faq-section {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+
+        .faq-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 24px;
+        }
+
+        .faq-item {
+            border-bottom: 1px solid #e5e7eb;
+            padding: 20px 0;
+        }
+
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+
+        .faq-question {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .faq-question::before {
+            content: "Q";
+            background: #667eea;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .faq-answer {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.8;
+            padding-left: 32px;
+        }
+
+        .contact-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+        }
+
+        .contact-section h2 {
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+
+        .contact-section p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+    </style>
+    <script src="demo-mode.js"></script>
+    <script src="unified-header.js"></script>
+</head>
+<body>
+    <!-- 統一ヘッダー -->
+    <div id="unified-header-mount"></div>
+
+    <div class="container">
+        <!-- クイックガイド -->
+        <div class="help-grid">
+            <div class="help-card" onclick="scrollToSection('getting-started')">
+                <div class="help-icon">🚀</div>
+                <div class="help-title">はじめに</div>
+                <div class="help-desc">ワンタッチ管理の基本的な使い方を学びます。</div>
+            </div>
+
+            <div class="help-card" onclick="window.location.href='permissions.html?from=help'">
+                <div class="help-icon">🔐</div>
+                <div class="help-title">権限について</div>
+                <div class="help-desc">各ロールでできることを確認します。</div>
+            </div>
+
+            <div class="help-card" onclick="scrollToSection('faq')">
+                <div class="help-icon">❓</div>
+                <div class="help-title">よくある質問</div>
+                <div class="help-desc">FAQ（よくある質問と回答）を確認します。</div>
+            </div>
+        </div>
+
+        <!-- はじめに -->
+        <div class="faq-section" id="getting-started" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 16px; padding: 32px; margin-bottom: 32px;">
+            <div class="faq-title" style="color: white;">🚀 はじめに</div>
+            <div style="line-height: 1.8; margin-top: 16px;">
+                <p style="margin-bottom: 16px;">ワンタッチ管理へようこそ！このシステムは、施設運営に必要な通報管理・マスタ管理を一元化するプラットフォームです。</p>
+                
+                <h3 style="font-size: 18px; margin-top: 24px; margin-bottom: 12px;">📱 基本的な使い方</h3>
+                <ol style="margin-left: 20px; line-height: 2;">
+                    <li><strong>ログイン:</strong> 会社コードとパスワードでログイン</li>
+                    <li><strong>通報:</strong> トラブル発生時は通報画面から業者へ通報</li>
+                    <li><strong>マスタ管理:</strong> 事業所・アカウント・取引先を管理</li>
+                    <li><strong>商品管理:</strong> 商品マスタで在庫や価格を管理</li>
+                </ol>
+                
+                <h3 style="font-size: 18px; margin-top: 24px; margin-bottom: 12px;">👥 あなたの権限を確認</h3>
+                <p>
+                    <a href="permissions.html?from=help" style="color: white; text-decoration: underline; font-weight: 600;">権限一覧ページ</a>で、
+                    あなたのロール（会社管理者・事業所管理者・スタッフ・業者）ごとに何ができるか確認できます。
+                </p>
+            </div>
+        </div>
+
+        <!-- FAQ -->
+        <div class="faq-section" id="faq">
+            <div class="faq-title">よくある質問（FAQ）</div>
+
+            <div class="faq-item">
+                <div class="faq-question">ログインできません</div>
+                <div class="faq-answer">
+                    ユーザーID・パスワードが正しいか確認してください。<br>
+                    パスワードを忘れた場合は、管理者にパスワードリセットを依頼してください。
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">通報を送信したのに業者から返信がありません</div>
+                <div class="faq-answer">
+                    通報画面の「通報履歴」から、業者ステータスと最新コメントを確認できます。<br>
+                    緊急度が「高」の場合、業者には6時間以内に対応するよう通知されます。
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">商品マスタにデータをインポートする方法は？</div>
+                <div class="faq-answer">
+                    マスタ管理画面 → 商品マスタ → インポートボタンをクリック。<br>
+                    PDF・Excel・CSV形式のファイルをアップロードできます。<br>
+                    1日のアップロード上限は10回、1回あたり5ファイルまでです。
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">DEMOモードとは何ですか？</div>
+                <div class="faq-answer">
+                    会社コード「TAMJ」でログインすると、DEMOモードになります。<br>
+                    DEMOモードでは、データはsessionStorageに保存され、ブラウザを閉じると消えます。<br>
+                    削除・エクスポート機能は制限されます。
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">データのバックアップは取れますか？</div>
+                <div class="faq-answer">
+                    システム管理者は「システム管理者ダッシュボード」からデータのバックアップ・復元ができます。<br>
+                    全データがJSON形式でエクスポートされます。<br>
+                    30日以上バックアップを取っていない場合、警告が表示されます。
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">業者として対応した通報を完了にするには？</div>
+                <div class="faq-answer">
+                    業者ダッシュボード → 通報をクリック → 「完了」ボタンをクリック。<br>
+                    必要に応じてコメントを追加してください。
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">監査ログは誰が見られますか？</div>
+                <div class="faq-answer">
+                    システム管理者：全ログを閲覧可能<br>
+                    会社管理者：自社のログのみ閲覧可能<br>
+                    事業所管理者：自事業所のログのみ閲覧可能<br>
+                    スタッフ・業者：閲覧不可
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">エラーが発生しました。どうすればいいですか？</div>
+                <div class="faq-answer">
+                    エラーメッセージが表示された場合、まずページを再読み込みしてください。<br>
+                    問題が解決しない場合は、システム管理者に連絡してください。<br>
+                    エラーログは自動的に記録されています。
+                </div>
+            </div>
+        </div>
+
+        <!-- お問い合わせ -->
+        <div class="contact-section">
+            <h2>さらにサポートが必要ですか？</h2>
+            <p style="margin-bottom: 20px;">解決しない問題がある場合は、下記フォームからお問い合わせください。</p>
+            
+            <!-- Google Forms 埋め込み -->
+            <div style="background: #fafafa; border-radius: 12px; padding: 20px; margin-top: 20px;">
+                <iframe 
+                    src="https://docs.google.com/forms/d/e/1FAIpQLScKdhPH3UJ5nhlSArREazFIJjL4XUKf3_3xh7OiKb2H95Ll2Q/viewform?embedded=true" 
+                    width="100%" 
+                    height="800" 
+                    frameborder="0" 
+                    marginheight="0" 
+                    marginwidth="0"
+                    style="border-radius: 8px;">
+                    読み込んでいます…
+                </iframe>
+            </div>
+            
+            <p style="font-size: 13px; color: #666; margin-top: 16px; text-align: center;">
+                ※ このフォームは Google Forms を使用しています。送信された内容は管理者に届きます。
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function scrollToSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // 戻る（ロールに応じたホームに遷移）
+        function goBack() {
+            try {
+                const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+                
+                if (!currentUser || !currentUser.role) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                // ロール別のホーム画面
+                const homePages = {
+                    'system_admin': 'system-admin.html',
+                    'company_admin': 'master-top.html',
+                    'office_admin': 'master-top.html',
+                    'staff': 'report.html',
+                    'contractor': 'contractor-dashboard.html'
+                };
+
+                const homePage = homePages[currentUser.role] || 'master-top.html';
+                window.location.href = homePage;
+            } catch (e) {
+                console.error('goBack error:', e);
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
+
+    <script>
+    UnifiedHeader.init({
+        icon: '❓',
+        title: 'ヘルプ・FAQ',
+        backButton: true
+    });
+    </script>
+</body>
+</html>

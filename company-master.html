@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>会社マスタ | ワンタッチ管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans CJK JP", sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+.btn-add {
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            color: #1a1a1a;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-add:hover {
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .search-bar {
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            padding: 20px;
+            border-radius: 14px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #1a1a1a;
+        }
+        
+        .btn-search {
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            color: #1a1a1a;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        
+        .btn-search:hover {
+            background: #f5f5f5;
+        }
+
+        .result-info {
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            padding: 12px 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #1a1a1a;
+        }
+
+        .table-container {
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f9fafb;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        th {
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+
+        tbody tr:hover {
+            background: #f5f5f5;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            color: #1a1a1a;
+        }
+
+        .status-inactive {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .btn-edit, .btn-delete {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        .btn-edit {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .btn-edit:hover {
+            background: #bbdefb;
+        }
+
+        .btn-delete {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .btn-delete:hover {
+            background: #ffcdd2;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 14px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        .form-label.required::after {
+            content: " *";
+            color: #dc2626;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #1a1a1a;
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn-primary, .btn-secondary {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #1a1a1a;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1a1a1a;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 768px) {
+.container {
+                padding: 0 16px;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 12px 8px;
+            }
+        }
+    </style>
+    <meta name="theme-color" content="#1a1a1a">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon-192.png">
+</head>
+<body>
+    <!-- 統一ヘッダー -->
+    <div id="unified-header-mount"></div>
+    <div class="container">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+            <button class="btn-add" onclick="openAddModal()">+ 新規登録</button>
+        </div>
+        <div class="search-bar">
+            <input type="text" class="search-input" id="searchInput" placeholder="会社コード・会社名で検索..." onkeypress="if(event.key==='Enter') performSearch()">
+            <button class="btn-search" onclick="performSearch()">検索</button>
+        </div>
+
+        <div class="result-info" id="resultInfo">
+            検索結果: 0件 / 全 0件
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>会社コード</th>
+                        <th>会社名</th>
+                        <th>代表者</th>
+                        <th>電話番号</th>
+                        <th>ステータス</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="companyList">
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <div class="empty-icon" style="color:#ccc;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="6" x2="9" y2="6.01"/><line x1="15" y1="6" x2="15" y2="6.01"/></svg></div>
+                            <div>登録されている会社がありません</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 追加・編集モーダル -->
+    <div class="modal" id="companyModal">
+        <div class="modal-content">
+            <div class="modal-header" id="modalTitle">会社を登録</div>
+            <form id="companyForm">
+                <div class="form-group">
+                    <label class="form-label required">会社コード</label>
+                    <input type="text" class="form-input" id="companyCode" required maxlength="20" placeholder="例: TAMJ" oninput="updateHonshaPreview()">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">会社名</label>
+                    <input type="text" class="form-input" id="companyName" required maxlength="100" placeholder="例: タムジ株式会社">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">代表者</label>
+                    <input type="text" class="form-input" id="representative" maxlength="50" placeholder="例: 山田太郎">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">電話番号</label>
+                    <input type="tel" class="form-input" id="phone" maxlength="15" placeholder="例: 03-1234-5678">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">住所</label>
+                    <input type="text" class="form-input" id="address" maxlength="200" placeholder="例: 東京都...">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">ステータス</label>
+                    <select class="form-select" id="status" required>
+                        <option value="active">有効</option>
+                        <option value="inactive">無効</option>
+                    </select>
+                </div>
+
+                <div id="honsha-info" style="background: #fff; padding: 16px; border-radius: 6px; margin-top: 20px; border-left: 4px solid #1a1a1a;">
+                    <div style="font-weight: 600; color: #1a1a1a; margin-bottom: 8px;">✨ 本社管理者アカウント自動生成</div>
+                    <div style="font-size: 13px; color: #555; line-height: 1.6;">
+                        会社登録時に、本社管理者アカウントが自動的に作成されます。<br>
+                        • ユーザーID: <strong id="preview-id">会社コード-H001</strong><br>
+                        • 初期パスワード: ランダム生成（登録後に表示）<br>
+                        • 権限: 会社全体の管理が可能
+                    </div>
+                </div>
+
+                <div class="form-buttons">
+                    <button type="button" class="btn-secondary" onclick="closeModal()">キャンセル</button>
+                    <button type="submit" class="btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 認証情報表示モーダル -->
+    <div class="modal" id="credentialsModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header" style="color: #1a1a1a;">会社を登録しました</div>
+            
+            <div style="background: #fff; padding: 20px; border-radius: 14px; margin-bottom: 20px; border: 2px solid #1a1a1a;">
+                <div style="font-weight: 700; color: #1a1a1a; margin-bottom: 16px; font-size: 16px;">本社管理者アカウント情報</div>
+                
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 12px; color: #666; margin-bottom: 4px;">会社コード</div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="text" id="displayCompanyCode" readonly style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: white; font-family: monospace; font-size: 14px;">
+                        <button onclick="copyToClipboard('displayCompanyCode')" style="padding: 8px 16px; background: #1a1a1a; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; white-space: nowrap;">コピー</button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 12px; color: #666; margin-bottom: 4px;">ユーザーID</div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="text" id="displayUserId" readonly style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: white; font-family: monospace; font-size: 14px;">
+                        <button onclick="copyToClipboard('displayUserId')" style="padding: 8px 16px; background: #1a1a1a; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; white-space: nowrap;">コピー</button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 12px; color: #666; margin-bottom: 4px;">初期パスワード</div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="text" id="displayPassword" readonly style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: white; font-family: monospace; font-size: 14px; font-weight: 700; letter-spacing: 1px;">
+                        <button onclick="copyToClipboard('displayPassword')" style="padding: 8px 16px; background: #1a1a1a; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; white-space: nowrap;">コピー</button>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: #fff3e0; padding: 16px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #ff9800;">
+                <div style="font-size: 13px; color: #e65100; line-height: 1.6;">
+                    <strong>重要</strong><br>
+                    この情報を本社担当者にお伝えください。<br>
+                    初回ログイン後、パスワードの変更を推奨します。
+                </div>
+            </div>
+
+            <button onclick="closeCredentialsModal()" style="width: 100%; padding: 12px; background: #1a1a1a; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px;">閉じる</button>
+        </div>
+    </div>
+
+    <script src="demo-mode.js"></script>
+    <script src="unified-header.js"></script>
+    <script>
+        // ランダムパスワード生成（8文字、英数字記号）
+        function generateRandomPassword() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%';
+            let password = '';
+            for (let i = 0; i < 8; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return password;
+        }
+
+        // 本社管理者の認証情報を表示
+        function showHonshaCredentials(companyCode, userId, password) {
+            document.getElementById('displayCompanyCode').value = companyCode;
+            document.getElementById('displayUserId').value = userId;
+            document.getElementById('displayPassword').value = password;
+            document.getElementById('credentialsModal').classList.add('show');
+        }
+
+        // 認証情報モーダルを閉じる
+        function closeCredentialsModal() {
+            document.getElementById('credentialsModal').classList.remove('show');
+        }
+
+        // クリップボードにコピー
+        function copyToClipboard(elementId) {
+            const input = document.getElementById(elementId);
+            input.select();
+            input.setSelectionRange(0, 99999); // モバイル対応
+            
+            try {
+                document.execCommand('copy');
+                // コピー成功のフィードバック
+                const button = event.target;
+                const originalText = button.textContent;
+                button.textContent = '✓ コピー完了';
+                button.style.background = '#1b5e20';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = '#1a1a1a';
+                }, 2000);
+            } catch (err) {
+                alert('コピーに失敗しました。手動で選択してコピーしてください。');
+            }
+        }
+
+        // 会社コード入力時に本社IDプレビューを更新
+        function updateHonshaPreview() {
+            const code = document.getElementById('companyCode').value.trim().toUpperCase();
+            const preview = document.getElementById('preview-id');
+            if (preview) {
+                preview.textContent = code ? code + '-H001' : '会社コード-H001';
+            }
+        }
+
+        // 監査ログ記録関数
+        function logEvent(type, detail = {}) {
+            try {
+                const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+                const logs = JSON.parse(demoGetFromLocalStorage('audit.logs') || '[]');
+                const logEntry = {
+                    timestamp: new Date().toISOString(),
+                    type: type,
+                    detail: detail,
+                    userId: currentUser?.id || 'unknown',
+                    userName: currentUser?.name || 'unknown',
+                    page: 'company-master.html'
+                };
+                logs.unshift(logEntry);
+                if (logs.length > 500) logs.length = 500;
+                demoSaveToLocalStorage('audit.logs', JSON.stringify(logs));
+            } catch (e) {
+                console.warn('監査ログの記録に失敗:', e);
+            }
+        }
+
+        // ログインチェック
+        const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = 'login.html';
+        } else if (currentUser.role !== 'system_admin') {
+            alert('この画面はシステム管理者のみアクセスできます。');
+            window.location.href = 'login.html';
+        }
+
+        let companies = [];
+        let editingCompanyCode = null;
+
+        // 戻る機能
+        // 戻る（ロールに応じたホームに遷移）
+        function goBack() {
+            try {
+                const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+                
+                if (!currentUser || !currentUser.role) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                // ロール別のホーム画面
+                const homePages = {
+                    'system_admin': 'system-admin.html',
+                    'company_admin': 'master-top.html',
+                    'office_admin': 'master-top.html',
+                    'staff': 'report.html',
+                    'contractor': 'contractor-dashboard.html'
+                };
+
+                const homePage = homePages[currentUser.role] || 'master-top.html';
+                window.location.href = homePage;
+            } catch (e) {
+                console.error('goBack error:', e);
+                window.location.href = 'master-top.html';
+            }
+        }
+
+        // 会社一覧を読み込み
+        function loadCompanies() {
+            try {
+                companies = JSON.parse(demoGetFromLocalStorage('companies') || '[]');
+                renderCompanies(companies);
+            } catch (e) {
+                console.error('会社データの読み込みに失敗:', e);
+                companies = [];
+            }
+        }
+
+        // 会社一覧を表示
+        function renderCompanies(filteredCompanies) {
+            const tbody = document.getElementById('companyList');
+            const resultInfo = document.getElementById('resultInfo');
+
+            resultInfo.textContent = `検索結果: ${filteredCompanies.length}件 / 全 ${companies.length}件`;
+
+            if (filteredCompanies.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <div class="empty-icon" style="color:#ccc;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="6" x2="9" y2="6.01"/><line x1="15" y1="6" x2="15" y2="6.01"/></svg></div>
+                            <div>登録されている会社がありません</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filteredCompanies.map(company => `
+                <tr>
+                    <td><strong>${company.code}</strong></td>
+                    <td>${company.name}</td>
+                    <td>${company.representative || '-'}</td>
+                    <td>${company.phone || '-'}</td>
+                    <td>
+                        <span class="status-badge status-${company.status}">
+                            ${company.status === 'active' ? '有効' : '無効'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn-edit" onclick="openEditModal('${company.code}')">編集</button>
+                        <button class="btn-delete" onclick="deleteCompany('${company.code}')">削除</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 検索機能（リアルタイム）
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const keyword = e.target.value.toLowerCase();
+            const filtered = companies.filter(company =>
+                company.code.toLowerCase().includes(keyword) ||
+                company.name.toLowerCase().includes(keyword)
+            );
+            renderCompanies(filtered);
+        });
+        
+        // 検索ボタン押下時
+        function performSearch() {
+            const keyword = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = companies.filter(company =>
+                company.code.toLowerCase().includes(keyword) ||
+                company.name.toLowerCase().includes(keyword)
+            );
+            renderCompanies(filtered);
+        }
+
+        // 新規登録モーダルを開く
+        function openAddModal() {
+            editingCompanyCode = null;
+            document.getElementById('modalTitle').textContent = '会社を登録';
+            document.getElementById('companyForm').reset();
+            document.getElementById('companyCode').disabled = false;
+            document.getElementById('honsha-info').style.display = 'block';
+            updateHonshaPreview();
+            document.getElementById('companyModal').classList.add('show');
+        }
+
+        // 編集モーダルを開く
+        function openEditModal(code) {
+            const company = companies.find(c => c.code === code);
+            if (!company) return;
+
+            editingCompanyCode = code;
+            document.getElementById('modalTitle').textContent = '会社を編集';
+            document.getElementById('companyCode').value = company.code;
+            document.getElementById('companyCode').disabled = true;
+            document.getElementById('companyName').value = company.name;
+            document.getElementById('representative').value = company.representative || '';
+            document.getElementById('phone').value = company.phone || '';
+            document.getElementById('address').value = company.address || '';
+            document.getElementById('status').value = company.status;
+            document.getElementById('honsha-info').style.display = 'none';
+            document.getElementById('companyModal').classList.add('show');
+        }
+
+        // モーダルを閉じる
+        function closeModal() {
+            document.getElementById('companyModal').classList.remove('show');
+            document.getElementById('companyForm').reset();
+            editingCompanyCode = null;
+        }
+
+        // 保存処理
+        document.getElementById('companyForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const code = document.getElementById('companyCode').value.trim().toUpperCase();
+            const name = document.getElementById('companyName').value.trim();
+            const representative = document.getElementById('representative').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const address = document.getElementById('address').value.trim();
+            const status = document.getElementById('status').value;
+
+            console.log('[保存処理] 開始');
+            console.log('[保存処理] editingCompanyCode:', editingCompanyCode);
+            console.log('[保存処理] 入力された会社コード:', code);
+            console.log('[保存処理] 既存の会社数:', companies.length);
+
+            if (editingCompanyCode) {
+                // 編集
+                console.log('[保存処理] 編集モード');
+                const index = companies.findIndex(c => c.code === editingCompanyCode);
+                if (index !== -1) {
+                    companies[index] = {
+                        ...companies[index],
+                        name,
+                        representative,
+                        phone,
+                        address,
+                        status,
+                        updatedAt: new Date().toISOString()
+                    };
+                    console.log('[保存処理] 会社を更新しました:', code);
+                    logEvent('update_company', { companyCode: code, companyName: name });
+                }
+            } else {
+                // 新規登録
+                console.log('[保存処理] 新規登録モード');
+                const existingCompany = companies.find(c => c.code === code);
+                console.log('[保存処理] 重複チェック結果:', existingCompany);
+                
+                if (existingCompany) {
+                    console.log('[保存処理] エラー: 会社コード重複', code);
+                    alert('この会社コードは既に使用されています。');
+                    return;
+                }
+
+                console.log('[保存処理] 新規会社を追加します:', code);
+
+                // 本社管理者IDとパスワードを生成
+                const honshaUserId = code + '-H001';
+                const initialPassword = generateRandomPassword();
+
+                companies.push({
+                    code,
+                    name,
+                    representative,
+                    phone,
+                    address,
+                    status,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                });
+
+                // 本社管理者アカウントを作成
+                const accounts = JSON.parse(demoGetFromLocalStorage('accounts') || '[]');
+                accounts.push({
+                    companyCode: code,
+                    id: honshaUserId,
+                    password: initialPassword,
+                    name: '本社管理者',
+                    role: 'company_admin',
+                    scope: 'company',
+                    officeCode: null,
+                    officeName: null,
+                    status: 'active',
+                    createdAt: new Date().toISOString()
+                });
+                demoSaveToLocalStorage('accounts', JSON.stringify(accounts));
+
+                logEvent('add_company', { companyCode: code, companyName: name });
+                logEvent('add_account', { userId: honshaUserId, userName: '本社管理者', role: 'company_admin' });
+
+                // 認証情報を表示
+                demoSaveToLocalStorage('companies', JSON.stringify(companies));
+                loadCompanies();
+                closeModal();
+                showHonshaCredentials(code, honshaUserId, initialPassword);
+                return;
+            }
+
+            demoSaveToLocalStorage('companies', JSON.stringify(companies));
+            loadCompanies();
+            closeModal();
+            alert(editingCompanyCode ? '会社情報を更新しました。' : '会社を登録しました。');
+        });
+
+        // 削除処理
+        function deleteCompany(code) {
+            if (!confirm('この会社を削除してもよろしいですか？\n※この会社に紐づく事業所・アカウントも確認してください。')) {
+                return;
+            }
+
+            const company = companies.find(c => c.code === code);
+            companies = companies.filter(c => c.code !== code);
+            demoSaveToLocalStorage('companies', JSON.stringify(companies));
+            logEvent('delete_company', { companyCode: code, companyName: company?.name });
+            loadCompanies();
+            alert('会社を削除しました。');
+        }
+
+        // 初期化
+        loadCompanies();
+    </script>
+
+    <script>
+    // 統一ヘッダー初期化
+    UnifiedHeader.init({
+        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><line x1="9" y1="10" x2="9" y2="10.01"/><line x1="15" y1="10" x2="15" y2="10.01"/><line x1="9" y1="14" x2="9" y2="14.01"/><line x1="15" y1="14" x2="15" y2="14.01"/></svg>',
+        title: '会社マスタ',
+        backButton: true
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アクセス権限一覧 | ワンタッチ管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+.role-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 24px;
+        }
+
+        .role-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .role-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .role-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .role-icon.system-admin { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .role-icon.company-admin { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .role-icon.office-admin { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .role-icon.staff { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .role-icon.contractor { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+
+        .role-title {
+            flex: 1;
+        }
+
+        .role-title h2 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .role-title p {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .feature-list {
+            list-style: none;
+        }
+
+        .feature-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feature-item::before {
+            content: "✓";
+            color: #10b981;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        .badge.read { background: #e3f2fd; color: #1976d2; }
+        .badge.write { background: #e8f5e9; color: #388e3c; }
+        .badge.admin { background: #fff3e0; color: #e65100; }
+    </style>
+    <script src="demo-mode.js"></script>
+    <script src="unified-header.js"></script>
+</head>
+<body>
+    <!-- 統一ヘッダー -->
+    <div id="unified-header-mount"></div>
+    <div class="container">
+
+        <div class="role-cards">
+            <!-- 会社管理者 -->
+            <div class="role-card">
+                <div class="role-header">
+                    <div class="role-icon company-admin">🏢</div>
+                    <div class="role-title">
+                        <h2>会社管理者</h2>
+                        <p>company_admin</p>
+                    </div>
+                </div>
+                <ul class="feature-list">
+                    <li class="feature-item">事業所マスタ管理 <span class="badge write">編集</span></li>
+                    <li class="feature-item">アカウントマスタ管理 <span class="badge write">編集</span></li>
+                    <li class="feature-item">業者マスタ管理 <span class="badge write">編集</span></li>
+                    <li class="feature-item">商品マスタ管理 <span class="badge write">編集</span></li>
+                    <li class="feature-item">通報履歴閲覧 <span class="badge read">閲覧</span></li>
+                    <li class="feature-item">システム設定 <span class="badge admin">管理</span></li>
+                    <li class="feature-item">監査ログ閲覧（自社のみ）<span class="badge read">閲覧</span></li>
+                </ul>
+            </div>
+
+            <!-- 事業所管理者 -->
+            <div class="role-card">
+                <div class="role-header">
+                    <div class="role-icon office-admin">🏪</div>
+                    <div class="role-title">
+                        <h2>事業所管理者</h2>
+                        <p>office_admin</p>
+                    </div>
+                </div>
+                <ul class="feature-list">
+                    <li class="feature-item">アカウント管理（自事業所）<span class="badge write">編集</span></li>
+                    <li class="feature-item">商品マスタ管理 <span class="badge write">編集</span></li>
+                    <li class="feature-item">通報履歴閲覧 <span class="badge read">閲覧</span></li>
+                    <li class="feature-item">データインポート <span class="badge write">編集</span></li>
+                    <li class="feature-item">監査ログ閲覧（自事業所）<span class="badge read">閲覧</span></li>
+                </ul>
+            </div>
+
+            <!-- スタッフ -->
+            <div class="role-card">
+                <div class="role-header">
+                    <div class="role-icon staff">👤</div>
+                    <div class="role-title">
+                        <h2>スタッフ</h2>
+                        <p>staff</p>
+                    </div>
+                </div>
+                <ul class="feature-list">
+                    <li class="feature-item">通報送信 <span class="badge write">編集</span></li>
+                    <li class="feature-item">自分の通報履歴閲覧 <span class="badge read">閲覧</span></li>
+                    <li class="feature-item">業者コメント閲覧 <span class="badge read">閲覧</span></li>
+                    <li class="feature-item">通報ステータス確認 <span class="badge read">閲覧</span></li>
+                </ul>
+            </div>
+
+            <!-- 業者 -->
+            <div class="role-card">
+                <div class="role-header">
+                    <div class="role-icon contractor">🔧</div>
+                    <div class="role-title">
+                        <h2>業者</h2>
+                        <p>contractor</p>
+                    </div>
+                </div>
+                <ul class="feature-list">
+                    <li class="feature-item">割当通報閲覧 <span class="badge read">閲覧</span></li>
+                    <li class="feature-item">ステータス更新 <span class="badge write">編集</span></li>
+                    <li class="feature-item">コメント投稿 <span class="badge write">編集</span></li>
+                    <li class="feature-item">対応完了報告 <span class="badge write">編集</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 戻る（前の画面に戻る、なければロール別ホーム）
+        function goBack() {
+            // 前の画面がある場合はそこに戻る
+            if (document.referrer && document.referrer.includes('help.html')) {
+                window.location.href = 'help.html';
+                return;
+            }
+            try {
+                const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+                
+                if (!currentUser || !currentUser.role) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                // ロール別のホーム画面
+                const homePages = {
+                    'system_admin': 'system-admin.html',
+                    'company_admin': 'master-top.html',
+                    'office_admin': 'master-top.html',
+                    'staff': 'report.html',
+                    'contractor': 'contractor-dashboard.html'
+                };
+
+                const homePage = homePages[currentUser.role] || 'master-top.html';
+                window.location.href = homePage;
+            } catch (e) {
+                console.error('goBack error:', e);
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
+
+    <script>
+    UnifiedHeader.init({
+        icon: '🔒',
+        title: 'アクセス権限',
+        backButton: true,
+        onBack: function() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('from') === 'help') {
+                window.location.href = 'help.html';
+            } else {
+                goBack();
+            }
+        }
+    });
+    </script>
+</body>
+</html>
