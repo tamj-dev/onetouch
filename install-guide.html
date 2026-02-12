@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ワンタッチ管理システム - インストールガイド</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: #f8f9fa;
+    color: #1a1a1a;
+    line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .header {
+    background: #fff;
+    border-bottom: 3px solid #1a1a1a;
+    padding: 20px 16px;
+    text-align: center;
+  }
+
+  .header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  .header p {
+    font-size: 13px;
+    color: #666;
+    margin-top: 4px;
+  }
+
+  .container {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+
+  /* OS選択タブ */
+  .os-tabs {
+    display: flex;
+    gap: 8px;
+    margin: 16px 0;
+  }
+
+  .os-tab {
+    flex: 1;
+    padding: 14px 8px;
+    border: 2px solid #ddd;
+    border-radius: 12px;
+    background: #fff;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .os-tab.active {
+    border-color: #1a1a1a;
+    background: #1a1a1a;
+    color: #fff;
+  }
+
+  .os-tab .os-icon {
+    display: block;
+    font-size: 28px;
+    margin-bottom: 4px;
+  }
+
+  /* セクション */
+  .os-section { display: none; }
+  .os-section.active { display: block; }
+
+  /* ステップカード */
+  .step {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    position: relative;
+  }
+
+  .step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: #1a1a1a;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  .step h3 {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .step p {
+    font-size: 14px;
+    color: #444;
+    margin-bottom: 8px;
+  }
+
+  /* 操作ハイライト */
+  .action {
+    background: #f0f7ff;
+    border-left: 3px solid #2196F3;
+    padding: 12px 14px;
+    border-radius: 0 8px 8px 0;
+    margin: 12px 0;
+    font-size: 14px;
+  }
+
+  .action strong {
+    color: #1565C0;
+  }
+
+  /* 注意書き */
+  .note {
+    background: #fff8e1;
+    border-left: 3px solid #FFC107;
+    padding: 12px 14px;
+    border-radius: 0 8px 8px 0;
+    margin: 12px 0;
+    font-size: 13px;
+    color: #666;
+  }
+
+  .note strong {
+    color: #F57F17;
+  }
+
+  /* 成功メッセージ */
+  .success {
+    background: #e8f5e9;
+    border-left: 3px solid #4CAF50;
+    padding: 12px 14px;
+    border-radius: 0 8px 8px 0;
+    margin: 12px 0;
+    font-size: 14px;
+  }
+
+  .success strong {
+    color: #2E7D32;
+  }
+
+  /* 画面の図解 */
+  .screen-mock {
+    background: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 16px;
+    margin: 12px 0;
+    text-align: center;
+    font-size: 13px;
+    color: #666;
+  }
+
+  .screen-mock .mock-icon {
+    font-size: 40px;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .screen-mock .mock-label {
+    font-weight: 500;
+    color: #333;
+  }
+
+  /* ボタン風ラベル */
+  .btn-label {
+    display: inline-block;
+    background: #1a1a1a;
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .btn-label.blue {
+    background: #2196F3;
+  }
+
+  .btn-label.green {
+    background: #4CAF50;
+  }
+
+  /* 矢印 */
+  .arrow {
+    text-align: center;
+    font-size: 24px;
+    color: #bbb;
+    padding: 4px 0;
+  }
+
+  /* FAQ */
+  .faq {
+    margin-top: 24px;
+  }
+
+  .faq h2 {
+    font-size: 18px;
+    font-weight: 700;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #1a1a1a;
+    margin-bottom: 16px;
+  }
+
+  .faq-item {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+
+  .faq-q {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .faq-a {
+    font-size: 13px;
+    color: #555;
+  }
+
+  /* テスト用ログイン情報 */
+  .login-info {
+    background: #fff;
+    border: 2px solid #1a1a1a;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+  }
+
+  .login-info h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  .login-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 13px;
+  }
+
+  .login-row:last-child {
+    border-bottom: none;
+  }
+
+  .login-row .role {
+    font-weight: 500;
+    color: #333;
+  }
+
+  .login-row .cred {
+    color: #666;
+    font-family: monospace;
+    font-size: 12px;
+  }
+
+  /* フッター */
+  .footer {
+    text-align: center;
+    padding: 24px 16px;
+    font-size: 12px;
+    color: #999;
+  }
+
+  /* 概要時間 */
+  .time-badge {
+    display: inline-block;
+    background: #e3f2fd;
+    color: #1565C0;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 16px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>ワンタッチ管理システム</h1>
+  <p>インストールガイド</p>
+</div>
+
+<div class="container">
+
+  <div class="time-badge">所要時間：約1分</div>
+
+  <p style="font-size:14px; color:#555; margin-bottom:16px;">
+    LINEで届いたリンクから、アプリをホーム画面に追加する手順です。<br>
+    お使いのスマホを選んでください。
+  </p>
+
+  <!-- OS選択タブ -->
+  <div class="os-tabs">
+    <div class="os-tab active" onclick="switchOS('android')">
+      <span class="os-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zM3.5 8C2.67 8 2 8.67 2 9.5v7c0 .83.67 1.5 1.5 1.5S5 17.33 5 16.5v-7C5 8.67 4.33 8 3.5 8zm17 0c-.83 0-1.5.67-1.5 1.5v7c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-7c0-.83-.67-1.5-1.5-1.5zm-4.97-5.84l1.3-1.3c.2-.2.2-.51 0-.71-.2-.2-.51-.2-.71 0l-1.48 1.48C13.85 1.23 12.95 1 12 1c-.96 0-1.86.23-2.66.63L7.85.15c-.2-.2-.51-.2-.71 0-.2.2-.2.51 0 .71l1.31 1.31C6.97 3.26 6 5.01 6 7h12c0-1.99-.97-3.75-2.47-4.84zM10 5H9V4h1v1zm5 0h-1V4h1v1z"/></svg>
+      </span>
+      Android
+    </div>
+    <div class="os-tab" onclick="switchOS('iphone')">
+      <span class="os-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 1h-8C6.12 1 5 2.12 5 3.5v17C5 21.88 6.12 23 7.5 23h8c1.38 0 2.5-1.12 2.5-2.5v-17C18 2.12 16.88 1 15.5 1zm-4 21c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4.5-4H7V4h9v14z"/></svg>
+      </span>
+      iPhone
+    </div>
+  </div>
+
+  <!-- ========== Android ========== -->
+  <div id="android-section" class="os-section active">
+
+    <div class="step">
+      <div class="step-number">1</div>
+      <h3>LINEでリンクをタップ</h3>
+      <p>LINEで届いたURLをタップしてください。</p>
+      <div class="note">
+        <strong>注意：</strong>LINEのアプリ内ブラウザで開いた場合は、右上の「︙」メニューから<strong>「Chromeで開く」</strong>を選んでください。
+      </div>
+    </div>
+
+    <div class="arrow">▼</div>
+
+    <div class="step">
+      <div class="step-number">2</div>
+      <h3>Chromeのメニューを開く</h3>
+      <p>画面右上の <strong>「︙」（3つの点）</strong> をタップします。</p>
+      <div class="screen-mock">
+        <span class="mock-label">Chrome 右上</span><br>
+        ︙ ← ここをタップ
+      </div>
+    </div>
+
+    <div class="arrow">▼</div>
+
+    <div class="step">
+      <div class="step-number">3</div>
+      <h3>ホーム画面に追加</h3>
+      <p>メニューの中から<strong>「ホーム画面に追加」</strong>をタップします。</p>
+      <div class="action">
+        <strong>「ホーム画面に追加」</strong>→ 確認画面で<strong>「追加」</strong>をタップ
+      </div>
+    </div>
+
+    <div class="arrow">▼</div>
+
+    <div class="step">
+      <div class="step-number">4</div>
+      <h3>完了！</h3>
+      <div class="success">
+        <strong>ホーム画面にアプリアイコンが追加されました。</strong><br>
+        タップするとアプリが起動します。
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========== iPhone ========== -->
+  <div id="iphone-section" class="os-section">
+
+    <div class="step">
+      <div class="step-number">1</div>
+      <h3>LINEでリンクをタップ</h3>
+      <p>LINEで届いたURLをタップしてください。</p>
+      <div class="note">
+        <strong>注意：</strong>LINEのアプリ内ブラウザで開いた場合は、右下の <strong>「Safari で開く」</strong>（コンパスアイコン）をタップしてください。
+      </div>
+    </div>
+
+    <div class="arrow">▼</div>
+
+    <div class="step">
+      <div class="step-number">2</div>
+      <h3>共有ボタンをタップ</h3>
+      <p>Safariの画面下にある<strong>共有ボタン</strong>をタップします。</p>
+      <div class="screen-mock">
+        <span style="font-size:36px;">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="#2196F3"><path d="M16 5l-1.42 1.42-1.59-1.59V16h-1.98V4.83L9.42 6.42 8 5l4-4 4 4zm4 5v11c0 1.1-.9 2-2 2H6c-1.11 0-2-.9-2-2V10c0-1.11.89-2 2-2h3v2H6v11h12V10h-3V8h3c1.1 0 2 .89 2 2z"/></svg>
+        </span><br>
+        <span class="mock-label">↑ この形のボタン（Safari下部）</span>
+      </div>
+    </div>
+
+    <div class="arrow">▼</div>
+
+    <div class="step">
+      <div class="step-number">3</div>
+      <h3>ホーム画面に追加</h3>
+      <p>共有メニューを下にスクロールして<strong>「ホーム画面に追加」</strong>をタップします。</p>
+      <div class="action">
+        <strong>「ホーム画面に追加」</strong>→ 右上の<strong>「追加」</strong>をタップ
+      </div>
+    </div>
+
+    <div class="arrow">▼</div>
+
+    <div class="step">
+      <div class="step-number">4</div>
+      <h3>完了！</h3>
+      <div class="success">
+        <strong>ホーム画面にアプリアイコンが追加されました。</strong><br>
+        タップするとアプリが起動します。
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ログイン情報 -->
+  <div class="login-info">
+    <h3>デモ用ログイン情報</h3>
+    <div class="login-row">
+      <span class="role">スタッフ</span>
+      <span class="cred">demo-staff / demo</span>
+    </div>
+    <div class="login-row">
+      <span class="role">管理者</span>
+      <span class="cred">demo-admin / demo</span>
+    </div>
+    <div class="login-row">
+      <span class="role">業者</span>
+      <span class="cred">P001-yamada / demo</span>
+    </div>
+    <div class="note" style="margin-bottom:0; margin-top:12px;">
+      <strong>デモモード：</strong>会社コード「TAMJ」と上記のID/パスワードでログインできます。
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq">
+    <h2>よくある質問</h2>
+
+    <div class="faq-item">
+      <div class="faq-q">Q. アプリをアンインストールしたい場合は？</div>
+      <div class="faq-a">通常のアプリと同様に、アイコンを長押しして「削除」または「アンインストール」を選んでください。</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Q. LINEのブラウザだと「ホーム画面に追加」が出ない</div>
+      <div class="faq-a">LINEのアプリ内ブラウザでは追加できません。必ずChromeまたはSafariで開いてから操作してください。</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Q. データは安全ですか？</div>
+      <div class="faq-a">デモ版ではデータはお使いのスマートフォン内にのみ保存されます。他の人からは見えません。</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Q. 通信料はかかりますか？</div>
+      <div class="faq-a">初回アクセス時にデータを読み込みます。以降はほぼオフラインで動作します。通常のウェブサイト閲覧と同程度の通信量です。</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Q. 問い合わせはどこに？</div>
+      <div class="faq-a">アプリ内のヘルプページ、またはLINEでお気軽にご連絡ください。</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  ワンタッチ管理システム<br>
+  &copy; 2026 All Rights Reserved.
+</div>
+
+<script>
+function switchOS(os) {
+  document.querySelectorAll('.os-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.os-section').forEach(s => s.classList.remove('active'));
+  
+  if (os === 'android') {
+    document.querySelectorAll('.os-tab')[0].classList.add('active');
+    document.getElementById('android-section').classList.add('active');
+  } else {
+    document.querySelectorAll('.os-tab')[1].classList.add('active');
+    document.getElementById('iphone-section').classList.add('active');
+  }
+}
+</script>
+
+</body>
+</html>

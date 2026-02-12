@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ワンタッチ管理システム | 施設×業者をつなぐ設備通報アプリ</title>
+<meta name="description" content="介護施設の設備トラブルをワンタッチで通報。業者への自動通知で対応スピードが劇的に向上します。">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
+
+  :root {
+    --black: #1a1a1a;
+    --dark: #333;
+    --gray: #666;
+    --light: #f5f6f8;
+    --white: #fff;
+    --accent: #2563eb;
+    --accent-dark: #1d4ed8;
+    --accent-light: #eff6ff;
+    --green: #059669;
+    --green-light: #ecfdf5;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    color: var(--black);
+    line-height: 1.8;
+    -webkit-text-size-adjust: 100%;
+    overflow-x: hidden;
+  }
+
+  /* ===== HERO ===== */
+  .hero {
+    background: var(--black);
+    color: var(--white);
+    padding: 60px 20px 50px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -30%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(37,99,235,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .hero-badge {
+    display: inline-block;
+    background: var(--accent);
+    color: var(--white);
+    padding: 4px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+  }
+
+  .hero h1 {
+    font-size: 28px;
+    font-weight: 900;
+    line-height: 1.4;
+    margin-bottom: 16px;
+    letter-spacing: -0.5px;
+  }
+
+  .hero h1 span {
+    color: var(--accent);
+  }
+
+  .hero p {
+    font-size: 15px;
+    color: #aaa;
+    max-width: 400px;
+    margin: 0 auto 28px;
+  }
+
+  .hero-cta {
+    display: inline-block;
+    background: var(--accent);
+    color: var(--white);
+    padding: 14px 32px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+
+  .hero-cta:hover { background: var(--accent-dark); }
+
+  /* ===== SECTION BASE ===== */
+  .section {
+    padding: 50px 20px;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .section h2 {
+    font-size: 22px;
+    font-weight: 900;
+    line-height: 1.4;
+    margin-bottom: 20px;
+  }
+
+  /* ===== PROBLEM ===== */
+  .problem {
+    background: var(--light);
+  }
+
+  .problem-list {
+    list-style: none;
+  }
+
+  .problem-list li {
+    background: var(--white);
+    padding: 16px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+
+  .problem-icon {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    background: #fef2f2;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+
+  /* ===== SOLUTION / FEATURES ===== */
+  .feature-grid {
+    display: grid;
+    gap: 16px;
+  }
+
+  .feature-card {
+    background: var(--white);
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 24px 20px;
+    transition: box-shadow 0.2s;
+  }
+
+  .feature-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  .feature-num {
+    display: inline-block;
+    background: var(--accent-light);
+    color: var(--accent);
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    text-align: center;
+    line-height: 28px;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  .feature-card h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .feature-card p {
+    font-size: 13px;
+    color: var(--gray);
+  }
+
+  /* ===== MERIT（業者向け） ===== */
+  .merit {
+    background: var(--black);
+    color: var(--white);
+    padding: 50px 20px;
+  }
+
+  .merit .section-label { color: #60a5fa; }
+
+  .merit h2 { color: var(--white); }
+
+  .merit-list {
+    list-style: none;
+  }
+
+  .merit-list li {
+    padding: 20px 0;
+    border-bottom: 1px solid #333;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .merit-list li:last-child { border-bottom: none; }
+
+  .merit-check {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+  }
+
+  .merit-check svg { width: 14px; height: 14px; }
+
+  .merit-text h4 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .merit-text p {
+    font-size: 13px;
+    color: #999;
+  }
+
+  /* ===== FLOW ===== */
+  .flow-steps {
+    position: relative;
+  }
+
+  .flow-step {
+    display: flex;
+    gap: 16px;
+    padding-bottom: 28px;
+    position: relative;
+  }
+
+  .flow-step:last-child { padding-bottom: 0; }
+
+  .flow-step::before {
+    content: '';
+    position: absolute;
+    left: 19px;
+    top: 40px;
+    bottom: 0;
+    width: 2px;
+    background: #e5e7eb;
+  }
+
+  .flow-step:last-child::before { display: none; }
+
+  .flow-dot {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-weight: 700;
+    font-size: 15px;
+    z-index: 1;
+  }
+
+  .flow-content h4 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    margin-top: 8px;
+  }
+
+  .flow-content p {
+    font-size: 13px;
+    color: var(--gray);
+  }
+
+  /* ===== DEMO CTA ===== */
+  .demo-section {
+    background: var(--accent-light);
+    border: 2px solid var(--accent);
+    border-radius: 16px;
+    padding: 28px 20px;
+    margin: 0 auto;
+    max-width: 520px;
+    text-align: center;
+  }
+
+  .demo-section h2 {
+    font-size: 20px;
+    font-weight: 900;
+    margin-bottom: 12px;
+  }
+
+  .demo-section p {
+    font-size: 14px;
+    color: var(--gray);
+    margin-bottom: 20px;
+  }
+
+  .demo-btn {
+    display: block;
+    background: var(--accent);
+    color: var(--white);
+    padding: 16px;
+    border-radius: 10px;
+    font-size: 17px;
+    font-weight: 700;
+    text-decoration: none;
+    margin-bottom: 12px;
+    transition: background 0.2s;
+  }
+
+  .demo-btn:hover { background: var(--accent-dark); }
+
+  .demo-btn.green {
+    background: var(--green);
+  }
+
+  .demo-btn.green:hover { background: #047857; }
+
+  /* ===== LOGIN INFO ===== */
+  .login-box {
+    background: var(--white);
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+    text-align: left;
+  }
+
+  .login-box h4 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  .login-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 13px;
+  }
+
+  .login-row:last-child { border-bottom: none; }
+
+  .login-role {
+    font-weight: 500;
+  }
+
+  .login-cred {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: var(--gray);
+    background: #f9fafb;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  .login-note {
+    font-size: 12px;
+    color: var(--gray);
+    margin-top: 12px;
+    text-align: center;
+  }
+
+  /* ===== INSTALL ===== */
+  .install-section {
+    background: var(--light);
+  }
+
+  .os-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .os-tab {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    background: var(--white);
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .os-tab.active {
+    border-color: var(--black);
+    background: var(--black);
+    color: var(--white);
+  }
+
+  .os-content { display: none; }
+  .os-content.active { display: block; }
+
+  .install-step {
+    background: var(--white);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .install-num {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    background: var(--black);
+    color: var(--white);
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+  }
+
+  .install-step strong {
+    color: var(--accent);
+  }
+
+  .install-warn {
+    background: #fff8e1;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 12px;
+    color: #92400e;
+    margin-top: 12px;
+  }
+
+  /* ===== LINE CTA ===== */
+  .line-cta {
+    background: #06c755;
+    color: var(--white);
+    padding: 50px 20px;
+    text-align: center;
+  }
+
+  .line-cta h2 {
+    color: var(--white);
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
+
+  .line-cta p {
+    color: rgba(255,255,255,0.85);
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+
+  .line-btn {
+    display: inline-block;
+    background: var(--white);
+    color: #06c755;
+    padding: 14px 40px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+
+  .line-btn:hover { opacity: 0.9; }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    background: var(--black);
+    color: #666;
+    text-align: center;
+    padding: 24px 20px;
+    font-size: 12px;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (min-width: 600px) {
+    .hero h1 { font-size: 36px; }
+    .section h2 { font-size: 26px; }
+    .feature-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero-badge">設備メーカー様向け</div>
+  <h1>施設からの<span>通報対応</span>を<br>もっとスムーズに。</h1>
+  <p>介護施設と設備メーカーをつなぐ、<br>設備通報管理システム。</p>
+  <a href="#demo" class="hero-cta">今すぐデモを試す</a>
+</section>
+
+<!-- ===== PROBLEM ===== -->
+<section class="section problem">
+  <div class="section-label">PROBLEM</div>
+  <h2>こんなお悩みありませんか？</h2>
+  <ul class="problem-list">
+    <li>
+      <div class="problem-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#ef4444"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+      </div>
+      <div>施設からの<strong>電話連絡が多く、対応漏れ</strong>が発生している</div>
+    </li>
+    <li>
+      <div class="problem-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#ef4444"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+      </div>
+      <div>どの施設の<strong>どの設備で何が起きたか</strong>、情報が散らばっている</div>
+    </li>
+    <li>
+      <div class="problem-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#ef4444"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+      </div>
+      <div><strong>対応状況の共有</strong>に手間がかかり、施設側も不安</div>
+    </li>
+    <li>
+      <div class="problem-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#ef4444"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+      </div>
+      <div><strong>対応実績の集計</strong>が手作業で、報告書作成に時間がかかる</div>
+    </li>
+  </ul>
+</section>
+
+<!-- ===== SOLUTION ===== -->
+<section class="section">
+  <div class="section-label">SOLUTION</div>
+  <h2>ワンタッチで、すべて解決。</h2>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-num">1</div>
+      <h3>ワンタッチ通報</h3>
+      <p>施設スタッフがスマホからカテゴリーを選ぶだけ。写真も添付可能。複雑な操作は一切不要です。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-num">2</div>
+      <h3>業者へ即時通知</h3>
+      <p>通報が入ると担当業者のダッシュボードにリアルタイムで反映。対応漏れを防ぎます。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-num">3</div>
+      <h3>ステータス管理</h3>
+      <p>「確認中→対応中→完了」の進捗を業者側で更新。施設にもリアルタイムで共有されます。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-num">4</div>
+      <h3>対応履歴の一元管理</h3>
+      <p>全通報の履歴をCSVエクスポート可能。月次報告や実績管理がワンクリックで完了します。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== MERIT ===== -->
+<section class="merit">
+  <div style="max-width:520px; margin:0 auto;">
+    <div class="section-label">MERIT</div>
+    <h2>導入メリット</h2>
+    <ul class="merit-list">
+      <li>
+        <div class="merit-check">
+          <svg viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        </div>
+        <div class="merit-text">
+          <h4>対応スピード向上</h4>
+          <p>電話・FAXのやり取りが不要。通報から対応開始までの時間を大幅に短縮できます。</p>
+        </div>
+      </li>
+      <li>
+        <div class="merit-check">
+          <svg viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        </div>
+        <div class="merit-text">
+          <h4>対応漏れゼロへ</h4>
+          <p>全通報がダッシュボードに集約。ステータス管理で「言った言わない」がなくなります。</p>
+        </div>
+      </li>
+      <li>
+        <div class="merit-check">
+          <svg viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        </div>
+        <div class="merit-text">
+          <h4>施設との信頼関係を強化</h4>
+          <p>素早い対応と進捗の見える化で、施設からの信頼度がアップ。契約継続率の向上に貢献します。</p>
+        </div>
+      </li>
+      <li>
+        <div class="merit-check">
+          <svg viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        </div>
+        <div class="merit-text">
+          <h4>報告業務を効率化</h4>
+          <p>対応履歴はシステムに自動蓄積。CSV出力で月次報告書の作成時間を削減できます。</p>
+        </div>
+      </li>
+      <li>
+        <div class="merit-check">
+          <svg viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        </div>
+        <div class="merit-text">
+          <h4>導入コスト最小</h4>
+          <p>専用アプリのインストール不要。スマホのブラウザからすぐに使えます。特別な機器は必要ありません。</p>
+        </div>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== FLOW ===== -->
+<section class="section">
+  <div class="section-label">FLOW</div>
+  <h2>利用の流れ</h2>
+  <div class="flow-steps">
+    <div class="flow-step">
+      <div class="flow-dot">1</div>
+      <div class="flow-content">
+        <h4>施設スタッフが通報</h4>
+        <p>設備の不具合をスマホからワンタッチで送信</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-dot">2</div>
+      <div class="flow-content">
+        <h4>業者に通知が届く</h4>
+        <p>担当業者のダッシュボードに即反映</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-dot">3</div>
+      <div class="flow-content">
+        <h4>業者が対応・報告</h4>
+        <p>ステータス更新とコメントで進捗を共有</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-dot">4</div>
+      <div class="flow-content">
+        <h4>施設が確認・完了</h4>
+        <p>対応完了を確認。履歴は自動で記録</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== DEMO ===== -->
+<section class="section" id="demo">
+  <div class="demo-section">
+    <h2>まずは触ってみてください</h2>
+    <p>アカウント登録不要。<br>デモ用のIDですぐにお試しいただけます。</p>
+
+    <a href="https://tamj-dev.github.io/onetouch/login.html" class="demo-btn">デモを開く</a>
+
+    <div class="login-box">
+      <h4>デモ用ログイン情報</h4>
+      <div class="login-row">
+        <span class="login-role">会社コード</span>
+        <span class="login-cred">TAMJ</span>
+      </div>
+      <div class="login-row">
+        <span class="login-role">業者画面</span>
+        <span class="login-cred">P001-yamada / demo</span>
+      </div>
+      <div class="login-row">
+        <span class="login-role">スタッフ画面</span>
+        <span class="login-cred">demo-staff / demo</span>
+      </div>
+      <div class="login-row">
+        <span class="login-role">管理者画面</span>
+        <span class="login-cred">demo-admin / demo</span>
+      </div>
+      <div class="login-note">※ デモデータはお使いのスマホ内にのみ保存されます</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== INSTALL ===== -->
+<section class="section install-section">
+  <div class="section-label">INSTALL</div>
+  <h2>ホーム画面への追加方法</h2>
+  <p style="font-size:14px; color:var(--gray); margin-bottom:16px;">アプリのようにホーム画面から起動できます。所要時間は約1分です。</p>
+
+  <div class="os-tabs">
+    <div class="os-tab active" onclick="switchOS('android')">Android</div>
+    <div class="os-tab" onclick="switchOS('iphone')">iPhone</div>
+  </div>
+
+  <!-- Android -->
+  <div id="android" class="os-content active">
+    <div class="install-step">
+      <div class="install-num">1</div>
+      <div>上の「デモを開く」ボタンをタップ。LINEから開いた場合は右上「︙」→ <strong>「Chromeで開く」</strong></div>
+    </div>
+    <div class="install-step">
+      <div class="install-num">2</div>
+      <div>Chrome右上の <strong>「︙」</strong> をタップ</div>
+    </div>
+    <div class="install-step">
+      <div class="install-num">3</div>
+      <div><strong>「ホーム画面に追加」</strong> → <strong>「追加」</strong></div>
+    </div>
+    <div class="install-step">
+      <div class="install-num">4</div>
+      <div>ホーム画面にアイコンが追加されます</div>
+    </div>
+  </div>
+
+  <!-- iPhone -->
+  <div id="iphone" class="os-content">
+    <div class="install-step">
+      <div class="install-num">1</div>
+      <div>上の「デモを開く」ボタンをタップ。LINEから開いた場合は右下の <strong>「Safariで開く」</strong></div>
+    </div>
+    <div class="install-step">
+      <div class="install-num">2</div>
+      <div>Safari下部の <strong>共有ボタン（□に↑）</strong> をタップ</div>
+    </div>
+    <div class="install-step">
+      <div class="install-num">3</div>
+      <div><strong>「ホーム画面に追加」</strong> → 右上の <strong>「追加」</strong></div>
+    </div>
+    <div class="install-step">
+      <div class="install-num">4</div>
+      <div>ホーム画面にアイコンが追加されます</div>
+    </div>
+  </div>
+
+  <div class="install-warn">
+    ※ LINEのアプリ内ブラウザでは「ホーム画面に追加」ができません。必ずChrome（Android）またはSafari（iPhone）で開いてください。
+  </div>
+</section>
+
+<!-- ===== LINE CTA ===== -->
+<section class="line-cta">
+  <h2>お問い合わせ・ご相談</h2>
+  <p>導入のご相談やご質問は<br>公式LINEからお気軽にどうぞ。</p>
+  <a href="#LINE_URL" class="line-btn">公式LINEで相談する</a>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  ワンタッチ管理システム &copy; 2026 All Rights Reserved.
+</footer>
+
+<script>
+function switchOS(os) {
+  document.querySelectorAll('.os-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.os-content').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById(os).classList.add('active');
+}
+</script>
+
+</body>
+</html>
