@@ -408,11 +408,11 @@
         if (items.length === 0 && isDemoMode) {
           console.log('[loadItems] DEMOモード: ダミー商品を自動生成');
           items = [
-            { itemId:'ITEM-DEMO-001', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'エアコン 1号機', maker:'ダイキン', model:'AN22XRS-W', category:'空調', assignedPartnerId:'PARTNER-001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:150000, stock:1, description:'2F 会議室に設置', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
-            { itemId:'ITEM-DEMO-002', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'給湯器 A', maker:'リンナイ', model:'RUX-A1615W-E', category:'給湯', assignedPartnerId:'PARTNER-001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:80000, stock:1, description:'1F 給湯室', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
-            { itemId:'ITEM-DEMO-003', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'照明器具 LED-01', maker:'パナソニック', model:'LGB51210', category:'電気', assignedPartnerId:'PARTNER-003', assignedPartnerName:'日本電気工事', unit:'個', price:12000, stock:10, description:'各フロア共通', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
-            { itemId:'ITEM-DEMO-004', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'トイレ 1F', maker:'TOTO', model:'CES9788F', category:'水道', assignedPartnerId:'PARTNER-002', assignedPartnerName:'関東水道サービス', unit:'台', price:180000, stock:1, description:'1F 男子トイレ', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
-            { itemId:'ITEM-DEMO-005', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'エレベーター', maker:'三菱電機', model:'AXIEZ', category:'設備', assignedPartnerId:'PARTNER-003', assignedPartnerName:'日本電気工事', unit:'基', price:5000000, stock:1, description:'本館', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() }
+            { itemId:'ITEM-DEMO-001', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'エアコン 1号機', maker:'ダイキン', model:'AN22XRS-W', category:'空調', assignedPartnerId:'P001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:150000, stock:1, description:'2F 会議室に設置', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            { itemId:'ITEM-DEMO-002', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'給湯器 A', maker:'リンナイ', model:'RUX-A1615W-E', category:'給湯', assignedPartnerId:'P001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:80000, stock:1, description:'1F 給湯室', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            { itemId:'ITEM-DEMO-003', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'照明器具 LED-01', maker:'パナソニック', model:'LGB51210', category:'電気', assignedPartnerId:'P003', assignedPartnerName:'日本電気工事', unit:'個', price:12000, stock:10, description:'各フロア共通', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            { itemId:'ITEM-DEMO-004', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'トイレ 1F', maker:'TOTO', model:'CES9788F', category:'水道', assignedPartnerId:'P002', assignedPartnerName:'関東水道サービス', unit:'台', price:180000, stock:1, description:'1F 男子トイレ', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            { itemId:'ITEM-DEMO-005', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'エレベーター', maker:'三菱電機', model:'AXIEZ', category:'設備', assignedPartnerId:'P003', assignedPartnerName:'日本電気工事', unit:'基', price:5000000, stock:1, description:'本館', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() }
           ];
           storage.setItem(storageKey, JSON.stringify(items));
           console.log('[loadItems] ダミー商品を生成・保存:', items.length, '件');
@@ -785,7 +785,7 @@
         
         // 緊急度
         var priorityClass='priority-low';
-        var priorityIcon='⚪';
+        var priorityIcon='○';
         if(r.priority==='高'){priorityClass='priority-high';priorityIcon='●';}
         else if(r.priority==='中'){priorityClass='priority-mid';priorityIcon='●';}
         else{priorityClass='priority-low';priorityIcon='●';}

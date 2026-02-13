@@ -589,14 +589,14 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="password">パスワード<span class="required">★</span></label>
+                    <label for="password">パスワード<span class="required">*</span></label>
                     <div class="password-wrapper">
                         <input type="password" id="password" name="password" required>
-                        <button type="button" class="toggle-password" onclick="togglePassword()">👁️‍🗨️</button>
+                        <button type="button" class="toggle-password" onclick="togglePassword()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
                     </div>
                     <div style="margin-top: 8px;">
                         <button type="button" class="btn-secondary" id="resetPasswordBtn" style="display: none;" onclick="resetPasswordToInitial()">
-                            🔄 初期パスワードにリセット
+                            初期パスワードにリセット
                         </button>
                         <small style="display: block; color: #666; margin-top: 4px;" id="passwordResetNote"></small>
                     </div>
@@ -929,10 +929,10 @@
             
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
-                toggleButton.textContent = '👁️'; // 開いた目
+                toggleButton.textContent = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'; // 開いた目
             } else {
                 passwordInput.type = 'password';
-                toggleButton.textContent = '👁️‍🗨️'; // 閉じた目
+                toggleButton.textContent = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'; // 閉じた目
             }
         }
 

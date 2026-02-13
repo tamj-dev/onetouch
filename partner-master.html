@@ -378,8 +378,8 @@
 
         <div class="search-panel">
             <div class="search-row">
-                <div class="search-label">取引先ID</div>
-                <input type="text" id="searchId" class="search-input" placeholder="取引先IDを入力">
+                <div class="search-label">業者コード</div>
+                <input type="text" id="searchId" class="search-input" placeholder="例: P001">
             </div>
 
             <div class="search-row">
@@ -401,7 +401,7 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>取引先ID</th>
+                            <th>業者コード</th>
                             <th>会社名</th>
                             <th>担当者名</th>
                             <th>電話番号</th>
@@ -424,11 +424,7 @@
             <form id="partnerForm">
                 <input type="hidden" id="editIndex">
 
-                <div class="form-group">
-                    <label>取引先ID</label>
-                    <input type="text" id="partnerId" readonly style="background: #f5f5f5; cursor: not-allowed;" placeholder="自動付与されます">
-                    <small style="color: #666; font-size: 12px; margin-top: 4px; display: block;">※取引先IDは保存時に自動的に付与されます</small>
-                </div>
+                <input type="hidden" id="partnerId">
 
                 <div class="form-group">
                     <label>会社名 <span class="required">*</span></label>
@@ -439,6 +435,21 @@
                     <label>担当者名 <span class="required">*</span></label>
                     <input type="text" id="contactName" required placeholder="例: 山田太郎">
                 </div>
+
+                <div class="form-group">
+                    <label>担当者名ローマ字 <span class="required">*</span></label>
+                    <input type="text" id="loginRomaji" required placeholder="例: yamada" pattern="[a-zA-Z]+" oninput="updateLoginIdPreview()">
+                    <small style="color: #888; font-size: 12px; margin-top: 4px; display: block;">半角英字で入力 → ログインIDが自動生成されます</small>
+                    <div id="loginIdPreview" style="margin-top: 8px; padding: 8px 12px; background: #f5f5f5; border-radius: 8px; font-size: 13px; color: #666; display: none;">
+                        業者コード: <strong id="partnerCodePreview"></strong><br>
+                        ログインID: <strong id="loginIdPreviewText"></strong>
+                    </div>
+                </div>
+
+                <input type="hidden" id="partnerCode">
+                <input type="hidden" id="loginId">
+                <input type="hidden" id="password">
+                <input type="hidden" id="assignedCompanies">
 
                 <div class="form-row">
                     <div class="form-group">
@@ -532,31 +543,6 @@
                     <input type="email" id="email" placeholder="例: info@example.com">
                 </div>
 
-                <!-- 業者ログイン情報 -->
-                <div class="form-section">
-                    <h3 style="color: #1a1a1a; font-size: 15px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid #e0e0e0;">
-                        業者ログイン情報
-                    </h3>
-                    
-                    <div class="form-group">
-                        <label>業者コード</label>
-                        <input type="text" id="partnerCode" readonly style="background: #f5f5f5; color: #333;">
-                        <small style="color: #888; font-size: 12px; margin-top: 4px; display: block;">自動発行（業者がログイン時に使用）</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label>担当者名ローマ字 <span class="required">*</span></label>
-                        <input type="text" id="loginRomaji" required placeholder="例: yamada" pattern="[a-zA-Z]+" oninput="updateLoginIdPreview()">
-                        <small style="color: #888; font-size: 12px; margin-top: 4px; display: block;">半角英字で入力 → ログインIDが自動生成されます</small>
-                        <div id="loginIdPreview" style="margin-top: 8px; padding: 8px 12px; background: #f5f5f5; border-radius: 8px; font-size: 13px; color: #666; display: none;">
-                            ログインID: <strong id="loginIdPreviewText"></strong>
-                        </div>
-                    </div>
-
-                    <input type="hidden" id="loginId">
-                    <input type="hidden" id="password">
-                    <input type="hidden" id="assignedCompanies">
-                </div>
 
                 <!-- system_admin用：紐づけ会社管理 -->
                 <div class="form-section" id="assignedCompaniesSection" style="display: none;">
@@ -595,7 +581,6 @@
         // 取引先データ（LocalStorageから読み込み + フィルタリング）
         let allPartners = JSON.parse(localStorage.getItem('partners')) || [];
         let partners = filterPartnersByScope(allPartners);
-        let partnerCounter = parseInt(localStorage.getItem('partnerCounter')) || 1;
 
         // スコープに応じて取引先をフィルタリング
         function filterPartnersByScope(partnerList) {
@@ -613,9 +598,7 @@
         function saveToLocalStorage() {
             // 全データに保存（DEMOモード時はsessionStorageにも保存）
             localStorage.setItem('partners', JSON.stringify(allPartners));
-            localStorage.setItem('partnerCounter', partnerCounter.toString());
             sessionStorage.setItem('partners', JSON.stringify(allPartners));
-            sessionStorage.setItem('partnerCounter', partnerCounter.toString());
             // 表示用データを再フィルタリング
             partners = filterPartnersByScope(allPartners);
         }
@@ -638,13 +621,6 @@
             } catch (e) {
                 console.error('監査ログの記録に失敗:', e);
             }
-        }
-
-        // 取引先IDを自動生成
-        function generatePartnerId() {
-            const id = 'PTN' + String(partnerCounter).padStart(4, '0');
-            partnerCounter++;
-            return id;
         }
 
         // 業者コード自動生成（P001, P002, ...）
@@ -703,7 +679,9 @@
             var code = document.getElementById('partnerCode').value || '';
             var preview = document.getElementById('loginIdPreview');
             var previewText = document.getElementById('loginIdPreviewText');
+            var codePreview = document.getElementById('partnerCodePreview');
             if (romaji && code) {
+                if (codePreview) codePreview.textContent = code;
                 previewText.textContent = code.toLowerCase() + '-' + romaji;
                 preview.style.display = 'block';
             } else {
@@ -765,16 +743,12 @@
             e.preventDefault();
             
             const editIndex = document.getElementById('editIndex').value;
-            let partnerId;
+            var partnerCode = document.getElementById('partnerCode').value;
             
             if (editIndex !== '') {
-                partnerId = partners[editIndex].id;
-            } else {
-                partnerId = generatePartnerId();
+                // 編集時は既存のIDを維持
+                partnerCode = partners[editIndex].partnerCode || partners[editIndex].id;
             }
-            
-            // ログインID自動生成（業者コード + ローマ字）
-            var partnerCode = document.getElementById('partnerCode').value;
             var romaji = (document.getElementById('loginRomaji').value || '').trim().toLowerCase();
             var loginId = partnerCode && romaji ? partnerCode.toLowerCase() + '-' + romaji : document.getElementById('loginId').value;
             
@@ -797,7 +771,7 @@
             }
             
             const partnerData = {
-                id: partnerId,
+                id: partnerCode,
                 companyCode: currentUser.companyCode || 'DEMO',
                 officeCode: currentUser.officeCode || '',
                 name: document.getElementById('companyName').value,
@@ -831,11 +805,11 @@
                         password: allPartners[allIndex].password || partnerData.password
                     };
                 }
-                logEvent('update_partner', { partnerId: partnerId, partnerName: partnerData.name });
+                logEvent('update_partner', { partnerId: partnerCode, partnerName: partnerData.name });
                 alert('取引先情報を更新しました');
             } else {
                 allPartners.push(partnerData);
-                logEvent('add_partner', { partnerId: partnerId, partnerName: partnerData.name });
+                logEvent('add_partner', { partnerId: partnerCode, partnerName: partnerData.name });
                 // 登録完了時にログイン情報を表示
                 alert('取引先を登録しました\n\n【業者ログイン情報】\n業者コード: ' + partnerCode + '\nログインID: ' + loginId + '\nパスワード: ' + password + '\n\n※この情報を業者にお伝えください');
             }
@@ -886,7 +860,7 @@
                     }
                     return `
                     <tr>
-                        <td>${partner.id}</td>
+                        <td>${partner.partnerCode || partner.id}</td>
                         <td>${partner.name}</td>
                         <td>${partner.contactName}</td>
                         <td>${partner.phone}</td>
@@ -907,7 +881,7 @@
             const searchName = document.getElementById('searchName').value.toLowerCase();
 
             const filtered = partners.filter(partner => {
-                const matchId = !searchId || partner.id.toLowerCase().includes(searchId);
+                const matchId = !searchId || (partner.partnerCode || partner.id || '').toLowerCase().includes(searchId);
                 const matchName = !searchName || partner.name.toLowerCase().includes(searchName);
                 return matchId && matchName;
             });

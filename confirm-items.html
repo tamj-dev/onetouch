@@ -180,18 +180,18 @@
   <div id="unified-header-mount"></div>
 
   <div class="container">
-    <h2>📋 インポートデータ確認</h2>
+    <h2>インポートデータ確認</h2>
     <p style="color: #666; font-size: 13px; margin-bottom: 16px;" id="docInfo">
       取り込んだデータを確認・修正してから商品マスタに登録します。
     </p>
 
     <!-- ツールバー -->
     <div class="toolbar">
-      <button class="btn" onclick="autoCategory()">🏷️ カテゴリ推定</button>
-      <button class="btn" onclick="normalizeAll()">🔤 全角→半角</button>
-      <button class="btn" onclick="selectAll()">☑️ 全選択</button>
+      <button class="btn" onclick="autoCategory()">カテゴリ推定</button>
+      <button class="btn" onclick="normalizeAll()">全角→半角</button>
+      <button class="btn" onclick="selectAll()">全選択</button>
       <span class="warning-badge" id="warningBadge">
-        ⚠️ <span id="warningCount">0</span>件の要確認
+        <span id="warningCount">0</span>件の要確認
       </span>
     </div>
 
@@ -225,7 +225,7 @@
     </div>
     <div class="bottom-actions">
       <button class="btn-cancel" onclick="cancelAll()">キャンセル</button>
-      <button class="btn-confirm" id="confirmBtn" onclick="confirmAll()">✅ 確定して商品マスタに登録</button>
+      <button class="btn-confirm" id="confirmBtn" onclick="confirmAll()">確定して商品マスタに登録</button>
     </div>
   </div>
 
@@ -268,7 +268,7 @@
     // ============================================
     UnifiedHeader.init({
       title: 'インポート確認',
-      icon: '📋',
+      icon: '',
       backUrl: 'import.html'
     });
 
@@ -280,7 +280,7 @@
         const doc = await DocumentStorage.getDocument(docId);
         if (doc) {
           const info = document.getElementById('docInfo');
-          info.textContent = `📄 ${doc.fileName || '不明'} からの取り込みデータを確認してください。`;
+          info.textContent = `${doc.fileName || '不明'} からの取り込みデータを確認してください。`;
         }
 
         // LineItems取得
@@ -288,7 +288,7 @@
 
         if (lineItems.length === 0) {
           document.getElementById('tableBody').innerHTML =
-            '<tr><td colspan="9" class="empty-state"><div class="icon">📋</div><p>データがありません</p></td></tr>';
+            '<tr><td colspan="9" class="empty-state"><div class="icon"></div><p>データがありません</p></td></tr>';
           document.getElementById('confirmBtn').disabled = true;
           return;
         }
@@ -308,7 +308,7 @@
       const tbody = document.getElementById('tableBody');
 
       if (lineItems.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" class="empty-state"><div class="icon">📋</div><p>データがありません</p></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="empty-state"><div class="icon"></div><p>データがありません</p></td></tr>';
         return;
       }
 
@@ -471,7 +471,7 @@
         console.error('登録エラー:', e);
         showToast('登録に失敗しました: ' + e.message, 'error');
         btn.disabled = false;
-        btn.textContent = '✅ 確定して商品マスタに登録';
+        btn.textContent = '確定して商品マスタに登録';
       }
     }
 

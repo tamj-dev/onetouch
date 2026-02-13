@@ -152,19 +152,19 @@
         <!-- クイックガイド -->
         <div class="help-grid">
             <div class="help-card" onclick="scrollToSection('getting-started')">
-                <div class="help-icon">🚀</div>
+                <div class="help-icon"></div>
                 <div class="help-title">はじめに</div>
                 <div class="help-desc">ワンタッチ管理の基本的な使い方を学びます。</div>
             </div>
 
             <div class="help-card" onclick="window.location.href='permissions.html?from=help'">
-                <div class="help-icon">🔐</div>
+                <div class="help-icon"></div>
                 <div class="help-title">権限について</div>
                 <div class="help-desc">各ロールでできることを確認します。</div>
             </div>
 
             <div class="help-card" onclick="scrollToSection('faq')">
-                <div class="help-icon">❓</div>
+                <div class="help-icon"></div>
                 <div class="help-title">よくある質問</div>
                 <div class="help-desc">FAQ（よくある質問と回答）を確認します。</div>
             </div>
@@ -172,11 +172,11 @@
 
         <!-- はじめに -->
         <div class="faq-section" id="getting-started" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 16px; padding: 32px; margin-bottom: 32px;">
-            <div class="faq-title" style="color: white;">🚀 はじめに</div>
+            <div class="faq-title" style="color: white;">はじめに</div>
             <div style="line-height: 1.8; margin-top: 16px;">
                 <p style="margin-bottom: 16px;">ワンタッチ管理へようこそ！このシステムは、施設運営に必要な通報管理・マスタ管理を一元化するプラットフォームです。</p>
                 
-                <h3 style="font-size: 18px; margin-top: 24px; margin-bottom: 12px;">📱 基本的な使い方</h3>
+                <h3 style="font-size: 18px; margin-top: 24px; margin-bottom: 12px;">基本的な使い方</h3>
                 <ol style="margin-left: 20px; line-height: 2;">
                     <li><strong>ログイン:</strong> 会社コードとパスワードでログイン</li>
                     <li><strong>通報:</strong> トラブル発生時は通報画面から業者へ通報</li>
@@ -184,7 +184,7 @@
                     <li><strong>商品管理:</strong> 商品マスタで在庫や価格を管理</li>
                 </ol>
                 
-                <h3 style="font-size: 18px; margin-top: 24px; margin-bottom: 12px;">👥 あなたの権限を確認</h3>
+                <h3 style="font-size: 18px; margin-top: 24px; margin-bottom: 12px;">あなたの権限を確認</h3>
                 <p>
                     <a href="permissions.html?from=help" style="color: white; text-decoration: underline; font-weight: 600;">権限一覧ページ</a>で、
                     あなたのロール（会社管理者・事業所管理者・スタッフ・業者）ごとに何ができるか確認できます。
@@ -330,7 +330,7 @@
 
     <script>
     UnifiedHeader.init({
-        icon: '❓',
+        icon: '',
         title: 'ヘルプ・FAQ',
         backButton: true
     });

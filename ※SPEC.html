@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ワンタッチ管理システム - システム仕様書</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background: #f5f5f5;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #9B2335 0%, #7a1c2a 100%);
+            color: white;
+            padding: 32px 40px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .container {
+            display: flex;
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            min-height: calc(100vh - 120px);
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #fafafa;
+            border-right: 1px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            height: calc(100vh - 120px);
+            overflow-y: auto;
+            padding: 24px 0;
+        }
+
+        .sidebar h3 {
+            padding: 0 24px;
+            margin-bottom: 16px;
+            color: #9B2335;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar ul {
+            list-style: none;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 4px;
+        }
+
+        .sidebar ul li a {
+            display: block;
+            padding: 10px 24px;
+            color: #666;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar ul li a:hover {
+            background: #f0f0f0;
+            color: #9B2335;
+            border-left-color: #9B2335;
+        }
+
+        .content {
+            flex: 1;
+            padding: 40px 60px;
+            overflow-y: auto;
+        }
+
+        .section {
+            margin-bottom: 60px;
+        }
+
+        .section h2 {
+            font-size: 28px;
+            color: #9B2335;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #9B2335;
+        }
+
+        .section h3 {
+            font-size: 22px;
+            color: #333;
+            margin-top: 32px;
+            margin-bottom: 16px;
+        }
+
+        .section h4 {
+            font-size: 18px;
+            color: #555;
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+
+        .section p {
+            margin-bottom: 16px;
+            color: #555;
+        }
+
+        .section ul, .section ol {
+            margin-left: 24px;
+            margin-bottom: 16px;
+        }
+
+        .section li {
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        table th {
+            background: #9B2335;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        table tr:last-child td {
+            border-bottom: none;
+        }
+
+        table tr:hover {
+            background: #fafafa;
+        }
+
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #e83e8c;
+        }
+
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 24px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .note {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 16px 20px;
+            margin: 24px 0;
+            border-radius: 4px;
+        }
+
+        .note strong {
+            color: #856404;
+        }
+
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 16px 20px;
+            margin: 24px 0;
+            border-radius: 4px;
+        }
+
+        .success strong {
+            color: #155724;
+        }
+
+        .danger {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 16px 20px;
+            margin: 24px 0;
+            border-radius: 4px;
+        }
+
+        .danger strong {
+            color: #721c24;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        .badge-primary {
+            background: #9B2335;
+            color: white;
+        }
+
+        .badge-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .badge-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .badge-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        @media print {
+            .sidebar {
+                display: none;
+            }
+            .content {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            .content {
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📘 ワンタッチ管理システム</h1>
+        <p>システム仕様書 v1.1 | 最終更新: 2026年2月12日</p>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <h3>目次</h3>
+            <ul>
+                <li><a href="#overview">1. システム概要</a></li>
+                <li><a href="#architecture">2. アーキテクチャ</a></li>
+                <li><a href="#data-structure">3. データ構造</a></li>
+                <li><a href="#auth">4. 認証・権限</a></li>
+                <li><a href="#demo-mode">5. DEMOモード</a></li>
+                <li><a href="#contractor">6. 業者連携</a></li>
+                <li><a href="#files">7. ファイル構成</a></li>
+                <li><a href="#ui-ux">8. UI/UXシステム</a></li>
+                <li><a href="#decisions">9. 設計判断の記録</a></li>
+            </ul>
+        </div>
+
+        <div class="content">
+            <!-- 1. システム概要 -->
+            <div class="section" id="overview">
+                <h2>1. システム概要</h2>
+                
+                <h3>1.1 目的</h3>
+                <p>ワンタッチ管理システムは、介護施設・福祉施設における設備トラブルや備品管理を効率化するためのWebアプリケーションです。スタッフが簡単に通報でき、業者と連携して迅速な対応を実現します。</p>
+
+                <h3>1.2 主要機能</h3>
+                <ul>
+                    <li><strong>通報管理:</strong> 設備トラブルの通報・追跡・履歴管理</li>
+                    <li><strong>業者連携:</strong> カテゴリー別の業者自動割り当て・ステータス管理</li>
+                    <li><strong>マスタ管理:</strong> 会社・事業所・アカウント・商品・業者の一元管理</li>
+                    <li><strong>商品管理:</strong> 備品・設備の在庫管理・検索・インポート/エクスポート</li>
+                    <li><strong>権限管理:</strong> 5つの役割による階層的なアクセス制御</li>
+                    <li><strong>監査ログ:</strong> 全操作の記録・検索・フィルタリング</li>
+                </ul>
+
+                <h3>1.3 対象ユーザー</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>役割</th>
+                            <th>説明</th>
+                            <th>想定人数</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge badge-primary">システム管理者</span></td>
+                            <td>全システムの管理・設定</td>
+                            <td>1-2名</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-info">会社管理者</span></td>
+                            <td>自社の全データ管理</td>
+                            <td>会社ごとに1-3名</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-info">事業所管理者</span></td>
+                            <td>自事業所のデータ管理</td>
+                            <td>事業所ごとに1-2名</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-success">スタッフ</span></td>
+                            <td>通報の送信・確認</td>
+                            <td>事業所ごとに10-50名</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-warning">業者</span></td>
+                            <td>通報への対応・ステータス更新</td>
+                            <td>業者ごとに1-5名</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 2. アーキテクチャ -->
+            <div class="section" id="architecture">
+                <h2>2. アーキテクチャ</h2>
+
+                <h3>2.1 技術スタック</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>レイヤー</th>
+                            <th>技術</th>
+                            <th>理由</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>フロントエンド</td>
+                            <td>HTML5 + CSS3 + Vanilla JavaScript</td>
+                            <td>シンプル・軽量・フレームワーク不要</td>
+                        </tr>
+                        <tr>
+                            <td>ストレージ</td>
+                            <td>localStorage + sessionStorage + IndexedDB</td>
+                            <td>サーバー不要・オフライン対応</td>
+                        </tr>
+                        <tr>
+                            <td>認証</td>
+                            <td>ローカル認証（sessionStorage）</td>
+                            <td>シンプル・高速</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>2.2 ストレージ設計</h3>
+                <h4>localStorage（永続データ）</h4>
+                <ul>
+                    <li><code>accounts</code> - アカウントマスタ</li>
+                    <li><code>companies</code> - 会社マスタ</li>
+                    <li><code>offices</code> - 事業所マスタ</li>
+                    <li><code>partners</code> - 業者マスタ</li>
+                    <li><code>onetouch.reports</code> - 通報データ（本番）</li>
+                    <li><code>onetouch.items</code> - 商品データ（本番）</li>
+                    <li><code>onetouch.documents</code> - インポート書類データ（本番）</li>
+                    <li><code>onetouch.lineItems</code> - インポート明細データ（本番）</li>
+                    <li><code>audit.logs</code> - 監査ログ</li>
+                </ul>
+
+                <h4>sessionStorage（一時データ）</h4>
+                <ul>
+                    <li><code>currentUser</code> - ログイン中のユーザー情報</li>
+                    <li><code>currentContractor</code> - ログイン中の業者情報</li>
+                    <li><code>onetouch.reports</code> - 通報データ（DEMO）</li>
+                    <li><code>demo.items</code> - 商品データ（DEMO）</li>
+                    <li><code>demo.documents</code> - インポート書類データ（DEMO）</li>
+                    <li><code>demo.lineItems</code> - インポート明細データ（DEMO）</li>
+                </ul>
+
+                <h4>IndexedDB（大容量データ）</h4>
+                <ul>
+                    <li><code>OneTouchDB</code> → <code>items</code> store - 商品データ（本番・2000件以上対応）※将来使用</li>
+                </ul>
+
+                <div class="note">
+                    <strong>設計判断:</strong> DEMOモード（TAMJ）はsessionStorageを使用し、ブラウザを閉じるとデータが消えます。ただし<strong>ログアウト時はdemo.*/onetouch.*キーを保持</strong>するため、別ユーザーへの切り替えではデータが消えません。本番モードはlocalStorageで永続化します。
+                </div>
+            </div>
+
+            <!-- 3. データ構造 -->
+            <div class="section" id="data-structure">
+                <h2>3. データ構造</h2>
+
+                <h3>3.1 アカウントデータ</h3>
+                <pre>{
+  "id": "TAMJ-S001",
+  "companyCode": "TAMJ",
+  "companyName": "タムジ株式会社",
+  "officeCode": "TAMJ-J0001",
+  "officeName": "東京事業所",
+  "name": "山田 太郎",
+  "password": "currentPassword123",
+  "initialPassword": "initial123",
+  "isFirstLogin": false,
+  "passwordChangedAt": "2026-02-11T10:30:00Z",
+  "role": "staff",
+  "scope": "office",
+  "status": "active",
+  "createdAt": "2026-02-01T00:00:00Z"
+}</pre>
+                <p><strong>パスワード管理フィールド:</strong></p>
+                <ul>
+                    <li><code>password</code>: 現在のパスワード</li>
+                    <li><code>initialPassword</code>: 初期パスワード（管理者がリセット時に使用）</li>
+                    <li><code>isFirstLogin</code>: 初回ログインフラグ（true の場合、推奨バナー表示）</li>
+                    <li><code>passwordChangedAt</code>: 最終パスワード変更日時（ISO 8601形式）</li>
+                </ul>
+
+                <h3>3.2 通報データ</h3>
+                <pre>{
+  "id": "RPT-20260212-001",
+  "userId": "demo-staff",
+  "userName": "デモスタッフ",
+  "reporter": "デモスタッフ",
+  "companyCode": "TAMJ",
+  "officeCode": "TAMJ-J0001",
+  "officeName": "東京事業所",
+  "title": "エアコン 1号機",
+  "category": "空調",
+  "priority": "高",
+  "location": "2F 会議室",
+  "description": "冷房が効かない、異臭がする",
+  "timestamp": "2026-02-12T12:34:56Z",
+  
+  "assignedPartnerId": "PARTNER-001",
+  "assignedPartnerName": "東京設備工業株式会社",
+  "contractorStatus": "未対応",
+  "contractorComments": [
+    {
+      "author": "東京設備工業株式会社",
+      "text": "本日午後に現場確認に伺います",
+      "timestamp": "2026-02-12T14:00:00Z"
+    }
+  ],
+  "resolvedAt": null
+}</pre>
+
+                <h3>3.3 業者データ</h3>
+                <pre>{
+  "id": "PARTNER-001",
+  "name": "東京設備工業株式会社",
+  "partnerCode": "P001",
+  "categories": ["空調", "給湯", "電気"],
+  "assignedCompanies": ["TAMJ", "DEMO"],
+  "status": "active",
+  "contactName": "山田 太郎",
+  "phone": "03-1111-2222",
+  "email": "<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="344d555955505574405b5f4d5b194751404741565d1a575b1a5e44">[email&#160;protected]</a>",
+  "loginId": "p001-yamada",
+  "password": "hashed_password",
+  "createdAt": "2026-02-01T00:00:00Z"
+}</pre>
+
+                <h3>3.4 商品データ</h3>
+                <pre>{
+  "itemId": "ITEM-DEMO-001",
+  "companyCode": "TAMJ",
+  "officeCode": "TAMJ-J0001",
+  "name": "エアコン 1号機",
+  "maker": "ダイキン",
+  "model": "AN22XRS-W",
+  "category": "空調",
+  "assignedPartnerId": "PARTNER-001",
+  "assignedPartnerName": "東京設備工業株式会社",
+  "unit": "台",
+  "price": 150000,
+  "stock": 1,
+  "description": "2F 会議室に設置",
+  "createdAt": "2026-02-11T00:00:00Z",
+  "updatedAt": "2026-02-11T00:00:00Z"
+}</pre>
+            </div>
+
+            <!-- 4. 認証・権限 -->
+            <div class="section" id="auth">
+                <h2>4. 認証・権限</h2>
+
+                <h3>4.1 ログインフロー</h3>
+                <ol>
+                    <li>ユーザーが <code>login.html</code> で会社コード・ID・パスワードを入力</li>
+                    <li>システムが <code>accounts</code> / <code>partners</code> から認証</li>
+                    <li><code>currentUser</code> または <code>currentContractor</code> をsessionStorageに保存</li>
+                    <li>役割（role）に応じてホーム画面へリダイレクト</li>
+                </ol>
+
+                <h3>4.2 役割別ホーム画面</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>役割</th>
+                            <th>ホーム画面</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>system_admin</td>
+                            <td>system-admin.html</td>
+                        </tr>
+                        <tr>
+                            <td>company_admin</td>
+                            <td>master-top.html</td>
+                        </tr>
+                        <tr>
+                            <td>office_admin</td>
+                            <td>master-top.html</td>
+                        </tr>
+                        <tr>
+                            <td>staff</td>
+                            <td>report.html</td>
+                        </tr>
+                        <tr>
+                            <td>contractor</td>
+                            <td>contractor-dashboard.html</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>4.3 権限マトリックス</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>機能</th>
+                            <th>system_admin</th>
+                            <th>company_admin</th>
+                            <th>office_admin</th>
+                            <th>staff</th>
+                            <th>contractor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>会社マスタ</td>
+                            <td>✅ 全て</td>
+                            <td>✅ 自社のみ</td>
+                            <td>❌</td>
+                            <td>❌</td>
+                            <td>❌</td>
+                        </tr>
+                        <tr>
+                            <td>事業所マスタ</td>
+                            <td>✅ 全て</td>
+                            <td>✅ 自社のみ</td>
+                            <td>✅ 自事業所のみ</td>
+                            <td>❌</td>
+                            <td>❌</td>
+                        </tr>
+                        <tr>
+                            <td>アカウントマスタ</td>
+                            <td>✅ 全て</td>
+                            <td>✅ 自社のみ</td>
+                            <td>✅ 自事業所のみ</td>
+                            <td>❌</td>
+                            <td>❌</td>
+                        </tr>
+                        <tr>
+                            <td>業者マスタ</td>
+                            <td>✅ 全て</td>
+                            <td>✅ 自社関連のみ</td>
+                            <td>✅ 自社関連のみ</td>
+                            <td>❌</td>
+                            <td>❌</td>
+                        </tr>
+                        <tr>
+                            <td>商品マスタ</td>
+                            <td>✅ 全て</td>
+                            <td>✅ 自社のみ</td>
+                            <td>✅ 自事業所のみ</td>
+                            <td>👁️ 閲覧のみ</td>
+                            <td>❌</td>
+                        </tr>
+                        <tr>
+                            <td>通報送信</td>
+                            <td>✅</td>
+                            <td>✅</td>
+                            <td>✅</td>
+                            <td>✅</td>
+                            <td>❌</td>
+                        </tr>
+                        <tr>
+                            <td>通報履歴閲覧</td>
+                            <td>✅ 全社</td>
+                            <td>✅ 自社全事業所</td>
+                            <td>✅ 自事業所</td>
+                            <td>👁️ 自分の通報のみ</td>
+                            <td>👁️ 割当分のみ</td>
+                        </tr>
+                        <tr>
+                            <td>通報対応</td>
+                            <td>❌</td>
+                            <td>❌</td>
+                            <td>❌</td>
+                            <td>❌</td>
+                            <td>✅</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>4.4 パスワード管理システム</h3>
+                
+                <h4>概要</h4>
+                <p>ユーザーのパスワードを安全に管理し、初回ログイン時のパスワード変更を推奨するシステムです。</p>
+
+                <h4>パスワードフロー</h4>
+                <pre>【新規アカウント作成】
+  ↓ 
+  password = 入力されたパスワード
+  initialPassword = password（同じ値）
+  isFirstLogin = true
+  ↓
+【初回ログイン】
+  ↓ 
+  推奨バナー表示「パスワードの変更をおすすめします」
+  - [今すぐ変更] → パスワード変更モーダル
+  - [後で変更] → バナー非表示（セッション中は再表示しない）
+  ↓
+【パスワード変更】
+  ↓
+  password = 新しいパスワード
+  isFirstLogin = false
+  passwordChangedAt = 現在時刻
+  ↓
+【通常使用】
+  
+─────────────────────────────
+
+【パスワード忘れ】
+  ↓
+【管理者がリセット】（account-master.htmlで操作）
+  ↓
+  password = initialPassword
+  isFirstLogin = true
+  ↓
+【初回ログインと同じ】
+  ↓
+  推奨バナー再表示</pre>
+
+                <h4>パスワード変更機能</h4>
+                <ul>
+                    <li><strong>アクセス方法:</strong> ヘッダーのユーザー情報ボタン → ドロップダウンメニュー → 「🔑 パスワード変更」</li>
+                    <li><strong>表示形式:</strong> モーダル（画面中央、半透明背景）</li>
+                    <li><strong>入力項目:</strong>
+                        <ul>
+                            <li>現在のパスワード（必須）</li>
+                            <li>新しいパスワード（必須、6文字以上）</li>
+                            <li>新しいパスワード（確認）（必須）</li>
+                        </ul>
+                    </li>
+                    <li><strong>バリデーション:</strong>
+                        <ul>
+                            <li>全項目入力チェック</li>
+                            <li>新しいパスワードが6文字以上</li>
+                            <li>新しいパスワードと確認用が一致</li>
+                            <li>現在のパスワードが正しい</li>
+                        </ul>
+                    </li>
+                    <li><strong>DEMOモード:</strong> currentUser のみ更新（セッション中のみ有効）</li>
+                    <li><strong>本番モード:</strong> localStorage['accounts'] も更新（永続化）</li>
+                </ul>
+
+                <h4>管理者によるパスワードリセット</h4>
+                <ul>
+                    <li><strong>場所:</strong> account-master.html の編集画面</li>
+                    <li><strong>表示:</strong> パスワード欄は「●●●●●●●●」で表示</li>
+                    <li><strong>ボタン:</strong> 「🔄 初期パスワードにリセット」</li>
+                    <li><strong>動作:</strong>
+                        <ul>
+                            <li>password = initialPassword</li>
+                            <li>isFirstLogin = true</li>
+                            <li>次回ログイン時に推奨バナー表示</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h4>初回ログイン推奨バナー</h4>
+                <ul>
+                    <li><strong>表示条件:</strong> isFirstLogin === true かつ sessionStorage['firstLoginBannerDismissed'] が未設定</li>
+                    <li><strong>デザイン:</strong> グラデーション背景（紫→青）、ドロップシャドウ</li>
+                    <li><strong>配置:</strong> 画面上部（ヘッダーの下、中央）</li>
+                    <li><strong>ボタン:</strong>
+                        <ul>
+                            <li>「今すぐ変更」→ パスワード変更モーダル表示</li>
+                            <li>「後で変更」→ バナー非表示（セッション中は再表示しない）</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- 5. DEMOモード -->
+            <div class="section" id="demo-mode">
+                <h2>5. DEMOモード</h2>
+
+                <h3>5.1 概要</h3>
+                <p>DEMOモードは、会社コード「TAMJ」でログインした場合に自動的に有効化されます。sessionStorageを使用するため、ブラウザを閉じるとデータが消えます。</p>
+
+                <h3>5.2 判定ロジック</h3>
+                <pre>function isDemoMode() {
+  const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+  return currentUser?.companyCode === 'TAMJ';
+}</pre>
+
+                <h3>5.3 ストレージの違い</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>項目</th>
+                            <th>DEMOモード（TAMJ）</th>
+                            <th>本番モード</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>ストレージ</td>
+                            <td>sessionStorage</td>
+                            <td>localStorage</td>
+                        </tr>
+                        <tr>
+                            <td>通報キー</td>
+                            <td><code>onetouch.reports</code>（session）</td>
+                            <td><code>onetouch.reports</code>（local）</td>
+                        </tr>
+                        <tr>
+                            <td>商品キー</td>
+                            <td><code>demo.items</code>（session）</td>
+                            <td><code>onetouch.items</code>（local）</td>
+                        </tr>
+                        <tr>
+                            <td>データ永続性</td>
+                            <td>❌ ブラウザを閉じると消える</td>
+                            <td>✅ 永続的</td>
+                        </tr>
+                        <tr>
+                            <td>ログアウト時</td>
+                            <td>✅ <strong>データ保持</strong>（demo.*/onetouch.*キー）</td>
+                            <td>✅ データ保持</td>
+                        </tr>
+                        <tr>
+                            <td>業者データ</td>
+                            <td>✅ 自動生成（3社）</td>
+                            <td>手動登録</td>
+                        </tr>
+                        <tr>
+                            <td>商品データ</td>
+                            <td>✅ 自動生成（5個）</td>
+                            <td>手動登録</td>
+                        </tr>
+                        <tr>
+                            <td>商品自動生成場所</td>
+                            <td>items.html + <strong>report.html</strong></td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td>削除機能</td>
+                            <td>❌ 無効</td>
+                            <td>✅ 有効</td>
+                        </tr>
+                        <tr>
+                            <td>インポート</td>
+                            <td>✅ 有効（CSV/Excel/PDF）</td>
+                            <td>✅ 有効</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>5.4 自動生成データ</h3>
+                <h4>業者データ（3社）</h4>
+                <ul>
+                    <li>東京設備工業株式会社（空調/給湯/電気）- P001 / p001-yamada / password123</li>
+                    <li>関東水道サービス（水道/給湯）- P002 / p002-sato / password456</li>
+                    <li>日本電気工事（電気/照明/設備）- P003 / p003-suzuki / password789</li>
+                </ul>
+
+                <h4>商品データ（5個）</h4>
+                <ul>
+                    <li>エアコン 1号機（空調）- ¥150,000</li>
+                    <li>給湯器 A（給湯）- ¥80,000</li>
+                    <li>照明器具 LED-01（電気）- ¥12,000</li>
+                    <li>トイレ 1F（水道）- ¥180,000</li>
+                    <li>エレベーター（設備）- ¥5,000,000</li>
+                </ul>
+
+                <div class="danger">
+                    <strong>重要:</strong> システム管理者（admin/admin）はDEMOモードのデータを見ることができません。DEMOモードのデータを変更する場合は、コードの修正が必要です。
+                </div>
+            </div>
+
+            <!-- 6. 業者連携 -->
+            <div class="section" id="contractor">
+                <h2>6. 業者連携</h2>
+
+                <h3>6.1 業者自動割り当て</h3>
+                <p>スタッフが通報を送信すると、カテゴリーに基づいて業者が自動的に割り当てられます。</p>
+
+                <h4>割り当てロジック</h4>
+                <pre>// 1. 対応可能カテゴリーに一致
+partner.categories.includes(report.category)
+
+// 2. 会社に紐付いている
+partner.assignedCompanies.includes(report.companyCode)
+
+// 3. ステータスがアクティブ
+partner.status === 'active'</pre>
+
+                <h3>6.2 ステータス遷移</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ステータス</th>
+                            <th>説明</th>
+                            <th>次のステータス</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>未対応</td>
+                            <td>通報が送信された直後</td>
+                            <td>対応中 / 対応不可</td>
+                        </tr>
+                        <tr>
+                            <td>対応中</td>
+                            <td>業者が対応を開始</td>
+                            <td>完了 / 対応不可</td>
+                        </tr>
+                        <tr>
+                            <td>対応不可</td>
+                            <td>業者が対応できない場合</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td>完了</td>
+                            <td>対応が完了</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>6.3 業者コメント</h3>
+                <p>業者は通報に対してコメントを追加できます。コメント送信後は<strong>詳細画面が自動で閉じ</strong>、カード一覧に<strong>最新コメントが💬で表示</strong>されます。コメントはスタッフ側の通報履歴にも表示されます。</p>
+
+                <h4>コメントデータ構造</h4>
+                <pre>{
+  "author": "東京設備工業株式会社",
+  "text": "本日午後に現場確認に伺います",
+  "timestamp": "2026-02-12T14:00:00Z"
+}</pre>
+
+                <h3>6.4 対応時間計算</h3>
+                <p>通報日時（<code>timestamp</code>）から完了日時（<code>resolvedAt</code>）までの時間を計算して表示します。</p>
+
+                <h3>6.5 業者画面の表示項目</h3>
+                <p>業者ダッシュボードでは以下の情報が表示されます：</p>
+                <ul>
+                    <li><strong>カード一覧:</strong> 設備名、日時、場所、事業所名、カテゴリー、状況説明、最新コメント</li>
+                    <li><strong>詳細画面:</strong> 通報元（事業所名＋通報者名）、設備名、カテゴリー、緊急度、場所、状況、ステータス選択、コメント入力・履歴</li>
+                    <li><strong>DEMOバナー:</strong> TAMJ紐付き業者の場合「⚠️ DEMOモード」バナーを表示</li>
+                </ul>
+
+                <h3>6.6 通報データの読み取り</h3>
+                <div class="note">
+                    <strong>重要:</strong> 業者画面（contractor-dashboard.html）と通報履歴（report-history.html）は、sessionStorageとlocalStorage<strong>両方</strong>からデータを読み取り、マージします。これはDEMOスタッフ（TAMJ）の通報がsessionStorageに保存される一方、業者（P001等）はDEMOモードではないため、両方を参照する必要があるためです。
+                </div>
+
+                <h3>6.7 通報履歴の閲覧範囲</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>役割</th>
+                            <th>閲覧範囲</th>
+                            <th>フィルタ条件</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>system_admin</td>
+                            <td>全社</td>
+                            <td>事業所選択ドロップダウン</td>
+                        </tr>
+                        <tr>
+                            <td>company_admin</td>
+                            <td><strong>自社全事業所</strong></td>
+                            <td>companyCodeでフィルタ</td>
+                        </tr>
+                        <tr>
+                            <td>office_admin</td>
+                            <td>自事業所のみ</td>
+                            <td>officeCodeでフィルタ</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 7. ファイル構成 -->
+            <div class="section" id="files">
+                <h2>7. ファイル構成</h2>
+
+                <h3>7.1 HTML画面</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ファイル名</th>
+                            <th>役割</th>
+                            <th>アクセス権限</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>login.html</td>
+                            <td>統一ログイン画面</td>
+                            <td>全員</td>
+                        </tr>
+                        <tr>
+                            <td>system-admin.html</td>
+                            <td>システム管理者ダッシュボード</td>
+                            <td>system_admin</td>
+                        </tr>
+                        <tr>
+                            <td>master-top.html</td>
+                            <td>マスタ管理TOP</td>
+                            <td>管理者</td>
+                        </tr>
+                        <tr>
+                            <td>company-master.html</td>
+                            <td>会社マスタ</td>
+                            <td>system_admin</td>
+                        </tr>
+                        <tr>
+                            <td>office-master.html</td>
+                            <td>事業所マスタ</td>
+                            <td>管理者</td>
+                        </tr>
+                        <tr>
+                            <td>account-master.html</td>
+                            <td>アカウントマスタ</td>
+                            <td>管理者</td>
+                        </tr>
+                        <tr>
+                            <td>partner-master.html</td>
+                            <td>業者マスタ</td>
+                            <td>管理者</td>
+                        </tr>
+                        <tr>
+                            <td>items.html</td>
+                            <td>商品マスタ（テーブル表示）</td>
+                            <td>管理者・staff（通報画面で選択のみ）</td>
+                        </tr>
+                        <tr>
+                            <td>import.html</td>
+                            <td>ファイル取込（CSV/Excel/PDF）</td>
+                            <td>管理者</td>
+                        </tr>
+                        <tr>
+                            <td>confirm-items.html</td>
+                            <td>インポート確認・商品マスタ登録</td>
+                            <td>管理者</td>
+                        </tr>
+                        <tr>
+                            <td>report.html</td>
+                            <td>通報画面</td>
+                            <td>staff以上</td>
+                        </tr>
+                        <tr>
+                            <td>report-history.html</td>
+                            <td>通報履歴</td>
+                            <td>管理者</td>
+                        </tr>
+                        <tr>
+                            <td>contractor-dashboard.html</td>
+                            <td>業者ダッシュボード</td>
+                            <td>contractor</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>7.2 共通JavaScript</h3>
+                <ul>
+                    <li><code>unified-header.js</code> - 統一ヘッダー（全画面共通）・ログアウト処理</li>
+                    <li><code>demo-mode.js</code> - DEMOモード判定・ストレージ管理</li>
+                    <li><code>error-handler.js</code> - エラーハンドリング・トースト表示</li>
+                    <li><code>loading.js</code> - ローディング表示</li>
+                    <li><code>item-storage.js</code> - 商品データのストレージ管理（DEMO/本番切替）</li>
+                    <li><code>document-storage.js</code> - インポート書類・明細データ管理（DEMO/本番切替）</li>
+                </ul>
+
+                <h3>7.3 ドキュメント類</h3>
+                <ul>
+                    <li><code>※SPEC.html</code> - システム仕様書（本ファイル）</li>
+                    <li><code>※TODO.md</code> - タスク管理</li>
+                    <li><code>※CHECK_LIST.md</code> - 動作確認チェックリスト</li>
+                    <li><code>※TEST-GUIDE.md</code> - テスト手順書（業者連携フロー）</li>
+                    <li><code>※SYSTEM-FLOW.md</code> - システムフロー図</li>
+                    <li><code>※FLOW-ITEMS.md</code> - 商品マスタのデータフロー</li>
+                    <li><code>※DEMO-GUIDE.md</code> - DEMOモード使い方ガイド</li>
+                    <li><code>※統一ヘッダー仕様書.md</code> - 統一ヘッダーの詳細仕様</li>
+                </ul>
+            </div>
+
+            <!-- 8. UI/UXシステム -->
+            <div class="section" id="ui-ux">
+                <h2>8. UI/UXシステム</h2>
+
+                <h3>8.1 統一ヘッダー</h3>
+                
+                <h4>概要</h4>
+                <p>全ての管理画面・マスタ画面で統一されたヘッダーデザインを使用します。</p>
+
+                <h4>デスクトップ表示（幅 > 768px）</h4>
+                <pre>┌─────────────────────────────────────────────────────────┐
+│ [← 戻る] 📦 商品マスタ  🔥 DEMOモード   [田] 田中太郎   │
+└─────────────────────────────────────────────────────────┘</pre>
+
+                <h4>モバイル表示（幅 ≤ 768px）</h4>
+                <pre>┌────────────────────────────────────┐
+│ [← 戻る] 📦 商品マスタ             │
+│          🔥 DEMOモード      [田]  │
+└────────────────────────────────────┘</pre>
+
+                <h4>構成要素</h4>
+                <ul>
+                    <li><strong>左側（header-left）:</strong>
+                        <ul>
+                            <li>戻るボタン: <code>[← 戻る]</code> - ロール別のホーム画面に遷移</li>
+                            <li>アイコン: 絵文字のみ（例: 📦 商品マスタ、👤 アカウントマスタ）</li>
+                            <li>画面名: h1タイトル</li>
+                        </ul>
+                    </li>
+                    <li><strong>真ん中（header-center）:</strong>
+                        <ul>
+                            <li>DEMOモードバッジ（currentUser.companyCode === 'TAMJ' の場合のみ表示）</li>
+                            <li>デザイン: グラデーション背景（紫→青）+ ふわふわアニメーション</li>
+                            <li>テキスト: 「🔥 DEMOモード」</li>
+                            <li>CSS: <code>background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)</code></li>
+                        </ul>
+                    </li>
+                    <li><strong>右側（header-right）:</strong>
+                        <ul>
+                            <li>ユーザー情報ボタン</li>
+                            <li>アバター: 名前の最初の1文字（例: 田中太郎 → 田）</li>
+                            <li>ユーザー名: フルネーム（モバイルでは非表示）</li>
+                            <li>クリック → ドロップダウンメニュー表示</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h4>ドロップダウンメニュー</h4>
+                <pre>┌─────────────────┐
+│ 👤 田中太郎      │
+│    東京事業所    │
+│ ──────────────   │
+│ 🔑 パスワード変更│
+│ 🚪 ログアウト    │
+└─────────────────┘</pre>
+
+                <ul>
+                    <li><strong>ユーザー情報（クリック不可）:</strong>
+                        <ul>
+                            <li>アイコン: 👤</li>
+                            <li>名前: currentUser.userName</li>
+                            <li>詳細: currentUser.officeName または currentUser.companyName</li>
+                            <li>背景: #fafafa</li>
+                        </ul>
+                    </li>
+                    <li><strong>パスワード変更:</strong>
+                        <ul>
+                            <li>アイコン: 🔑</li>
+                            <li>クリック → パスワード変更モーダル表示</li>
+                        </ul>
+                    </li>
+                    <li><strong>ログアウト:</strong>
+                        <ul>
+                            <li>アイコン: 🚪</li>
+                            <li>テキスト色: #d32f2f（赤）</li>
+                            <li>クリック → logout() 関数実行</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h4>画面別アイコン一覧</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>画面名</th>
+                            <th>アイコン</th>
+                            <th>英語名</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>商品マスタ</td><td>📦</td><td>items</td></tr>
+                        <tr><td>アカウントマスタ</td><td>👤</td><td>accounts</td></tr>
+                        <tr><td>事業所マスタ</td><td>🏢</td><td>offices</td></tr>
+                        <tr><td>業者マスタ</td><td>🤝</td><td>partners</td></tr>
+                        <tr><td>システム設定</td><td>⚙️</td><td>settings</td></tr>
+                        <tr><td>監査ログ</td><td>📋</td><td>audit</td></tr>
+                        <tr><td>通報</td><td>📢</td><td>report</td></tr>
+                        <tr><td>ホーム</td><td>🏠</td><td>home</td></tr>
+                        <tr><td>業者ダッシュボード</td><td>🔧</td><td>contractor</td></tr>
+                    </tbody>
+                </table>
+
+                <h4>実装状況</h4>
+                <ul>
+                    <li>✅ <strong>全画面に適用完了</strong>（items.html, account-master.html, office-master.html, partner-master.html, system-settings.html, audit-log.html, report.html, contractor-dashboard.html, master-top.html, import.html, confirm-items.html, report-history.html等）</li>
+                </ul>
+
+                <h3>8.2 パスワード管理UI</h3>
+
+                <h4>パスワード変更モーダル</h4>
+                <ul>
+                    <li><strong>表示方法:</strong> モーダル形式、画面中央、半透明の黒背景（rgba(0,0,0,0.5)）</li>
+                    <li><strong>サイズ:</strong> 最大幅 400px、幅90%（モバイル対応）</li>
+                    <li><strong>z-index:</strong> 10000（最前面）</li>
+                    <li><strong>入力フィールド:</strong>
+                        <ul>
+                            <li>現在のパスワード（type: password）</li>
+                            <li>新しいパスワード（type: password、6文字以上）</li>
+                            <li>新しいパスワード（確認）（type: password）</li>
+                        </ul>
+                    </li>
+                    <li><strong>ボタン:</strong>
+                        <ul>
+                            <li>キャンセル（グレー背景）</li>
+                            <li>変更する（#9B2335 赤背景、白文字）</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h4>初回ログイン推奨バナー</h4>
+                <ul>
+                    <li><strong>配置:</strong> 画面上部（ヘッダーの下、中央）</li>
+                    <li><strong>デザイン:</strong>
+                        <ul>
+                            <li>背景: <code>linear-gradient(135deg, #667eea 0%, #764ba2 100%)</code></li>
+                            <li>色: 白文字</li>
+                            <li>ドロップシャドウ: <code>0 4px 20px rgba(102, 126, 234, 0.4)</code></li>
+                            <li>角丸: 12px</li>
+                        </ul>
+                    </li>
+                    <li><strong>アイコン:</strong> 🔐（32px）</li>
+                    <li><strong>メッセージ:</strong>
+                        <ul>
+                            <li>太字: 「パスワードの変更をおすすめします」</li>
+                            <li>説明: 「セキュリティ向上のため、初期パスワードを変更することを推奨します。」</li>
+                        </ul>
+                    </li>
+                    <li><strong>ボタン:</strong>
+                        <ul>
+                            <li>「今すぐ変更」（白背景、紫文字）</li>
+                            <li>「後で変更」（半透明白背景、白文字）</li>
+                            <li>×ボタン（右上）</li>
+                        </ul>
+                    </li>
+                    <li><strong>z-index:</strong> 9999</li>
+                </ul>
+            </div>
+
+            <!-- 9. 設計判断の記録 -->
+            <div class="section" id="decisions">
+                <h2>9. 設計判断の記録</h2>
+
+                <h3>9.1 DEMOモードをsessionStorageにした理由</h3>
+                <div class="success">
+                    <strong>決定:</strong> DEMOモード（TAMJ）はsessionStorageを使用
+                </div>
+                <ul>
+                    <li><strong>理由1:</strong> ブラウザを閉じるとデータが消える → デモとして適切</li>
+                    <li><strong>理由2:</strong> 本番データとの混在を防ぐ</li>
+                    <li><strong>理由3:</strong> 削除操作を無効化してもデータが残らない</li>
+                    <li><strong>トレードオフ:</strong> システム管理者がDEMOデータを見れない（設計上の意図）</li>
+                </ul>
+
+                <h3>9.2 カテゴリーを統一した理由</h3>
+                <div class="success">
+                    <strong>決定:</strong> 通報画面・商品マスタ・業者マスタで同じカテゴリーを使用
+                </div>
+                <ul>
+                    <li><strong>理由1:</strong> 業者自動割り当てが正確に動作する</li>
+                    <li><strong>理由2:</strong> データの一貫性が保たれる</li>
+                    <li><strong>理由3:</strong> ユーザーが混乱しない</li>
+                    <li><strong>カテゴリー:</strong> 空調・給湯・電気・水道・ガス・設備・その他</li>
+                </ul>
+
+                <h3>9.3 商品マスタのページネーションを50件にした理由</h3>
+                <div class="success">
+                    <strong>決定:</strong> 1ページあたり50件表示
+                </div>
+                <ul>
+                    <li><strong>理由1:</strong> 2000件以上のデータでも高速表示</li>
+                    <li><strong>理由2:</strong> ブラウザがフリーズしない</li>
+                    <li><strong>理由3:</strong> スクロールが重くならない</li>
+                    <li><strong>検証:</strong> 5000件でも0.05秒で表示可能</li>
+                </ul>
+
+                <h3>9.4 業者を自動割り当てにした理由</h3>
+                <div class="success">
+                    <strong>決定:</strong> カテゴリーに基づいて業者を自動割り当て
+                </div>
+                <ul>
+                    <li><strong>理由1:</strong> スタッフが業者を選ぶ手間を省く</li>
+                    <li><strong>理由2:</strong> ヒューマンエラーを防ぐ</li>
+                    <li><strong>理由3:</strong> 迅速な対応が可能</li>
+                    <li><strong>フォールバック:</strong> 該当業者がいない場合は未割当で通報</li>
+                </ul>
+
+                <h3>9.5 業者ログインを統一ログイン画面にした理由</h3>
+                <div class="success">
+                    <strong>決定:</strong> contractor-login.htmlを削除し、login.htmlに統合
+                </div>
+                <ul>
+                    <li><strong>理由1:</strong> ログイン画面が分かれていると混乱する</li>
+                    <li><strong>理由2:</strong> メンテナンスが楽</li>
+                    <li><strong>理由3:</strong> セッション管理が統一される</li>
+                    <li><strong>実装:</strong> 会社コードに業者コード（P001等）を入力</li>
+                </ul>
+
+                <h3>9.6 商品検索をリアルタイムにしなかった理由</h3>
+                <div class="success">
+                    <strong>決定:</strong> 検索ボタンをクリックして検索
+                </div>
+                <ul>
+                    <li><strong>理由1:</strong> 入力中に何度もフィルタリングされると重い</li>
+                    <li><strong>理由2:</strong> ユーザーが入力を完了してから検索したい</li>
+                    <li><strong>理由3:</strong> Enterキーでも検索可能（利便性は確保）</li>
+                </ul>
+
+                <h3>9.7 システム管理者が会社マスタのみ管理する理由</h3>
+                <div class="success">
+                    <strong>決定:</strong> システム管理者は会社マスタのみ管理、他は各会社が管理
+                </div>
+                <ul>
+                    <li><strong>理由1:</strong> スケーラビリティ（会社ごとに独立）</li>
+                    <li><strong>理由2:</strong> セキュリティ（他社のデータを見れない）</li>
+                    <li><strong>理由3:</strong> ビジネスモデル（会社ごとに契約）</li>
+                </ul>
+
+                <h3>9.8 ファイル名に「※」をつけた理由</h3>
+                <div class="success">
+                    <strong>決定:</strong> ドキュメント類のファイル名に「※」を追加
+                </div>
+                <ul>
+                    <li><strong>理由1:</strong> ファイル一覧で上部に表示される</li>
+                    <li><strong>理由2:</strong> 視認性が高い</li>
+                    <li><strong>理由3:</strong> 開発ファイルとドキュメントが明確に分かれる</li>
+                    <li><strong>対象:</strong> ※SPEC.html, ※TODO.md, ※TEST-GUIDE.md 等</li>
+                </ul>
+
+                <h3>9.9 ログアウト時にDEMOデータを保持する理由</h3>
+                <div class="success">
+                    <strong>決定:</strong> ログアウト時にdemo.*/onetouch.*キーをsessionStorageから退避・復元
+                </div>
+                <ul>
+                    <li><strong>理由1:</strong> スタッフ→業者→管理者と切り替えてテストするため</li>
+                    <li><strong>理由2:</strong> ログアウトするたびにデータが消えるとテスト不可能</li>
+                    <li><strong>理由3:</strong> ブラウザを閉じた時だけ消えれば十分</li>
+                    <li><strong>実装:</strong> <code>window.location.replace('login.html')</code> で戻るボタン無効化</li>
+                </ul>
+
+                <h3>9.10 商品マスタをテーブル表示にした理由</h3>
+                <div class="success">
+                    <strong>決定:</strong> カード表示からExcel風テーブル表示に変更
+                </div>
+                <ul>
+                    <li><strong>理由1:</strong> account-master.htmlと表示方式を統一</li>
+                    <li><strong>理由2:</strong> 多項目（商品名・メーカー・型番・カテゴリー・業者・在庫・単価）を一覧で比較しやすい</li>
+                    <li><strong>理由3:</strong> 初期非表示→検索/全件表示で、大量データでも高速</li>
+                    <li><strong>UI:</strong> ヘッダー固定（sticky）、カテゴリーバッジ、業者バッジ、スマホ横スクロール対応</li>
+                </ul>
+
+                <h3>9.11 インポート確認画面を設けた理由</h3>
+                <div class="success">
+                    <strong>決定:</strong> import.html → confirm-items.html → items.html の3段階フロー
+                </div>
+                <ul>
+                    <li><strong>理由1:</strong> OCRやCSVパースの結果を目視確認してから登録</li>
+                    <li><strong>理由2:</strong> 信頼度（confidence）の低い項目を編集可能にする</li>
+                    <li><strong>理由3:</strong> カテゴリ推定・全角→半角変換の自動補正ツール提供</li>
+                    <li><strong>将来:</strong> GCP Vision API（画像OCR）とVertex AI（AI整形）を追加するだけで拡張可能</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <p style="text-align: center; color: #999; margin-top: 60px;">
+                    ワンタッチ管理システム v1.1<br>
+ 

@@ -96,7 +96,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🧪 テストデータ作成</h1>
+        <h1>テストデータ作成</h1>
 
         <div class="section">
             <h2>1. 業者データ（Partners）</h2>
@@ -131,7 +131,7 @@
         function createPartners() {
             const partners = [
                 {
-                    id: 'PARTNER-001',
+                    id: 'P001',
                     companyCode: 'TAMJ',
                     officeCode: '',
                     type1: 'building',
@@ -150,14 +150,14 @@
                     // 業者ログイン情報
                     partnerCode: 'P001',
                     loginId: 'p001-yamada',
-                    password: 'password123',
+                    password: 'demo',
                     categories: ['空調', '給湯', '電気'],
                     assignedCompanies: ['TAMJ'],
                     status: 'active',
                     createdAt: '2026/02/09'
                 },
                 {
-                    id: 'PARTNER-002',
+                    id: 'P002',
                     companyCode: 'TAMJ',
                     officeCode: '',
                     type1: 'building',
@@ -176,14 +176,14 @@
                     // 業者ログイン情報
                     partnerCode: 'P002',
                     loginId: 'p002-sato',
-                    password: 'password456',
+                    password: 'demo',
                     categories: ['水道', '給湯'],
                     assignedCompanies: ['TAMJ'],
                     status: 'active',
                     createdAt: '2026/02/09'
                 },
                 {
-                    id: 'PARTNER-003',
+                    id: 'P003',
                     companyCode: 'TAMJ',
                     officeCode: '',
                     type1: 'building',
@@ -202,7 +202,7 @@
                     // 業者ログイン情報
                     partnerCode: 'P003',
                     loginId: 'p003-suzuki',
-                    password: 'password789',
+                    password: 'demo',
                     categories: ['電気', '設備'],
                     assignedCompanies: ['TAMJ'],
                     status: 'active',
@@ -216,7 +216,7 @@
             result.style.display = 'block';
             result.className = 'result';
             result.innerHTML = `
-                ✅ 業者データを作成しました！<br>
+                業者データを作成しました！<br>
                 <strong>${partners.length}件</strong> の業者を登録<br><br>
                 <small>
                 業者1: 東京設備工業 (空調/給湯/電気) - ログインID: p001-yamada<br>
@@ -231,7 +231,7 @@
             const result = document.getElementById('partnerResult');
             result.style.display = 'block';
             result.className = 'result';
-            result.innerHTML = '🗑️ 業者データを削除しました';
+            result.innerHTML = '️ 業者データを削除しました';
         }
 
         // ========================================
@@ -259,7 +259,7 @@
                     timestamp: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(), // 2時間前
                     emergency: false,
                     // 業者情報（自動割り当て済み）
-                    assignedPartnerId: 'PARTNER-001',
+                    assignedPartnerId: 'P001',
                     assignedPartnerName: '東京設備工業株式会社',
                     assignedAt: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
                     contractorStatus: '未対応',
@@ -280,7 +280,7 @@
                     timestamp: new Date(now.getTime() - 5 * 60 * 60 * 1000).toISOString(), // 5時間前
                     emergency: false,
                     // 業者情報（自動割り当て済み）
-                    assignedPartnerId: 'PARTNER-001',
+                    assignedPartnerId: 'P001',
                     assignedPartnerName: '東京設備工業株式会社',
                     assignedAt: new Date(now.getTime() - 5 * 60 * 60 * 1000).toISOString(),
                     contractorStatus: '対応中',
@@ -307,7 +307,7 @@
                     timestamp: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(), // 1日前
                     emergency: false,
                     // 業者情報（自動割り当て済み）
-                    assignedPartnerId: 'PARTNER-003',
+                    assignedPartnerId: 'P003',
                     assignedPartnerName: '日本電気工事株式会社',
                     assignedAt: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(),
                     contractorStatus: '完了',
@@ -328,7 +328,7 @@
             result.style.display = 'block';
             result.className = 'result';
             result.innerHTML = `
-                ✅ 通報データを作成しました！<br>
+                通報データを作成しました！<br>
                 <strong>${reports.length}件</strong> の通報を登録<br><br>
                 <small>
                 通報1: 特浴A（空調/高） - 未対応<br>
@@ -343,7 +343,7 @@
             const result = document.getElementById('reportResult');
             result.style.display = 'block';
             result.className = 'result';
-            result.innerHTML = '🗑️ 通報データを削除しました';
+            result.innerHTML = '️ 通報データを削除しました';
         }
 
         // ========================================
@@ -378,7 +378,7 @@
             localStorage.removeItem('partners');
             localStorage.removeItem('onetouch.reports');
 
-            alert('✅ 全データを削除しました');
+            alert('全データを削除しました');
             location.reload();
         }
     </script>

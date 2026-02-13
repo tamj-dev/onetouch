@@ -220,7 +220,48 @@
                 padding: 40px 24px;
             }
         }
+        @keyframes demoFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
     </style>
+    <script>
+        // DEMOワンタップログイン
+        function demoLogin(role) {
+            var user = window.DEMO_ACCOUNTS && window.DEMO_ACCOUNTS[role];
+            if (!user) return;
+
+            // セッション保存
+            const userInfo = {
+                companyCode: user.companyCode, companyName: user.companyName,
+                id: user.id, userId: user.id, password: user.password,
+                name: user.name, userName: user.name, role: user.role,
+                scope: user.scope || '', officeCode: user.officeCode || '',
+                officeName: user.officeName || '', isFirstLogin: false, isDemoMode: true
+            };
+            sessionStorage.setItem('currentUser', JSON.stringify(userInfo));
+            localStorage.setItem('currentAccount', JSON.stringify(userInfo));
+            localStorage.setItem('ONE_loggedIn', '1');
+            localStorage.setItem('ONE_userId', user.id);
+            localStorage.setItem('ONE_userName', user.name);
+
+            // 業者の場合はcontractor情報も保存
+            if (role === 'contractor') {
+                sessionStorage.setItem('currentContractor', JSON.stringify({
+                    id: user.partnerId, partnerId: user.partnerId,
+                    partnerCode: user.partnerCode, companyName: user.companyName,
+                    name: user.name, loginId: user.id, contactName: user.name,
+                    categories: user.categories, assignedCompanies: user.assignedCompanies,
+                    role: 'contractor'
+                }));
+                window.location.href = 'contractor-dashboard.html';
+            } else if (role === 'office_admin') {
+                window.location.href = 'master-top.html';
+            } else {
+                window.location.href = 'report.html';
+            }
+        }
+    </script>
     <meta name="theme-color" content="#1a1a1a">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="icon-192.png">
@@ -250,7 +291,7 @@
                 <label for="password">パスワード</label>
                 <div class="password-wrapper">
                     <input type="password" id="password" name="password" required placeholder="パスワードを入力">
-                    <button type="button" class="toggle-password" onclick="togglePassword()">👁️</button>
+                    <button type="button" class="toggle-password" onclick="togglePassword()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
                 </div>
             </div>
 
@@ -261,29 +302,48 @@
             アカウントマスタで登録されたユーザーIDと<br>パスワードを入力してください
         </div>
 
-        <div class="demo-info">
-            <div class="demo-info-header">
-                <span>💡</span>
-                <strong>デモ用の認証情報</strong>
-            </div>
-            <div class="demo-info-body">
-                <strong>会社コード: TAMJ</strong><br>
-                本社管理者 - ID: <strong>TAMJ-H001</strong> / パスワード: <strong>demo</strong><br>
-                事業所管理者 - ID: <strong>demo-office</strong> / パスワード: <strong>demo</strong><br>
-                スタッフ - ID: <strong>demo-staff</strong> / パスワード: <strong>demo</strong>
-            </div>
+        <!-- DEMOワンタップボタン -->
+        <div style="display:flex; align-items:center; gap:12px; margin:8px 0 16px;">
+            <div style="flex:1; height:1px; background:#e0e0e0;"></div>
+            <span style="font-size:12px; color:#999;">または、デモですぐ体験</span>
+            <div style="flex:1; height:1px; background:#e0e0e0;"></div>
         </div>
 
-        <div class="demo-info">
-            <div class="demo-info-header">
-                <span>🔧</span>
-                <strong>業者用ログイン情報</strong>
-            </div>
-            <div class="demo-info-body">
-                <strong>会社コード: P001</strong><br>
-                ログインID: <strong>p001-yamada</strong> / パスワード: <strong>password123</strong><br>
+        <div style="display:inline-block; background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; padding:3px 14px; border-radius:20px; font-size:12px; font-weight:700; margin-bottom:14px; animation:demoFloat 3s ease-in-out infinite;">DEMO MODE</div>
 
-            </div>
+        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+            <button type="button" onclick="demoLogin('staff')" style="display:flex; align-items:center; gap:12px; padding:14px 16px; border:2px solid #e8e8e8; border-radius:12px; background:#fff; cursor:pointer; text-align:left; font-family:inherit; transition:all 0.2s;">
+                <div style="width:40px; height:40px; background:#e8f5e9; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="#4CAF50"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                </div>
+                <div>
+                    <div style="font-size:14px; font-weight:700; color:#1a1a1a;">スタッフで体験</div>
+                    <div style="font-size:11px; color:#999;">通報画面を試す</div>
+                </div>
+                <div style="margin-left:auto; color:#ccc; font-size:18px;">›</div>
+            </button>
+
+            <button type="button" onclick="demoLogin('contractor')" style="display:flex; align-items:center; gap:12px; padding:14px 16px; border:2px solid #e8e8e8; border-radius:12px; background:#fff; cursor:pointer; text-align:left; font-family:inherit; transition:all 0.2s;">
+                <div style="width:40px; height:40px; background:#e3f2fd; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="#2196F3"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-2 .89-2 2v11c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>
+                </div>
+                <div>
+                    <div style="font-size:14px; font-weight:700; color:#1a1a1a;">業者で体験</div>
+                    <div style="font-size:11px; color:#999;">対応・管理画面を試す</div>
+                </div>
+                <div style="margin-left:auto; color:#ccc; font-size:18px;">›</div>
+            </button>
+
+            <button type="button" onclick="demoLogin('office_admin')" style="display:flex; align-items:center; gap:12px; padding:14px 16px; border:2px solid #e8e8e8; border-radius:12px; background:#fff; cursor:pointer; text-align:left; font-family:inherit; transition:all 0.2s;">
+                <div style="width:40px; height:40px; background:#fff3e0; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="#FF9800"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                </div>
+                <div>
+                    <div style="font-size:14px; font-weight:700; color:#1a1a1a;">事業所管理者で体験</div>
+                    <div style="font-size:11px; color:#999;">マスタ管理・設定画面を試す</div>
+                </div>
+                <div style="margin-left:auto; color:#ccc; font-size:18px;">›</div>
+            </button>
         </div>
     </div>
 
@@ -324,10 +384,10 @@
             
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
-                toggleBtn.textContent = '🙈';
+                toggleBtn.textContent = '非表示';
             } else {
                 passwordInput.type = 'password';
-                toggleBtn.textContent = '👁️';
+                toggleBtn.textContent = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
             }
         }
 
@@ -429,41 +489,7 @@
                 partners = JSON.parse(localStorage.getItem('partners')) || [];
                 
                 // DEMOモード用：デフォルト業者データを常に追加（IDの重複は除外）
-                const demoPartners = [
-                    {
-                        id: 'PARTNER-001',
-                        name: '東京設備工業株式会社',
-                        partnerCode: 'P001',
-                        categories: ['空調', '給湯', '電気'],
-                        assignedCompanies: ['TAMJ'],
-                        status: 'active',
-                        contactName: '山田 太郎',
-                        loginId: 'p001-yamada',
-                        password: 'password123'
-                    },
-                    {
-                        id: 'PARTNER-002',
-                        name: '関東水道サービス',
-                        partnerCode: 'P002',
-                        categories: ['水道', '給湯', '排水'],
-                        assignedCompanies: ['TAMJ'],
-                        status: 'active',
-                        contactName: '佐藤 花子',
-                        loginId: 'p002-sato',
-                        password: 'password456'
-                    },
-                    {
-                        id: 'PARTNER-003',
-                        name: '日本電気工事',
-                        partnerCode: 'P003',
-                        categories: ['電気', '照明', '設備'],
-                        assignedCompanies: ['TAMJ'],
-                        status: 'active',
-                        contactName: '鈴木 一郎',
-                        loginId: 'p003-suzuki',
-                        password: 'password789'
-                    }
-                ];
+                const demoPartners = window.DEMO_PARTNERS || [];
                 // 既存データにDEMO業者が含まれていなければ先頭に追加（優先マッチ）
                 const mergedPartners = [];
                 demoPartners.forEach(dp => {
@@ -506,7 +532,7 @@
                 // メンテナンスモードチェック（システム管理者以外はブロック）
                 if (localStorage.getItem('maintenanceMode') === 'true' && user.role !== 'system_admin') {
                     const maintenanceMsg = localStorage.getItem('maintenanceMessage') || '現在システムメンテナンス中です。しばらくお待ちください。';
-                    errorMessage.textContent = '🔧 ' + maintenanceMsg;
+                    errorMessage.textContent = '' + maintenanceMsg;
                     errorMessage.classList.add('show');
                     return;
                 }

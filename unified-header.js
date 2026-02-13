@@ -5,7 +5,7 @@
  * 使い方:
  *   1. <script src="unified-header.js"></script> を読み込む
  *   2. <div id="unified-header-mount"></div> をbody直下に置く
- *   3. JS内で UnifiedHeader.init({ icon: '👤', title: 'アカウントマスタ', backButton: true }) を呼ぶ
+ *   3. JS内で UnifiedHeader.init({ icon: '', title: 'アカウントマスタ', backButton: true }) を呼ぶ
  * 
  * 最終更新: 2026-02-11
  */
@@ -36,7 +36,7 @@ const UnifiedHeader = {
     // ========== 初期化 ==========
     init(options = {}) {
         const {
-            icon = '📋',
+            icon = '',
             title = 'ページ',
             backButton = true,
             onBack = null,  // カスタム戻る関数
@@ -216,6 +216,7 @@ const UnifiedHeader = {
             .uh-divider { height: 1px; background: #e0e0e0; margin: 4px 0; }
             .uh-menu-item.uh-logout { color: #d32f2f; }
             .uh-menu-item.uh-logout:hover { background: #ffebee; }
+            .uh-menu-item.uh-demo-active { background: #f0f7ff; font-weight: 700; color: #2563eb; }
 
             /* パスワード変更モーダル */
             .uh-pw-overlay {
@@ -309,7 +310,7 @@ const UnifiedHeader = {
                     <h1 class="uh-title">${title}</h1>
                 </div>
                 <div class="uh-center" id="uhDemoBadge" style="display: none;">
-                    <span class="uh-demo-badge">🔥 DEMOモード</span>
+                    <span class="uh-demo-badge">DEMOモード</span>
                 </div>
                 <div class="uh-right">
                     <button class="uh-bell-btn" id="uhBellBtn" title="通知">
@@ -358,6 +359,30 @@ const UnifiedHeader = {
             `;
         }
 
+        // DEMOモード切替メニュー
+        var demoSwitchMenu = '';
+        const isDemoMode = user && (user.isDemoMode || user.companyCode === 'TAMJ' || user.companyCode === 'P001');
+        if (isDemoMode) {
+            const currentRole = user.role;
+            const roles = [
+                { key: 'staff', label: 'スタッフで表示', color: '#4CAF50', active: currentRole === 'staff' },
+                { key: 'contractor', label: '業者で表示', color: '#2196F3', active: currentRole === 'contractor' },
+                { key: 'office_admin', label: '事業所管理者で表示', color: '#FF9800', active: currentRole === 'office_admin' }
+            ];
+            const roleItems = roles.map(r => `
+                <a href="#" class="uh-menu-item${r.active ? ' uh-demo-active' : ''}" onclick="UnifiedHeader._demoSwitch('${r.key}'); return false;">
+                    <div class="uh-menu-icon"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${r.color};"></span></div>
+                    <span class="uh-menu-text">${r.label}</span>
+                    ${r.active ? '<span style="margin-left:auto;color:#2563eb;font-size:14px;">✓</span>' : ''}
+                </a>
+            `).join('');
+            demoSwitchMenu = `
+                <div class="uh-divider"></div>
+                <div style="padding:4px 16px 4px;font-size:10px;font-weight:700;color:#999;letter-spacing:1px;">DEMO切替</div>
+                ${roleItems}
+            `;
+        }
+
         dropdown.innerHTML = `
             <div class="uh-menu-item uh-user-detail">
                 <div class="uh-menu-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
@@ -368,6 +393,7 @@ const UnifiedHeader = {
                 </div>
             </div>
             ${contractorMenu}
+            ${demoSwitchMenu}
             <div class="uh-divider"></div>
             <a href="#" class="uh-menu-item" id="uhMenuPassword">
                 <div class="uh-menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>
@@ -441,7 +467,7 @@ const UnifiedHeader = {
         banner.id = 'uhFirstLogin';
         banner.innerHTML = `
             <div class="uh-fl-top">
-                <div class="uh-fl-icon">🔐</div>
+                <div class="uh-fl-icon"></div>
                 <div class="uh-fl-text">
                     <div class="uh-fl-title">パスワードの変更をおすすめします</div>
                     <div class="uh-fl-desc">セキュリティ向上のため、初期パスワードを変更することを推奨します。</div>
@@ -825,6 +851,66 @@ const UnifiedHeader = {
             localStorage.removeItem('ONE_userName');
             // 確実にリダイレクト
             window.location.replace('login.html');
+        }
+    },
+
+    // ========== DEMO切替 ==========
+    _demoSwitch(role) {
+        // ドロップダウンを閉じる
+        var dd = document.getElementById('uhDropdown');
+        if (dd) dd.classList.remove('show');
+
+        var user = window.DEMO_ACCOUNTS && window.DEMO_ACCOUNTS[role];
+        if (!user) return;
+
+        // 3. DEMOデータを確実に保持しつつセッション切替
+        const keepData = {};
+        for (let i = 0; i < sessionStorage.length; i++) {
+            const key = sessionStorage.key(i);
+            if (key && (key.startsWith('demo.') || key.startsWith('onetouch.'))) {
+                keepData[key] = sessionStorage.getItem(key);
+            }
+        }
+        // partnersデータも保持（通報→業者画面で参照するため）
+        var partnersData = localStorage.getItem('partners');
+
+        // currentUser/currentContractorのみクリア
+        sessionStorage.removeItem('currentUser');
+        sessionStorage.removeItem('currentContractor');
+
+        // 保持データを復元
+        Object.keys(keepData).forEach(function(key) {
+            sessionStorage.setItem(key, keepData[key]);
+        });
+
+        // 新しいユーザー情報をセット
+        const userInfo = {
+            companyCode: user.companyCode, companyName: user.companyName,
+            id: user.id, userId: user.id, password: user.password,
+            name: user.name, userName: user.name, role: user.role,
+            scope: user.scope || '', officeCode: user.officeCode || '',
+            officeName: user.officeName || '', isFirstLogin: false, isDemoMode: true
+        };
+        sessionStorage.setItem('currentUser', JSON.stringify(userInfo));
+        localStorage.setItem('currentAccount', JSON.stringify(userInfo));
+        localStorage.setItem('ONE_loggedIn', '1');
+        localStorage.setItem('ONE_userId', user.id);
+        localStorage.setItem('ONE_userName', user.name);
+
+        // 業者の場合はcontractor情報も保存
+        if (role === 'contractor') {
+            sessionStorage.setItem('currentContractor', JSON.stringify({
+                id: user.partnerId, partnerId: user.partnerId,
+                partnerCode: user.partnerCode, companyName: user.companyName,
+                name: user.name, loginId: user.id, contactName: user.name,
+                categories: user.categories, assignedCompanies: user.assignedCompanies,
+                role: 'contractor'
+            }));
+            window.location.href = 'contractor-dashboard.html';
+        } else if (role === 'office_admin') {
+            window.location.href = 'master-top.html';
+        } else {
+            window.location.href = 'report.html';
         }
     },
 

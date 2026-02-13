@@ -68,7 +68,7 @@
         `;
 
         toast.innerHTML = `
-            <div style="flex-shrink: 0; font-size: 20px;">❌</div>
+            <div style="flex-shrink: 0; font-size: 20px;"></div>
             <div style="flex: 1;">
                 <div style="font-weight: 600; margin-bottom: 4px;">エラーが発生しました</div>
                 <div style="font-size: 13px; opacity: 0.95;">${message}</div>
@@ -177,7 +177,7 @@
             `;
 
             toast.innerHTML = `
-                <div style="flex-shrink: 0; font-size: 20px;">✅</div>
+                <div style="flex-shrink: 0; font-size: 20px;"></div>
                 <div style="flex: 1;">${message}</div>
                 <button onclick="this.parentElement.remove()" style="background: none; border: none; color: white; cursor: pointer; font-size: 20px; line-height: 1; padding: 0;">×</button>
             `;
@@ -221,7 +221,7 @@
             `;
 
             toast.innerHTML = `
-                <div style="flex-shrink: 0; font-size: 20px;">⚠️</div>
+                <div style="flex-shrink: 0; font-size: 20px;"></div>
                 <div style="flex: 1;">${message}</div>
                 <button onclick="this.parentElement.remove()" style="background: none; border: none; color: white; cursor: pointer; font-size: 20px; line-height: 1; padding: 0;">×</button>
             `;

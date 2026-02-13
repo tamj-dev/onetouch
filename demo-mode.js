@@ -148,7 +148,7 @@ function showDemoModeBadge() {
         box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         pointer-events: none;
     `;
-    badge.textContent = '🎭 DEMOモード';
+    badge.textContent = 'DEMOモード';
     
     document.body.appendChild(badge);
 }
@@ -170,3 +170,54 @@ window.DEMO = {
     exportData: demoExportData,
     importData: demoImportData
 };
+
+// ========== DEMOデータ集約 ==========
+// 全画面で共通のDEMOデータをここに定義
+window.DEMO_ACCOUNTS = {
+    staff: {
+        companyCode: 'TAMJ', id: 'demo-staff', password: 'demo',
+        name: 'デモスタッフ', role: 'staff', scope: 'office',
+        companyName: 'タムジ株式会社', officeCode: 'TAMJ-J0001', officeName: '東京事業所',
+        status: 'active', isFirstLogin: false, isDemoMode: true
+    },
+    office_admin: {
+        companyCode: 'TAMJ', id: 'demo-office', password: 'demo',
+        name: 'デモ事業所管理者', role: 'office_admin', scope: 'office',
+        companyName: 'タムジ株式会社', officeCode: 'TAMJ-J0001', officeName: '東京事業所',
+        status: 'active', isFirstLogin: false, isDemoMode: true
+    },
+    company_admin: {
+        companyCode: 'TAMJ', id: 'TAMJ-H001', password: 'demo',
+        name: 'デモ本社管理者', role: 'company_admin', scope: 'company',
+        companyName: 'タムジ株式会社', officeCode: 'TAMJ-H001', officeName: '本社',
+        status: 'active', isFirstLogin: false, isDemoMode: true
+    },
+    contractor: {
+        companyCode: 'P001', id: 'p001-yamada', password: 'demo',
+        name: '山田 太郎', role: 'contractor',
+        companyName: '東京設備工業株式会社', partnerId: 'P001',
+        partnerCode: 'P001', categories: ['空調', '給湯', '電気'],
+        assignedCompanies: ['TAMJ'], status: 'active', isDemoMode: true
+    }
+};
+
+window.DEMO_PARTNERS = [
+    {
+        id: 'P001', name: '東京設備工業株式会社', partnerCode: 'P001',
+        categories: ['空調', '給湯', '電気'], assignedCompanies: ['TAMJ'],
+        status: 'active', contactName: '山田 太郎',
+        loginId: 'p001-yamada', password: 'demo'
+    },
+    {
+        id: 'P002', name: '関東水道サービス', partnerCode: 'P002',
+        categories: ['水道', '給湯', '排水'], assignedCompanies: ['TAMJ'],
+        status: 'active', contactName: '佐藤 花子',
+        loginId: 'p002-sato', password: 'demo'
+    },
+    {
+        id: 'P003', name: '日本電気工事', partnerCode: 'P003',
+        categories: ['電気', '照明', '設備'], assignedCompanies: ['TAMJ'],
+        status: 'active', contactName: '鈴木 一郎',
+        loginId: 'p003-suzuki', password: 'demo'
+    }
+];

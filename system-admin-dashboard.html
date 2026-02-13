@@ -126,7 +126,7 @@
             <div class="stat-card">
                 <div class="stat-card-header">
                     <div class="stat-card-label">総ユーザー数</div>
-                    <div class="stat-card-icon">👥</div>
+                    <div class="stat-card-icon"></div>
                 </div>
                 <div class="stat-card-value" id="totalUsers">0</div>
                 <div class="stat-card-detail">アクティブアカウント</div>
@@ -135,7 +135,7 @@
             <div class="stat-card">
                 <div class="stat-card-header">
                     <div class="stat-card-label">総通報数</div>
-                    <div class="stat-card-icon">📢</div>
+                    <div class="stat-card-icon"></div>
                 </div>
                 <div class="stat-card-value" id="totalReports">0</div>
                 <div class="stat-card-detail">累計通報件数</div>
@@ -144,7 +144,7 @@
             <div class="stat-card">
                 <div class="stat-card-header">
                     <div class="stat-card-label">データ使用量</div>
-                    <div class="stat-card-icon">💾</div>
+                    <div class="stat-card-icon"></div>
                 </div>
                 <div class="stat-card-value" id="totalStorage">0</div>
                 <div class="stat-card-detail">KB / 10MB</div>
@@ -196,7 +196,7 @@
         <div class="section">
             <div class="section-header">
                 <div class="section-title">
-                    <span class="section-icon">📤</span>
+                    <span class="section-icon"></span>
                     グローバルデータエクスポート
                 </div>
             </div>
@@ -228,14 +228,14 @@
                     <input type="date" class="form-input" id="exportEndDate">
                 </div>
             </div>
-            <button class="btn-export" onclick="exportGlobalData()">📤 エクスポート実行</button>
+            <button class="btn-export" onclick="exportGlobalData()">エクスポート実行</button>
         </div>
 
         <!-- メンテナンスモード -->
         <div class="section">
             <div class="section-header">
                 <div class="section-title">
-                    <span class="section-icon">🔧</span>
+                    <span class="section-icon"></span>
                     メンテナンスモード
                 </div>
             </div>
@@ -269,14 +269,14 @@
     <div class="section">
         <div class="section-header">
             <div class="section-title">
-                <span class="section-icon">💾</span>
+                <span class="section-icon"></span>
                 データバックアップ・リストア
             </div>
         </div>
 
         <!-- 最終バックアップ情報 -->
         <div style="background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
-            <div style="font-size: 13px; color: #666; margin-bottom: 8px;">📅 最終バックアップ</div>
+            <div style="font-size: 13px; color: #666; margin-bottom: 8px;">最終バックアップ</div>
             <div id="lastBackupInfo" style="font-size: 14px; color: #333; font-weight: 600;">まだバックアップがありません</div>
             <div id="backupWarning" style="display: none; margin-top: 8px; color: #dc2626; font-size: 13px;">
                 30日以上バックアップされていません！早めにバックアップを取ってください。
@@ -285,7 +285,7 @@
 
         <!-- エクスポート -->
         <div style="margin-bottom: 24px;">
-            <div style="font-weight: 600; margin-bottom: 12px; font-size: 15px;">📤 データエクスポート（バックアップ）</div>
+            <div style="font-weight: 600; margin-bottom: 12px; font-size: 15px;">データエクスポート（バックアップ）</div>
             <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 12px;">
                 <div style="font-size: 13px; color: #666; margin-bottom: 8px;">エクスポートされるデータ:</div>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; font-size: 13px;">
@@ -300,13 +300,13 @@
                 </div>
             </div>
             <button onclick="exportAllData()" style="background: #667eea; color: white; border: none; padding: 14px 28px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 15px; width: 100%; transition: all 0.2s;">
-                💾 全データをエクスポート（JSON形式）
+                全データをエクスポート（JSON形式）
             </button>
         </div>
 
         <!-- インポート -->
         <div>
-            <div style="font-weight: 600; margin-bottom: 12px; font-size: 15px;">📥 データインポート（復元）</div>
+            <div style="font-weight: 600; margin-bottom: 12px; font-size: 15px;">データインポート（復元）</div>
             <div style="background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
                 <div style="color: #856404; font-size: 13px;">
                     注意: インポートすると現在のデータが上書きされます。事前にバックアップを取ることを推奨します。
@@ -314,7 +314,7 @@
             </div>
             <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="importAllData(event)">
             <button onclick="document.getElementById('importFileInput').click()" style="background: #757575; color: white; border: none; padding: 14px 28px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 15px; width: 100%; transition: all 0.2s;">
-                📥 バックアップファイルを選択して復元
+                バックアップファイルを選択して復元
             </button>
         </div>
     </div>

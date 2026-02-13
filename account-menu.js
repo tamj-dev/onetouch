@@ -69,7 +69,7 @@ function initAccountMenu() {
                         text-decoration: none;
                         transition: background 0.2s;
                     " onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='transparent'">
-                        <span style="font-size: 18px;">🔔</span>
+                        <span style="font-size: 18px;"></span>
                         <span>通知設定</span>
                     </a>
                     <a href="change-password.html" style="
@@ -81,7 +81,7 @@ function initAccountMenu() {
                         text-decoration: none;
                         transition: background 0.2s;
                     " onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='transparent'">
-                        <span style="font-size: 18px;">🔑</span>
+                        <span style="font-size: 18px;"></span>
                         <span>パスワード変更</span>
                     </a>
                     <a href="system-settings.html" style="
@@ -93,7 +93,7 @@ function initAccountMenu() {
                         text-decoration: none;
                         transition: background 0.2s;
                     " onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='transparent'">
-                        <span style="font-size: 18px;">⚙️</span>
+                        <span style="font-size: 18px;">️</span>
                         <span>システム設定</span>
                     </a>
                 </div>
@@ -107,7 +107,7 @@ function initAccountMenu() {
                         text-decoration: none;
                         transition: background 0.2s;
                     " onmouseover="this.style.background='#ffebee'" onmouseout="this.style.background='transparent'">
-                        <span style="font-size: 18px;">🚪</span>
+                        <span style="font-size: 18px;"></span>
                         <span>ログアウト</span>
                     </a>
                 </div>

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>商品一覧 | ワンタッチ管理</title>
     <script src="demo-mode.js"></script>
+    <script src="unified-header.js"></script>
     <script>
         // item-storage.js を直接埋め込み
         const DB_NAME = 'OneTouchDB';
@@ -801,43 +802,7 @@
 </head>
 <body>
     <!-- 統一ヘッダー -->
-    <div class="unified-header">
-        <div class="header-left">
-            <button class="back-btn" onclick="goBack()">← 戻る</button>
-            <span class="header-icon">📦</span>
-            <h1 class="header-title">商品マスタ</h1>
-        </div>
-        <div class="header-center" id="demoModeBadge" style="display: none;">
-            <span class="demo-badge">🔥 DEMOモード</span>
-        </div>
-        <div class="header-right">
-            <button class="user-info-btn" onclick="toggleUserMenu()">
-                <div class="user-avatar" id="userAvatar">-</div>
-                <span class="user-name" id="userName">ユーザー</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- ドロップダウンメニュー -->
-    <div class="dropdown-menu" id="dropdownMenu">
-        <div class="menu-item user-info-detail">
-            <div class="menu-icon">👤</div>
-            <div class="menu-text">
-                <div class="menu-name" id="menuUserName">ユーザー</div>
-                <div class="menu-detail" id="menuUserDetail">-</div>
-            </div>
-        </div>
-        <div class="menu-divider"></div>
-        <a href="#" onclick="openPasswordChangeModal(); return false;" class="menu-item">
-            <div class="menu-icon">🔑</div>
-            <span class="menu-text">パスワード変更</span>
-        </a>
-        <div class="menu-divider"></div>
-        <a href="#" onclick="logout(); return false;" class="menu-item logout">
-            <div class="menu-icon">🚪</div>
-            <span class="menu-text">ログアウト</span>
-        </a>
-    </div>
+    <div id="unified-header-mount" data-title="商品マスタ" data-back="master-top.html"></div>
 
     <!-- 検索・フィルターエリア -->
     <div class="header">
@@ -1000,9 +965,10 @@
 
         // 初期化
         async function init() {
+            // 統一ヘッダー初期化
+            UnifiedHeader.init({ title: '商品マスタ', backButton: true, onBack: function() { window.location.href = 'master-top.html'; } });
             await ItemStorage.initDemoItems();
             await loadItems();
-            initUserInfo();
         }
 
         // ユーザー情報表示
@@ -1071,7 +1037,7 @@
                     console.log('[loadPartners] DEMOモード: デフォルト業者データを使用');
                     partners = [
                         {
-                            id: 'PARTNER-001',
+                            id: 'P001',
                             name: '東京設備工業株式会社',
                             partnerCode: 'P001',
                             categories: ['空調', '給湯', '電気'],
@@ -1079,7 +1045,7 @@
                             status: 'active'
                         },
                         {
-                            id: 'PARTNER-002',
+                            id: 'P002',
                             name: '関東水道サービス',
                             partnerCode: 'P002',
                             categories: ['水道', '給湯', '排水'],
@@ -1087,7 +1053,7 @@
                             status: 'active'
                         },
                         {
-                            id: 'PARTNER-003',
+                            id: 'P003',
                             name: '日本電気工事',
                             partnerCode: 'P003',
                             categories: ['電気', '照明', '設備'],
@@ -1151,7 +1117,7 @@
                             maker: 'ダイキン',
                             model: 'AN22XRS-W',
                             category: '空調',
-                            assignedPartnerId: 'PARTNER-001',
+                            assignedPartnerId: 'P001',
                             assignedPartnerName: '東京設備工業株式会社',
                             unit: '台',
                             price: 150000,
@@ -1168,7 +1134,7 @@
                             maker: 'リンナイ',
                             model: 'RUX-A1615W-E',
                             category: '給湯',
-                            assignedPartnerId: 'PARTNER-001',
+                            assignedPartnerId: 'P001',
                             assignedPartnerName: '東京設備工業株式会社',
                             unit: '台',
                             price: 80000,
@@ -1185,7 +1151,7 @@
                             maker: 'パナソニック',
                             model: 'LGB51210',
                             category: '電気',
-                            assignedPartnerId: 'PARTNER-003',
+                            assignedPartnerId: 'P003',
                             assignedPartnerName: '日本電気工事',
                             unit: '個',
                             price: 12000,
@@ -1202,7 +1168,7 @@
                             maker: 'TOTO',
                             model: 'CES9788F',
                             category: '水道',
-                            assignedPartnerId: 'PARTNER-002',
+                            assignedPartnerId: 'P002',
                             assignedPartnerName: '関東水道サービス',
                             unit: '台',
                             price: 180000,
@@ -1219,7 +1185,7 @@
                             maker: '三菱電機',
                             model: 'NEXIEZ-MR',
                             category: '設備',
-                            assignedPartnerId: 'PARTNER-003',
+                            assignedPartnerId: 'P003',
                             assignedPartnerName: '日本電気工事',
                             unit: '台',
                             price: 5000000,
@@ -1653,10 +1619,6 @@
         // 削除
         // エクスポート
         function exportItems() {
-            if (ItemStorage.isDemoMode()) {
-                alert('DEMOモードではエクスポートできません');
-                return;
-            }
 
             const csv = [
                 ['商品No.', '商品名', '担当業者', 'メーカー', '型番', 'カテゴリー', '単価', '在庫', '単位', '備考', '終了日', '登録日', '更新日'].join(','),
@@ -1841,7 +1803,7 @@
     <!-- パスワード変更モーダル -->
     <div id="passwordChangeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
         <div style="background: white; border-radius: 12px; padding: 24px; width: 90%; max-width: 400px; box-shadow: 0 8px 24px rgba(0,0,0,0.2);">
-            <h2 style="margin: 0 0 20px 0; font-size: 20px; color: #333;">🔑 パスワード変更</h2>
+            <h2 style="margin: 0 0 20px 0; font-size: 20px; color: #333;">パスワード変更</h2>
             
             <div style="margin-bottom: 16px;">
                 <label style="display: block; font-size: 14px; color: #666; margin-bottom: 6px;">現在のパスワード</label>
@@ -1869,7 +1831,7 @@
     <!-- 初回ログイン推奨バナー -->
     <div id="firstLoginBanner" style="display: none; position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px 24px; border-radius: 12px; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4); z-index: 9999; max-width: 500px; width: 90%;">
         <div style="display: flex; align-items: center; gap: 16px;">
-            <div style="font-size: 32px;">🔐</div>
+            <div style="font-size: 32px;"></div>
             <div style="flex: 1;">
                 <div style="font-weight: 600; margin-bottom: 4px;">パスワードの変更をおすすめします</div>
                 <div style="font-size: 13px; opacity: 0.9;">セキュリティ向上のため、初期パスワードを変更することを推奨します。</div>

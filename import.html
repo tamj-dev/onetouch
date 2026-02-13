@@ -404,7 +404,7 @@
       <div class="hgrid" style="grid-template-columns:repeat(3,1fr);margin-bottom:18px;">
         <div class="hcard" style="border-color:var(--ok);"><h4>L1 直接パース</h4><p>Excel/CSV/TXT → OCR不要（最安・最速）。列マッピングでほぼ99%</p></div>
         <div class="hcard" style="border-color:var(--warn);"><h4>L2 Vision OCR</h4><p>PDF/画像 → テキスト抽出 → ダメならGCP Vision OCR</p></div>
-        <div class="hcard" style="border-color:#7c3aed;"><h4>L3 構造化</h4><p>A) ルール抽出（無料）→ B) 失敗時のみ🤖AI整形（Gemini）</p></div>
+        <div class="hcard" style="border-color:#7c3aed;"><h4>L3 構造化</h4><p>A) ルール抽出（無料）→ B) 失敗時のみAI整形（Gemini）</p></div>
       </div>
       <h3>対応フォーマット</h3>
       <div class="hgrid">
@@ -484,7 +484,7 @@
           <select id="tplSelect" onchange="onTplSelect()">
             <option value="">（手動設定）</option>
           </select>
-          <button onclick="saveCurrentAsTemplate()">💾 保存</button>
+          <button onclick="saveCurrentAsTemplate()">保存</button>
           <button onclick="deleteTplCurrent()" id="tplDelBtn" style="display:none;color:var(--err);"></button>
         </div>
         <div id="tplAutoApplied" style="display:none;font-size:0.78rem;color:var(--ok);margin-bottom:8px;padding:6px 10px;background:#d1fae5;border-radius:6px;">
@@ -1168,7 +1168,7 @@
       if(isPDF||isImage){
         if(SERVER_AVAILABLE){
           //  サーバAPIで一括処理（L1→L2→L3 全レイヤー）
-          showCard(fid,file.name,file.size,'parsing',null,'☁️ サーバ解析中…');
+          showCard(fid,file.name,file.size,'parsing',null,'サーバ解析中…');
           setStep(2);
           var apiResult=await callExtractAPI(file);
           if(apiResult&&apiResult.items&&apiResult.items.length>0){
@@ -1246,7 +1246,7 @@
           // テキスト抽出も失敗 → スキャンPDFなのでサーバが必要
           showCard(fid,file.name,file.size,'error',null,
             SERVER_AVAILABLE
-              ? 'PDFからデータを取得できませんでした。🤖 AI整形を試すか、CSV/Excelでアップロードしてください。'
+              ? 'PDFからデータを取得できませんでした。AI整形を試すか、CSV/Excelでアップロードしてください。'
               : 'このPDFはスキャン画像のため、サーバ接続が必要です。ネットワークを確認してください。'
           );
           return;
@@ -1634,13 +1634,13 @@
           var methodHtml='';
           if(currentFile&&currentFile._evidence&&currentFile._evidence.method){
             var methodLabels={
-              local_pdf:' ローカルPDF',local_excel:' ローカルExcel',server:'☁️ サーバAPI',
+              local_pdf:' ローカルPDF',local_excel:' ローカルExcel',server:'サーバAPI',
               ocr:' OCR',local:' ローカル',pdf_text:' PDFテキスト',
               'excel':' Excel',csv:' CSV',txt:' TXT',
-              'ai_fix':'🤖 AI整形',
-              'excel+ai':' Excel + 🤖AI','txt+ai':' TXT + 🤖AI',
-              'pdf_text+ai':' PDF + 🤖AI','ocr+ai':' OCR + 🤖AI',
-              rules:' ルール抽出',ai:'🤖 AI整形',
+              'ai_fix':'AI整形',
+              'excel+ai':' Excel + AI','txt+ai':' TXT + AI',
+              'pdf_text+ai':' PDF + AI','ocr+ai':' OCR + AI',
+              rules:' ルール抽出',ai:'AI整形',
             };
             methodHtml='<span class="fcard-method">'+(methodLabels[currentFile._evidence.method]||currentFile._evidence.method)+'</span>';
             //  テンプレ適用バッジ
@@ -1657,11 +1657,11 @@
             +(currentFile&&currentFile._rawRows?'<button class="btn btn-sub" onclick="reopenHdrPicker()"> 読取り範囲を設定</button>':'');
           //  AI整形ボタン: サーバ接続あり＋AI有効＋(低信頼 or 中信頼)
           if(SERVER_AVAILABLE&&AI_AVAILABLE&&conf!==null&&conf<0.85){
-            btns+='<button class="btn btn-sub" onclick="retryWithAI()" style="border-color:#7c3aed;color:#7c3aed;">🤖 AI整形</button>';
+            btns+='<button class="btn btn-sub" onclick="retryWithAI()" style="border-color:#7c3aed;color:#7c3aed;">AI整形</button>';
           }
           // サーバ接続あり＋AI無効＋低信頼 → 高精度OCRだけ再試行
           else if(SERVER_AVAILABLE&&!AI_AVAILABLE&&conf!==null&&conf<0.60){
-            btns+='<button class="btn btn-sub" onclick="retryHighPrecision()" style="border-color:var(--accent);color:var(--accent);">🔬 高精度OCR</button>';
+            btns+='<button class="btn btn-sub" onclick="retryHighPrecision()" style="border-color:var(--accent);color:var(--accent);">高精度OCR</button>';
           }
           btns+='</div>';
           break;
@@ -1684,9 +1684,9 @@
           btns='<div class="fcard-btns"><button class="btn btn-sub" onclick="dismissCard(\''+fid+'\')">✕ 閉じる</button>';
           //  エラー時もAI整形再試行可能
           if(SERVER_AVAILABLE&&AI_AVAILABLE){
-            btns+='<button class="btn btn-sub" onclick="retryWithAI()" style="border-color:#7c3aed;color:#7c3aed;">🤖 AI整形で再試行</button>';
+            btns+='<button class="btn btn-sub" onclick="retryWithAI()" style="border-color:#7c3aed;color:#7c3aed;">AI整形で再試行</button>';
           }else if(SERVER_AVAILABLE){
-            btns+='<button class="btn btn-sub" onclick="retryHighPrecision()" style="border-color:var(--accent);color:var(--accent);">🔬 高精度OCRで再試行</button>';
+            btns+='<button class="btn btn-sub" onclick="retryHighPrecision()" style="border-color:var(--accent);color:var(--accent);">高精度OCRで再試行</button>';
           }
           btns+='</div>';
           break;
@@ -1699,7 +1699,7 @@
     async function retryWithAI(){
       if(!currentFile||!currentFile.fileObj)return;
       var fid=currentFile.fileId;
-      showCard(fid,currentFile.fileName,currentFile.fileObj.size,'parsing',null,'🤖 AI整形中…（Gemini構造化）');
+      showCard(fid,currentFile.fileName,currentFile.fileObj.size,'parsing',null,'AI整形中…（Gemini構造化）');
       var apiResult=await callExtractAPIHighPrecision(currentFile.fileObj);
       if(apiResult&&apiResult.items&&apiResult.items.length>0){
         currentFile._confidence=apiResult.confidence||0;
@@ -1736,7 +1736,7 @@
     async function retryHighPrecision(){
       if(!currentFile||!currentFile.fileObj)return;
       var fid=currentFile.fileId;
-      showCard(fid,currentFile.fileName,currentFile.fileObj.size,'parsing',null,'🔬 高精度OCR中…');
+      showCard(fid,currentFile.fileName,currentFile.fileObj.size,'parsing',null,'高精度OCR中…');
       var apiResult=await callExtractAPIHighPrecision(currentFile.fileObj);
       if(apiResult&&apiResult.items&&apiResult.items.length>0){
         currentFile._confidence=apiResult.confidence||0;
@@ -2424,9 +2424,9 @@
       h+='<div class="pk-sum-item set"> ヘッダー: 行'+(pkState.headerIdx+1)+'</div>';
       // フッター行
       if(pkState.footerIdx>=0){
-        h+='<div class="pk-sum-item set">🔚 フッター: 行'+(pkState.footerIdx+1)+'</div>';
+        h+='<div class="pk-sum-item set">フッター: 行'+(pkState.footerIdx+1)+'</div>';
       }else{
-        h+='<div class="pk-sum-item unset">🔚 フッター: 未設定（最終行まで）</div>';
+        h+='<div class="pk-sum-item unset">フッター: 未設定（最終行まで）</div>';
       }
       // 列ロール
       var assigned=Object.keys(pkState.colRoles).length;
