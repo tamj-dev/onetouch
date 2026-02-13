@@ -37,7 +37,8 @@
     function isDemoMode() {
       try {
         const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
-        return currentUser && currentUser.companyCode === 'TAMJ';
+        if (!currentUser) return false;
+        return currentUser.companyCode === 'TAMJ' || !!currentUser.isDemoMode;
       } catch (e) { return false; }
     }
 
@@ -1583,6 +1584,7 @@
         case'parsing':
           var parseMsg=errorMsg||'解析中…';
           badge='<span class="fcard-badge parsing"><span class="spin"></span>'+esc(parseMsg)+'</span>';
+          btns='<div class="fcard-btns"><button class="btn btn-sub" onclick="removeFile()" style="color:var(--err);border-color:var(--err);">キャンセル</button></div>';
           break;
         case'ready':
           badge='<span class="fcard-badge ready">プレビュー可</span>';
@@ -1631,6 +1633,7 @@
           else if(SERVER_AVAILABLE&&!AI_AVAILABLE&&conf!==null&&conf<0.60){
             btns+='<button class="btn btn-sub" onclick="retryHighPrecision()" style="border-color:var(--accent);color:var(--accent);">高精度OCR</button>';
           }
+          btns+='<button class="btn btn-sub" onclick="removeFile()" style="color:var(--err);border-color:var(--err);">削除</button>';
           btns+='</div>';
           break;
         case'importing':
@@ -1734,6 +1737,18 @@
       var c=document.getElementById('fc-'+fid);
       if(c)c.remove();
       currentFile=null;
+      setStep(1);
+    }
+
+    // ファイル削除（やり直し）
+    function removeFile(){
+      if(!currentFile)return;
+      var fid=currentFile.fileId;
+      var c=document.getElementById('fc-'+fid);
+      if(c)c.remove();
+      currentFile=null;
+      rowFlags=[];
+      document.getElementById('fileInput').value='';
       setStep(1);
     }
 
@@ -2296,7 +2311,7 @@
         if (updateItems.length > 0) {
           // DEMOモード判定
           var cu = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
-          var isDemo = cu.companyCode === 'TAMJ' || sessionStorage.getItem('demo.mode') === 'true';
+          var isDemo = cu.companyCode === 'TAMJ' || !!cu.isDemoMode || sessionStorage.getItem('demo.mode') === 'true';
           if (isDemo) {
             sessionStorage.setItem('demo.items', JSON.stringify(existingItems));
           } else {
@@ -2306,10 +2321,17 @@
 
 
         // ========================================================================
-        //  新システム: LineItems保存（新規分のみ）
+        //  新システム: LineItems保存（新規＋上書き両方）
         // ========================================================================
-        if (newItems.length > 0) {
-          await DocumentStorage.addLineItems(newItems);
+        var allLineItems = newItems.concat(updateItems.map(function(item) {
+          return Object.assign({}, item, {
+            docId: currentFile.fileId,
+            lineId: null,
+            status: 'updated'
+          });
+        }));
+        if (allLineItems.length > 0) {
+          await DocumentStorage.addLineItems(allLineItems);
         }
         
 

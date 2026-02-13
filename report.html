@@ -172,11 +172,6 @@
     </button>
     <a href="report-help.html" style="font-size: 13px; color: var(--text-muted); text-decoration: none; margin-top: 4px;">通報の仕方がわからない方はこちら</a>
     
-    <!-- よく通報する設備（クイックアクセス） -->
-    <div id="quickEquipment" style="display:none;margin-top:16px;width:100%;max-width:320px;">
-      <div style="font-size:12px;color:#999;margin-bottom:8px;">よく通報する設備</div>
-      <div id="quickEquipmentList" style="display:flex;flex-direction:column;gap:6px;"></div>
-    </div>
   </div>
 
   <!-- 通報履歴 -->
@@ -222,7 +217,7 @@
       <input type="hidden" id="formType">
       
       <div class="field">
-        <label>設備名</label>
+        <label>設備名/商品名</label>
         <div id="equipmentSelector">
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;" id="categoryTabs"></div>
           <div style="position:relative;">
@@ -260,11 +255,6 @@
       </div>
       
       <div class="field">
-        <label>場所</label>
-        <input type="text" id="formLoc" placeholder="例：2階 居室203">
-      </div>
-      
-      <div class="field">
         <label>状況</label>
         <textarea id="formDesc" placeholder="何が起きたか書いてください" maxlength="200"></textarea>
         <div style="font-size:11px;color:#aaa;margin-top:4px;text-align:right;" id="formDescCount">0/200</div>
@@ -286,33 +276,6 @@
         <button class="mbtn mbtn-send" id="formSendBtn" onclick="send()">通報する</button>
       </div>
       <div class="result" id="formResult"></div>
-    </div>
-  </div>
-
-  <!-- 緊急フォーム -->
-  <div class="overlay" id="emgOverlay">
-    <div class="modal">
-      <h3>緊急通報</h3>
-      <div class="field">
-        <label>緊急種別</label>
-        <select id="emgType">
-          <option>火災</option><option>事故</option><option>急病</option>
-          <option>不審者</option><option>その他緊急</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>場所</label>
-        <input type="text" id="emgLoc" placeholder="例：1階 食堂">
-      </div>
-      <div class="field">
-        <label>状況</label>
-        <textarea id="emgDesc" placeholder="できるだけ詳しく書いてください"></textarea>
-      </div>
-      <div class="modal-btns">
-        <button class="mbtn mbtn-cancel" onclick="closeEmg()">やめる</button>
-        <button class="mbtn mbtn-danger" onclick="sendEmg()">緊急通報する</button>
-      </div>
-      <div class="result" id="emgResult"></div>
     </div>
   </div>
 
@@ -382,7 +345,6 @@
     }
 
     function openForm(type){
-      if(type==='emergency'){document.getElementById('emgOverlay').classList.add('open');return;}
       document.getElementById('formType').value=type;
       document.getElementById('formTitle').textContent='トラブル通報';
       document.getElementById('formResult').style.display='none';
@@ -400,7 +362,7 @@
     function loadItems() {
       try {
         const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
-        const isDemoMode = currentUser && currentUser.companyCode === 'TAMJ';
+        const isDemoMode = currentUser && (currentUser.companyCode === 'TAMJ' || currentUser.isDemoMode);
         const storageKey = isDemoMode ? 'demo.items' : 'onetouch.items';
         const storage = isDemoMode ? sessionStorage : localStorage;
         
@@ -585,12 +547,6 @@
       var locParts = [item.floor, item.location].filter(Boolean);
       if (locParts.length > 0) detail += (detail ? ' — ' : '') + locParts.join(' ');
       document.getElementById('selectedEquipmentDetail').textContent = detail;
-      
-      // 場所を自動入力（空欄の場合のみ）
-      var locInput = document.getElementById('formLoc');
-      if (!locInput.value && locParts.length > 0) {
-        locInput.value = locParts.join(' ');
-      }
     }
 
     function clearEquipmentSelection() {
@@ -600,14 +556,19 @@
       document.getElementById('selectedPartnerId').value = '';
       document.getElementById('selectedPartnerName').value = '';
       
+      // カテゴリフィルタをリセット
+      _activeCategory = '';
+      
       document.getElementById('equipmentSearch').style.display = '';
       document.getElementById('equipmentSearch').value = '';
       document.getElementById('categoryTabs').style.display = '';
       document.getElementById('selectedEquipment').style.display = 'none';
       document.getElementById('suggestList').style.display = 'none';
+      
+      // カテゴリタブの見た目もリセット
+      buildCategoryTabs(_allEquipments);
     }
     function closeForm(){document.getElementById('formOverlay').classList.remove('open');}
-    function closeEmg(){document.getElementById('emgOverlay').classList.remove('open');}
 
     function getVendor(type){
       try{
@@ -633,7 +594,11 @@
       if (!title && titleSelect.selectedIndex > 0) title = titleSelect.options[titleSelect.selectedIndex].textContent;
       var cat=document.getElementById('formCat').value;
       var priority=document.getElementById('formPriority').value;
-      var loc=document.getElementById('formLoc').value;
+      var loc = '';
+      if (selectedItem) {
+        var locParts = [selectedItem.floor, selectedItem.location].filter(Boolean);
+        loc = locParts.join(' ');
+      }
       var desc=document.getElementById('formDesc').value;
       
       if(!itemId){toast('設備を選択してください');return;}
@@ -694,40 +659,9 @@
       // フォームリセット
       document.getElementById('formTitleInput').value='';
       document.getElementById('formDesc').value='';
-      document.getElementById('formLoc').value='';
       clearEquipmentSelection();
     }
 
-    function sendEmg(){
-      var type=document.getElementById('emgType').value;
-      var loc=document.getElementById('emgLoc').value;
-      var desc=document.getElementById('emgDesc').value;
-      if(!desc){toast('状況を入力してください');return;}
-
-      saveReport({type:'emergency',category:type,location:loc,description:desc,emergency:true});
-      closeEmg();
-      logEvent('emergency_report', { emergencyType: type, location: loc });
-      showSentOK('緊急通報を送信しました', '種別：'+type+(loc ? '　場所：'+loc : ''), true);
-      // 事業所管理者・本社管理者向け通知
-      if (typeof sendNotification === 'function') {
-        sendNotification({
-          toRole: 'office_admin',
-          type: 'emergency',
-          reportId: lastSavedReportId || '',
-          message: '【緊急】緊急通報：' + type + '（' + (loc||'場所未記入') + '）'
-        });
-        sendNotification({
-          toRole: 'company_admin',
-          type: 'emergency',
-          reportId: lastSavedReportId || '',
-          message: '【緊急】緊急通報：' + type + '（' + (loc||'場所未記入') + '）'
-        });
-      }
-      try{ONE.sendLocalNotify('【緊急通報】'+type, '場所：'+(loc||'未記入')+'\n'+desc, {tag:'emergency-'+Date.now(), url:'/report.html', emergency:true});}catch(e){}
-      renderHistory();
-      document.getElementById('emgDesc').value='';
-      document.getElementById('emgLoc').value='';
-    }
 
     // ===== 写真添付機能 =====
     var attachedPhotos = [];
@@ -1008,49 +942,8 @@
     }
     
     renderHistory();
-    buildQuickEquipment();
     
     // よく通報する設備を構築（通報履歴から集計）
-    function buildQuickEquipment() {
-      try {
-        var reports = getAllReports();
-        if (reports.length === 0) return;
-        
-        // 設備IDごとの通報回数を集計
-        var counts = {};
-        reports.forEach(function(r) {
-          if (r.title && r.itemId) {
-            if (!counts[r.itemId]) counts[r.itemId] = { name: r.title, itemId: r.itemId, count: 0 };
-            counts[r.itemId].count++;
-          }
-        });
-        
-        // 通報回数が多い順に上位3件
-        var top = Object.values(counts).sort(function(a, b) { return b.count - a.count; }).slice(0, 3);
-        if (top.length === 0) return;
-        
-        var container = document.getElementById('quickEquipment');
-        var list = document.getElementById('quickEquipmentList');
-        container.style.display = 'block';
-        
-        list.innerHTML = top.map(function(item) {
-          return '<button onclick="quickReport(\'' + item.itemId + '\')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:white;border:1px solid #e5e7eb;border-radius:8px;cursor:pointer;text-align:left;transition:border-color .15s;"'
-            + ' onmouseover="this.style.borderColor=\'#999\'" onmouseout="this.style.borderColor=\'#e5e7eb\'">'
-            + '<span style="font-size:14px;font-weight:500;color:#333;">' + item.name + '</span>'
-            + '<span style="font-size:11px;color:#999;">' + item.count + '回</span>'
-            + '</button>';
-        }).join('');
-      } catch(e) {}
-    }
-    
-    // クイック通報：設備を事前選択した状態でフォームを開く
-    function quickReport(itemId) {
-      openForm('report');
-      setTimeout(function() {
-        selectEquipment(itemId);
-      }, 100);
-    }
-    
     // 履歴カードから詳細表示
     function showHistoryDetail(reportId) {
       var reports = getAllReports();
