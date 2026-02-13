@@ -678,14 +678,9 @@
             const address = document.getElementById('address').value.trim();
             const status = document.getElementById('status').value;
 
-            console.log('[保存処理] 開始');
-            console.log('[保存処理] editingCompanyCode:', editingCompanyCode);
-            console.log('[保存処理] 入力された会社コード:', code);
-            console.log('[保存処理] 既存の会社数:', companies.length);
 
             if (editingCompanyCode) {
                 // 編集
-                console.log('[保存処理] 編集モード');
                 const index = companies.findIndex(c => c.code === editingCompanyCode);
                 if (index !== -1) {
                     companies[index] = {
@@ -697,22 +692,17 @@
                         status,
                         updatedAt: new Date().toISOString()
                     };
-                    console.log('[保存処理] 会社を更新しました:', code);
                     logEvent('update_company', { companyCode: code, companyName: name });
                 }
             } else {
                 // 新規登録
-                console.log('[保存処理] 新規登録モード');
                 const existingCompany = companies.find(c => c.code === code);
-                console.log('[保存処理] 重複チェック結果:', existingCompany);
                 
                 if (existingCompany) {
-                    console.log('[保存処理] エラー: 会社コード重複', code);
                     alert('この会社コードは既に使用されています。');
                     return;
                 }
 
-                console.log('[保存処理] 新規会社を追加します:', code);
 
                 // 本社管理者IDとパスワードを生成
                 const honshaUserId = code + '-H001';

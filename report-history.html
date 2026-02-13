@@ -697,8 +697,6 @@
             try { reportsFromLocal = JSON.parse(localStorage.getItem('onetouch.reports') || '[]'); } catch(e) {}
             let reports = [...reportsFromSession];
             reportsFromLocal.forEach(r => { if (!reports.find(m => m.id === r.id)) reports.push(r); });
-            console.log('[report-history] 全通報数:', reports.length, '(session:', reportsFromSession.length, '/ local:', reportsFromLocal.length, ')');
-            console.log('[report-history] currentUser:', currentUser.role, currentUser.companyCode, 'selectedOffice:', selectedOfficeCode);
             
             // 会社フィルタ（システム管理者のみ）
             if (currentUser.role === 'system_admin') {
@@ -711,7 +709,6 @@
             // 事業所でフィルタリング
             if (selectedOfficeCode === 'all_company') {
                 reports = reports.filter(r => r.companyCode === currentUser.companyCode);
-                console.log('[report-history] all_company フィルタ後:', reports.length, '件 (companyCode:', currentUser.companyCode, ')');
             } else if (selectedOfficeCode && selectedOfficeCode !== 'all' && selectedOfficeCode !== '') {
                 reports = reports.filter(r => r.officeCode === selectedOfficeCode);
             }

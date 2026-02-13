@@ -32,13 +32,9 @@
         function isDemoMode() {
           try {
             const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
-            console.log('[isDemoMode] currentUser:', currentUser);
-            console.log('[isDemoMode] companyCode:', currentUser?.companyCode);
             const result = currentUser && currentUser.companyCode === 'TAMJ';
-            console.log('[isDemoMode] result:', result);
             return result;
           } catch (e) { 
-            console.log('[isDemoMode] error:', e);
             return false; 
           }
         }
@@ -96,8 +92,6 @@
 
         async function addItem(item) {
           const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
-          console.log('[addItem] currentUser:', currentUser);
-          console.log('[addItem] isDemoMode():', isDemoMode());
           
           if (!item.itemId) {
             item.itemId = generateItemNumber(item.assignedPartnerId);
@@ -108,14 +102,11 @@
           item.officeCode = item.officeCode || currentUser.officeCode;
           
           if (isDemoMode()) {
-            console.log('[addItem] DEMOモードで保存');
             const items = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
             items.push(item);
             sessionStorage.setItem('demo.items', JSON.stringify(items));
-            console.log('[addItem] 保存後のdemo.items:', sessionStorage.getItem('demo.items'));
             return item;
           }
-          console.log('[addItem] 通常モード（localStorageに保存）');
           const items = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
           items.push(item);
           localStorage.setItem('onetouch.items', JSON.stringify(items));
@@ -1005,12 +996,10 @@
 
         // 業者一覧を読み込む
         function loadPartners() {
-            console.log('[loadPartners] 開始');
             
             try {
                 // 業者ログインの場合
                 if (currentUser.role === 'contractor') {
-                    console.log('[loadPartners] 業者ログイン: 自社のみ表示');
                     const currentContractor = JSON.parse(sessionStorage.getItem('currentContractor'));
                     
                     if (!currentContractor) {
@@ -1022,7 +1011,6 @@
                     select.innerHTML = `<option value="${currentContractor.id}" data-partner-name="${currentContractor.name}" selected>${currentContractor.name}</option>`;
                     select.disabled = true; // 業者は変更できない
                     
-                    console.log('[loadPartners] 業者モード完了:', currentContractor.name);
                     return;
                 }
                 
@@ -1034,7 +1022,6 @@
                 
                 // DEMOモードで業者データが空の場合、デフォルトデータを使用
                 if (partners.length === 0 && currentUser.companyCode === 'TAMJ') {
-                    console.log('[loadPartners] DEMOモード: デフォルト業者データを使用');
                     partners = [
                         {
                             id: 'P001',
@@ -1063,7 +1050,6 @@
                     ];
                 }
                 
-                console.log('[loadPartners] partners総数:', partners.length);
                 
                 // 現在の会社に紐付いている業者のみフィルター
                 const filteredPartners = partners.filter(p => {
@@ -1074,7 +1060,6 @@
                     return (isAssigned || sameCompany) && isActive;
                 });
                 
-                console.log('[loadPartners] フィルタ後の業者数:', filteredPartners.length);
                 
                 // セレクトボックスに追加
                 const select = document.getElementById('itemAssignedPartner');
@@ -1088,7 +1073,6 @@
                     select.appendChild(option);
                 });
                 
-                console.log('[loadPartners] 完了');
             } catch (e) {
                 console.error('[loadPartners] エラー:', e);
             }
@@ -1096,18 +1080,12 @@
 
         // 商品読み込み
         async function loadItems(showResults = false) {
-            console.log('[loadItems] 開始, showResults:', showResults);
-            console.log('[loadItems] isDemoMode:', ItemStorage.isDemoMode());
-            console.log('[loadItems] sessionStorage demo.items:', sessionStorage.getItem('demo.items'));
             
             try {
                 allItems = await ItemStorage.getItems();
-                console.log('[loadItems] 取得した商品数:', allItems.length);
-                console.log('[loadItems] 商品リスト:', allItems);
                 
                 // DEMOモード（TAMJ）で商品が0件の場合、ダミー商品を自動生成
                 if (allItems.length === 0 && currentUser?.companyCode === 'TAMJ') {
-                    console.log('[loadItems] DEMOモード: ダミー商品を自動生成');
                     const demoItems = [
                         {
                             itemId: 'P00125020001',
@@ -1202,18 +1180,14 @@
                     storage.setItem(storageKey, JSON.stringify(demoItems));
                     
                     allItems = demoItems;
-                    console.log('[loadItems] ダミー商品を生成・保存しました:', allItems.length);
                 }
                 
                 allItems.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
                 
-                console.log('[loadItems] updateFilters呼び出し');
                 updateFilters();
                 if (showResults) {
-                    console.log('[loadItems] applyFilters呼び出し（結果表示）');
                     applyFilters();
                 }
-                console.log('[loadItems] 完了');
             } catch (e) {
                 console.error('商品読み込みエラー:', e);
                 alert('商品の読み込みに失敗しました');
@@ -1301,7 +1275,6 @@
             const endIndex = startIndex + itemsPerPage;
             const pageItems = filteredItems.slice(startIndex, endIndex);
 
-            console.log(`[renderItems] ページ ${currentPage}/${totalPages}, 表示: ${startIndex}-${endIndex} / 全${filteredItems.length}件`);
 
             grid.innerHTML = `
             <div class="table-container">
@@ -1503,11 +1476,9 @@
 
         async function saveItem(e) {
             e.preventDefault();
-            console.log('[saveItem] 開始');
 
             // currentUserを取得（スコープ問題対策）
             const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
-            console.log('[saveItem] currentUser:', currentUser);
             
             if (!currentUser) {
                 alert('エラー: ログイン情報が見つかりません');
@@ -1549,7 +1520,6 @@
                 endDate: document.getElementById('itemEndDate').value
             };
             
-            console.log('[saveItem] item:', item);
 
             try {
                 if (currentEditId) {
@@ -1557,7 +1527,6 @@
                     const oldItem = allItems.find(i => i.itemId === currentEditId);
                     
                     if (oldItem && oldItem.assignedPartnerId !== item.assignedPartnerId) {
-                        console.log('[saveItem] 業者変更を検出');
                         
                         // 業者変更履歴を初期化（存在しない場合）
                         if (!item.partnerHistory) {
@@ -1575,7 +1544,6 @@
                             newPartnerName: item.assignedPartnerName
                         });
                         
-                        console.log('[saveItem] 業者変更履歴を追加:', item.partnerHistory);
                     } else {
                         // 業者変更がない場合は既存の履歴を保持
                         item.partnerHistory = oldItem?.partnerHistory || [];
@@ -1586,7 +1554,6 @@
                     item.updatedByRole = currentUser.role;
                     item.updatedAt = new Date().toISOString();
                     
-                    console.log('[saveItem] 更新モード');
                     await ItemStorage.updateItem(item);
                     logItemEvent('update_item', { itemId: item.itemId, itemName: item.name });
                     alert('商品を更新しました');
@@ -1598,18 +1565,13 @@
                     item.updatedAt = new Date().toISOString();
                     item.partnerHistory = []; // 履歴を初期化
                     
-                    console.log('[saveItem] 新規登録モード');
                     await ItemStorage.addItem(item);
                     logItemEvent('add_item', { itemId: item.itemId, itemName: item.name });
-                    console.log('[saveItem] addItem完了');
                     alert('商品を登録しました');
                 }
 
-                console.log('[saveItem] closeModal呼び出し');
                 closeModal();
-                console.log('[saveItem] loadItems呼び出し');
                 await loadItems(true);
-                console.log('[saveItem] 完了');
             } catch (e) {
                 console.error('[saveItem] エラー:', e);
                 alert('エラーが発生しました:\n\n' + e.message + '\n\n' + e.stack);

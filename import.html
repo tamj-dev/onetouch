@@ -601,10 +601,9 @@
           SERVER_AVAILABLE=true;
           var data=await resp.json().catch(function(){return {};});
           AI_AVAILABLE=!!(data.vertexAi);
-          console.log('[API] サーバ接続OK'+(AI_AVAILABLE?' | AI整形: ON':' | AI整形: OFF'));
           return true;
         }
-      }catch(e){console.log('[API] サーバ未接続 → ローカルモードで動作');}
+      }catch(e){/* サーバ未接続 → ローカルモードで動作 */}
       SERVER_AVAILABLE=false;
       AI_AVAILABLE=false;
       return false;
@@ -872,7 +871,6 @@
             if(count>bestCount){bestCount=count;bestCol=ci;}
           }
           if(bestCol>=0 && bestCount>nameNonEmpty){
-            console.log('[mapColumns] name col corrected: '+map.name+' → '+bestCol+' ('+nameNonEmpty+' vs '+bestCount+' filled)');
             // 元のname列をmaker列として記録（メーカー情報）
             map.maker=map.name;
             map.name=bestCol;
@@ -892,7 +890,6 @@
           }
           if(codeCount>=sampleSize2*0.3){
             map.model=ci2;
-            console.log('[mapColumns] model col detected from data: col '+ci2);
             break;
           }
         }
@@ -1157,7 +1154,6 @@
           status: 'pending'
         };
         await DocumentStorage.addDocument(doc);
-        console.log('[Document] 保存完了:', doc.docId);
       } catch (e) {
         console.error('[Document] 保存エラー:', e);
       }
@@ -1196,7 +1192,6 @@
           }
           // サーバAPI失敗 → PDFのみローカルテキスト抽出にフォールバック
           if(isPDF){
-            console.log('[API] サーバ抽出失敗 → ローカルPDFテキスト抽出へ');
           }else{
             // 画像はサーバOCR必須 → エラー表示
             showCard(fid,file.name,file.size,'error',null,'サーバでの画像読取りに失敗しました。再試行するか、CSV/Excelでアップロードしてください。');
@@ -1418,7 +1413,6 @@
         if(!bestRows) bestRows=rows;
       }
       if(!bestRows||bestRows.length<2)throw new Error('データが見つかりません');
-      console.log('[ExcelParse] bestSheet='+bestSheet+', score='+bestScore);
       return bestRows;
     }
 
@@ -1428,7 +1422,6 @@
     function detectHeaderRow(rawRows){
       var pick=pickHeaderRow(rawRows, 45);
       if(pick.idx!==-1){
-        console.log('[HeaderDetect] pickHeaderRow: row='+pick.idx+', score='+pick.score);
         return {headerIdx:pick.idx, score:pick.score};
       }
       // fallback: 旧ロジック（HDR_WORDS + ボーナス/ペナルティ）
@@ -1465,7 +1458,6 @@
         if(score>bestScore){bestScore=score;bestIdx=i;}
       }
       if(bestScore<2)bestIdx=0;
-      console.log('[HeaderDetect] fallback: row='+bestIdx+', score='+bestScore);
       return {headerIdx:bestIdx, score:bestScore};
     }
 
@@ -2239,7 +2231,6 @@
           localStorage.setItem('items', JSON.stringify(existingItems));
         }
 
-        console.log('[Import] 新規:' + newItems.length + '件, 更新:' + updateItems.length + '件');
 
         // ========================================================================
         //  新システム: LineItems保存（新規分のみ）
@@ -2248,7 +2239,6 @@
           await DocumentStorage.addLineItems(newItems);
         }
         
-        console.log('[LineItems] 保存完了:', newItems.length, '件');
 
         var totalProcessed = newItems.length + updateItems.length;
         var excluded=p.rows.length-totalProcessed;

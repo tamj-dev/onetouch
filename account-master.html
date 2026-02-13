@@ -842,11 +842,9 @@
             if (currentUser.role === 'company_admin' || currentUser.role === 'system_admin') {
                 // 本社管理者・システム管理者は「会社管理者」を作成可能
                 companyAdminOption.classList.remove('hidden');
-                console.log('[applyRoleRestrictions] 会社管理者ロールを表示');
             } else {
                 // 事業所管理者は「会社管理者」を作成できない
                 companyAdminOption.classList.add('hidden');
-                console.log('[applyRoleRestrictions] 会社管理者ロールを非表示');
             }
         }
 

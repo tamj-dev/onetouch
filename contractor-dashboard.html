@@ -544,20 +544,16 @@
             });
             
             allReports = merged;
-            console.log('[loadReports] 全通報数:', allReports.length, '(session:', reportsFromSession.length, '/ local:', reportsFromLocal.length, ')');
-            console.log('[loadReports] 現在の業者ID:', currentContractor.id || currentContractor.partnerCode);
             
             // 現在の業者に割り当てられた通報のみフィルター
             allReports = allReports.filter(report => {
                 const match = report.assignedPartnerId === currentContractor.id ||
                               report.assignedPartnerId === currentContractor.partnerCode;
                 if (match) {
-                    console.log('[loadReports] マッチ:', report.id, report.category);
                 }
                 return match;
             });
             
-            console.log('[loadReports] フィルタ後:', allReports.length);
             
             updateStatusCounts();
             renderRequests();
@@ -577,7 +573,6 @@
 
         // フィルター処理
         function handleFilterByStatus(status, element) {
-            console.log('フィルター:', status);
             currentFilter = status;
             
             // アクティブタブ切り替え
@@ -641,7 +636,6 @@
 
         // ログアウト
         function handleLogout() {
-            console.log('ログアウトボタンが押されました');
             if (confirm('ログアウトしますか？')) {
                 // 全てのセッション情報をクリア
                 sessionStorage.removeItem('currentContractor');
@@ -956,7 +950,6 @@
                 
                 if (updated) {
                     storage.setItem('onetouch.reports', JSON.stringify(allStoredReports));
-                    console.log('[saveReports]', storageName, 'に保存完了');
                 }
             });
         }

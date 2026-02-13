@@ -496,16 +496,10 @@ const UnifiedHeader = {
         const menuSub = document.getElementById('uhMenuSub');
 
         if (avatar) {
-            // 会社ロゴがあればアバターに表示
-            const logoUrl = this._getCompanyLogo(user);
-            if (logoUrl) {
-                avatar.style.background = 'white';
-                avatar.style.boxShadow = '0 0 0 1px #e0e0e0';
-                avatar.style.padding = '3px';
-                avatar.innerHTML = `<img src="${logoUrl}" style="width:100%;height:100%;object-fit:contain;border-radius:50%;">`;
-            } else {
-                avatar.textContent = name.charAt(0);
-            }
+            // アプリアイコンを表示
+            avatar.style.background = 'white';
+            avatar.style.padding = '2px';
+            avatar.innerHTML = '<img src="icon-192.png" style="width:100%;height:100%;object-fit:contain;border-radius:50%;" alt="">';
         }
         if (userName) userName.textContent = name;
         if (menuName) menuName.textContent = name;

@@ -65,7 +65,6 @@ function showDemoWarning(action) {
 // デモモード用のストレージ保存（sessionStorageに保存）
 function demoSaveToLocalStorage(key, value) {
     if (isDemoMode()) {
-        console.log('[DEMO] sessionStorageに保存:', key);
         sessionStorage.setItem(key, value);
         return true;
     }
@@ -78,7 +77,6 @@ function demoSaveToLocalStorage(key, value) {
 // デモモード用のストレージ読み込み
 function demoGetFromLocalStorage(key) {
     if (isDemoMode()) {
-        console.log('[DEMO] sessionStorageから取得:', key);
         return sessionStorage.getItem(key);
     }
     
@@ -89,7 +87,6 @@ function demoGetFromLocalStorage(key) {
 // デモモード用の削除処理（実際には削除しない）
 function demoDeleteFromLocalStorage(key) {
     if (isDemoMode()) {
-        console.log('[DEMO] 削除をスキップ:', key);
         showDemoWarning('delete');
         return false;
     }

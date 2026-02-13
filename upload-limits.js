@@ -44,7 +44,6 @@ function incrementUploadCount() {
         demoSaveToLocalStorage('limit.uploadCountToday', String(currentCount + 1));
         demoSaveToLocalStorage('limit.uploadDate', today);
         
-        console.log('[UploadLimits] アップロード回数:', currentCount + 1);
     } catch (e) {
         console.error('[UploadLimits] incrementUploadCount error:', e);
     }
@@ -143,4 +142,3 @@ window.UploadLimits = {
     LIMITS
 };
 
-console.log('[UploadLimits] 初期化完了');

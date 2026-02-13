@@ -345,10 +345,8 @@
           return (prefix || '') + Math.random().toString(36).substr(2, 9).toUpperCase();
         },
         logEvent: function(event, data) {
-          console.log('Event:', event, data);
         },
         sendLocalNotify: function(title, body, options) {
-          console.log('Notification:', title, body, options);
         }
       };
     }
@@ -394,7 +392,6 @@
     
     // 商品一覧を読み込む
     function loadItems() {
-      console.log('[loadItems] 商品読み込み開始');
       
       try {
         const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
@@ -406,7 +403,6 @@
         
         // DEMOモードで商品が0件の場合、ダミー商品を自動生成
         if (items.length === 0 && isDemoMode) {
-          console.log('[loadItems] DEMOモード: ダミー商品を自動生成');
           items = [
             { itemId:'ITEM-DEMO-001', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'エアコン 1号機', maker:'ダイキン', model:'AN22XRS-W', category:'空調', assignedPartnerId:'P001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:150000, stock:1, description:'2F 会議室に設置', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
             { itemId:'ITEM-DEMO-002', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'給湯器 A', maker:'リンナイ', model:'RUX-A1615W-E', category:'給湯', assignedPartnerId:'P001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:80000, stock:1, description:'1F 給湯室', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
@@ -415,10 +411,8 @@
             { itemId:'ITEM-DEMO-005', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'エレベーター', maker:'三菱電機', model:'AXIEZ', category:'設備', assignedPartnerId:'P003', assignedPartnerName:'日本電気工事', unit:'基', price:5000000, stock:1, description:'本館', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() }
           ];
           storage.setItem(storageKey, JSON.stringify(items));
-          console.log('[loadItems] ダミー商品を生成・保存:', items.length, '件');
         }
         
-        console.log('[loadItems] 商品数:', items.length);
         
         // 現在のユーザーの会社・事業所に紐付く商品のみフィルター
         items = items.filter(item => {
@@ -426,7 +420,6 @@
                  (item.officeCode === currentUser.officeCode || !item.officeCode);
         });
         
-        console.log('[loadItems] フィルタ後の商品数:', items.length);
         
         // セレクトボックスに追加
         const select = document.getElementById('formTitleInput');
@@ -455,12 +448,9 @@
             document.getElementById('selectedPartnerId').value = selected.dataset.partnerId;
             document.getElementById('selectedPartnerName').value = selected.dataset.partnerName;
             
-            console.log('[loadItems] 商品選択:', selected.textContent);
-            console.log('[loadItems] 業者:', selected.dataset.partnerName);
           }
         };
         
-        console.log('[loadItems] 完了');
       } catch (e) {
         console.error('[loadItems] エラー:', e);
       }
@@ -643,7 +633,6 @@
             currentOfficeName = currentAccount.officeName || currentOfficeName;
           }
         } catch (e) {
-          console.log('ユーザー情報取得エラー:', e);
         }
       }
       
@@ -667,13 +656,7 @@
       var assignedPartnerId = data.assignedPartnerId || null;
       var assignedPartnerName = data.assignedPartnerName || null;
       
-      console.log('[saveReport] 商品から業者情報を取得');
-      console.log('[saveReport] assignedPartnerId:', assignedPartnerId);
-      console.log('[saveReport] assignedPartnerName:', assignedPartnerName);
       
-      console.log('[saveReport] currentUser:', currentUser);
-      console.log('[saveReport] userId保存値:', currentUser?.userId);
-      console.log('[saveReport] reporter保存値:', currentUser?.name);
       
       reports.unshift({
         id: reportId,
@@ -697,7 +680,6 @@
         ...data
       });
       demoSaveToLocalStorage('onetouch.reports',JSON.stringify(reports));
-      console.log('[saveReport] 保存完了。通報ID:', reportId);
       ONE.logEvent('report_submit',data.category+' / '+data.type);
     }
 

@@ -120,7 +120,6 @@ async function initDemoItems() {
   const demoItems = generateDemoItems();
   sessionStorage.setItem('demo.items', JSON.stringify(demoItems));
   
-  console.log('[DEMO] サンプル商品100件を生成しました');
 }
 
 // ============================================
@@ -181,10 +180,8 @@ async function getItems() {
 
 // 商品登録
 async function addItem(item) {
-  console.log('[addItem] 開始:', item);
   
   const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
-  console.log('[addItem] currentUser:', currentUser);
   
   // 自動生成
   if (!item.itemId) {
@@ -193,28 +190,23 @@ async function addItem(item) {
     item.itemId = `ITEM-${dateStr}-${random}`;
   }
   
-  console.log('[addItem] itemId:', item.itemId);
   
   item.createdAt = item.createdAt || new Date().toISOString();
   item.updatedAt = new Date().toISOString();
   item.companyCode = item.companyCode || currentUser.companyCode;
   item.officeCode = item.officeCode || currentUser.officeCode;
   
-  console.log('[addItem] 最終データ:', item);
-  console.log('[addItem] isDemoMode():', isDemoMode());
   
   // DEMOモード
   if (isDemoMode()) {
     const items = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
     items.push(item);
     sessionStorage.setItem('demo.items', JSON.stringify(items));
-    console.log('[addItem] DEMOモード保存完了');
     return item;
   }
   
   // 本番モード（IndexedDB）
   try {
-    console.log('[addItem] IndexedDB保存開始');
     const database = await openDB();
     const transaction = database.transaction(['items'], 'readwrite');
     const store = transaction.objectStore('items');
@@ -222,7 +214,6 @@ async function addItem(item) {
     await new Promise((resolve, reject) => {
       const request = store.add(item);
       request.onsuccess = () => {
-        console.log('[addItem] IndexedDB保存成功');
         resolve();
       };
       request.onerror = () => {
