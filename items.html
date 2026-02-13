@@ -916,14 +916,36 @@
                         <label class="form-label">カテゴリー（任意）</label>
                         <select class="form-input" id="itemCategory">
                             <option value="">未設定</option>
-                            <option value="空調">空調</option>
-                            <option value="給湯">給湯</option>
-                            <option value="電気">電気</option>
+                            <option value="家具/什器">家具/什器</option>
+                            <option value="家電">家電</option>
+                            <option value="インターネット">インターネット</option>
+                            <option value="厨房/食器">厨房/食器</option>
+                            <option value="浴室">浴室</option>
+                            <option value="介護医療用品">介護医療用品</option>
                             <option value="水道">水道</option>
                             <option value="ガス">ガス</option>
-                            <option value="設備">設備</option>
+                            <option value="エレベーター/昇降機">エレベーター/昇降機</option>
                             <option value="その他">その他</option>
                         </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">設置場所</label>
+                    <div style="display:flex;gap:8px;">
+                        <select class="form-select" id="itemFloor" style="flex:0 0 120px;">
+                            <option value="">フロア</option>
+                            <option value="B1F">B1F</option>
+                            <option value="1F">1F</option>
+                            <option value="2F">2F</option>
+                            <option value="3F">3F</option>
+                            <option value="4F">4F</option>
+                            <option value="5F">5F</option>
+                            <option value="屋上">屋上</option>
+                            <option value="共用部">共用部</option>
+                            <option value="外構">外構</option>
+                        </select>
+                        <input type="text" class="form-input" id="itemLocation" placeholder="例：居室203、会議室A" style="flex:1;">
                     </div>
                 </div>
 
@@ -1094,13 +1116,15 @@
                             name: 'エアコン 1号機',
                             maker: 'ダイキン',
                             model: 'AN22XRS-W',
-                            category: '空調',
+                            category: '家電',
                             assignedPartnerId: 'PN001',
                             assignedPartnerName: '東京設備工業株式会社',
                             unit: '台',
                             price: 150000,
                             stock: 1,
                             description: '2F 会議室に設置',
+                            floor: '2F',
+                            location: '会議室',
                             createdAt: new Date().toISOString(),
                             updatedAt: new Date().toISOString()
                         },
@@ -1111,13 +1135,15 @@
                             name: '給湯器 A',
                             maker: 'リンナイ',
                             model: 'RUX-A1615W-E',
-                            category: '給湯',
+                            category: '水道',
                             assignedPartnerId: 'PN001',
                             assignedPartnerName: '東京設備工業株式会社',
                             unit: '台',
                             price: 80000,
                             stock: 1,
                             description: '1F 給湯室',
+                            floor: '1F',
+                            location: '給湯室',
                             createdAt: new Date().toISOString(),
                             updatedAt: new Date().toISOString()
                         },
@@ -1128,13 +1154,15 @@
                             name: '照明器具 LED-01',
                             maker: 'パナソニック',
                             model: 'LGB51210',
-                            category: '電気',
+                            category: '家電',
                             assignedPartnerId: 'PN003',
                             assignedPartnerName: '日本電気工事',
                             unit: '個',
                             price: 12000,
                             stock: 10,
                             description: '各フロア共通',
+                            floor: '共用部',
+                            location: '各フロア',
                             createdAt: new Date().toISOString(),
                             updatedAt: new Date().toISOString()
                         },
@@ -1152,6 +1180,8 @@
                             price: 180000,
                             stock: 1,
                             description: '1F 男子トイレ',
+                            floor: '1F',
+                            location: '男子トイレ',
                             createdAt: new Date().toISOString(),
                             updatedAt: new Date().toISOString()
                         },
@@ -1162,7 +1192,7 @@
                             name: 'エレベーター',
                             maker: '三菱電機',
                             model: 'NEXIEZ-MR',
-                            category: '設備',
+                            category: 'エレベーター/昇降機',
                             assignedPartnerId: 'PN003',
                             assignedPartnerName: '日本電気工事',
                             unit: '台',
@@ -1231,7 +1261,9 @@
                     normalizeSearch(item.model).includes(searchQuery) ||
                     normalizeSearch(item.maker).includes(searchQuery) ||
                     normalizeSearch(item.itemId).includes(searchQuery) ||
-                    normalizeSearch(item.category).includes(searchQuery);
+                    normalizeSearch(item.category).includes(searchQuery) ||
+                    normalizeSearch(item.floor).includes(searchQuery) ||
+                    normalizeSearch(item.location).includes(searchQuery);
 
                 // 担当業者
                 const matchPartner = !partnerFilter || item.assignedPartnerName === partnerFilter;
@@ -1296,6 +1328,7 @@
                             <th>メーカー</th>
                             <th>型番</th>
                             <th>担当業者</th>
+                            <th>設置場所</th>
                             <th>在庫</th>
                             <th>単価</th>
                             <th>編集</th>
@@ -1309,6 +1342,7 @@
                             <td>${item.maker || '-'}</td>
                             <td>${item.model || '-'}</td>
                             <td>${item.assignedPartnerName ? `<span class="badge-partner" title="${item.assignedPartnerName}" style="${item.endDate ? 'opacity:0.5;' : ''}">${item.assignedPartnerName}</span>` : '-'}</td>
+                            <td style="font-size:12px;color:#666;">${[item.floor, item.location].filter(Boolean).join(' ') || '-'}</td>
                             <td>${item.stock || 0} ${item.unit || '個'}</td>
                             <td class="col-price">¥${(item.price || 0).toLocaleString()}</td>
                             <td class="col-actions">
@@ -1456,6 +1490,8 @@
             document.getElementById('itemPrice').value = item.price || 0;
             document.getElementById('itemStock').value = item.stock || 0;
             document.getElementById('itemDescription').value = item.description || '';
+            document.getElementById('itemFloor').value = item.floor || '';
+            document.getElementById('itemLocation').value = item.location || '';
             document.getElementById('itemEndDate').value = item.endDate || '';
 
             document.getElementById('itemModal').classList.add('show');
@@ -1527,6 +1563,8 @@
                 price: parseFloat(document.getElementById('itemPrice').value) || 0,
                 stock: parseFloat(document.getElementById('itemStock').value) || 0,
                 description: document.getElementById('itemDescription').value,
+                floor: document.getElementById('itemFloor').value,
+                location: document.getElementById('itemLocation').value,
                 endDate: document.getElementById('itemEndDate').value
             };
             
@@ -1593,7 +1631,7 @@
         function exportItems() {
 
             const csv = [
-                ['商品No.', '商品名', '担当業者', 'メーカー', '型番', 'カテゴリー', '単価', '在庫', '単位', '備考', '終了日', '登録日', '更新日'].join(','),
+                ['商品No.', '商品名', '担当業者', 'メーカー', '型番', 'カテゴリー', 'フロア', '設置場所', '単価', '在庫', '単位', '備考', '終了日', '登録日', '更新日'].join(','),
                 ...allItems.map(item => [
                     item.itemId || '',
                     item.name || '',
@@ -1601,6 +1639,8 @@
                     item.maker || '',
                     item.model || '',
                     item.category || '',
+                    item.floor || '',
+                    item.location || '',
                     item.price || 0,
                     item.stock || 0,
                     item.unit || '個',

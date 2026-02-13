@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-  <title>データインポート | マスタ管理</title>
+  <title>データインポート | ワンタッチ管理</title>
   <meta name="theme-color" content="#1a1a1a">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="icon-192.png">
@@ -118,7 +118,6 @@
 
     window.ItemStorage = { isDemoMode, initDemoItems, getItems, addItem, updateItem, deleteItem };
   </script>
-  <script src="upload-limits.js"></script>
   <script src="csv-utils.js"></script>
   <script src="document-storage.js"></script>
   <!-- Tesseract.js 削除: OCR処理はサーバ側 GCP Vision API で実行 -->
@@ -361,6 +360,7 @@
     }
   </style>
     <script src="demo-mode.js"></script>
+    <script src="upload-limits.js"></script>
     <script src="unified-header.js"></script>
 </head>
 <body>
@@ -727,6 +727,8 @@
       {key:'maker',label:'メーカー',req:false,p:['メーカー','製造元','maker','manufacturer','ブランド','メーカ']},
       {key:'model',label:'型番',req:false,p:['型番','品番','model','code','jan','sku','商品コード','型式','規格']},
       {key:'category',label:'カテゴリ',req:false,p:['カテゴリ','分類','category','種別','区分']},
+      {key:'floor',label:'フロア',req:false,p:['フロア','階','floor','階数','F']},
+      {key:'location',label:'設置場所',req:false,p:['設置場所','場所','location','設置先','部屋','room','居室']},
       {key:'notes',label:'備考',req:false,p:['備考','摘要','note','notes','remark','remarks','コメント','注記']},
     ];
 
@@ -2224,6 +2226,8 @@
             price: map.unitPrice!==undefined?parseNumber(row[map.unitPrice]):0,
             unit: '個',
             category: map.category!==undefined?String(row[map.category]||'').trim():'',
+            floor: map.floor!==undefined?String(row[map.floor]||'').trim():'',
+            location: map.location!==undefined?String(row[map.location]||'').trim():'',
             assignedPartnerId: partnerId,
             assignedPartnerName: partnerName,
             status: 'pending'

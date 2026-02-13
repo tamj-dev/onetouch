@@ -130,6 +130,8 @@ async function confirmLineItems(docId) {
       maker: line.maker || '',
       model: line.model || '',
       category: line.category || '',
+      floor: line.floor || '',
+      location: line.location || '',
       unit: line.unit || '個',
       price: line.price || line.unitPrice || 0,
       stock: line.quantity || line.qty || 1,

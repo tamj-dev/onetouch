@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>対応依頼一覧 - 業者用画面</title>
+    <title>対応依頼一覧 | ワンタッチ管理</title>
     <script src="demo-mode.js"></script>
     <script src="unified-header.js"></script>
     <style>
@@ -371,6 +371,23 @@
                 transform: translateX(-50%) translateY(20px);
                 opacity: 0;
             }
+        }
+        /* モバイル対応 */
+        @media (max-width: 768px) {
+            .container { padding: 12px; }
+            .section-title { font-size: 14px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .stat-card { padding: 12px; }
+            .stat-number { font-size: 20px; }
+            .report-card { padding: 14px; }
+            .report-header { flex-direction: column; gap: 8px; }
+            .report-title { font-size: 14px; }
+            .report-actions { flex-wrap: wrap; }
+            .report-actions button { font-size: 12px; padding: 6px 10px; }
+            .detail-grid { grid-template-columns: 1fr; }
+            .modal-content { margin: 10px; padding: 20px; max-height: 90vh; }
+            .comment-input { font-size: 14px; }
+            .timeline-date { font-size: 10px; min-width: 40px; }
         }
     </style>
     <meta name="theme-color" content="#1a1a1a">

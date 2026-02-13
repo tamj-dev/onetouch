@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#1a1a1a">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="icon-192.png">
-  <title>通報 - ワンタッチ管理</title>
+  <title>通報 | ワンタッチ管理</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="demo-mode.js"></script>
   <script src="unified-header.js"></script>
@@ -171,6 +171,12 @@
       <p>設備のトラブルや問題を報告</p>
     </button>
     <a href="report-help.html" style="font-size: 13px; color: var(--text-muted); text-decoration: none; margin-top: 4px;">通報の仕方がわからない方はこちら</a>
+    
+    <!-- よく通報する設備（クイックアクセス） -->
+    <div id="quickEquipment" style="display:none;margin-top:16px;width:100%;max-width:320px;">
+      <div style="font-size:12px;color:#999;margin-bottom:8px;">よく通報する設備</div>
+      <div id="quickEquipmentList" style="display:flex;flex-direction:column;gap:6px;"></div>
+    </div>
   </div>
 
   <!-- 通報履歴 -->
@@ -402,11 +408,11 @@
         
         if (items.length === 0 && isDemoMode) {
           items = [
-            { itemId:'ITEM-DEMO-001', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'エアコン 1号機', maker:'ダイキン', model:'AN22XRS-W', category:'空調', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:150000, stock:1, description:'2F 会議室に設置', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
-            { itemId:'ITEM-DEMO-002', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'給湯器 A', maker:'リンナイ', model:'RUX-A1615W-E', category:'給湯', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:80000, stock:1, description:'1F 給湯室', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
-            { itemId:'ITEM-DEMO-003', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'照明器具 LED-01', maker:'パナソニック', model:'LGB51210', category:'電気', assignedPartnerId:'PN003', assignedPartnerName:'日本電気工事', unit:'個', price:12000, stock:10, description:'各フロア共通', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
-            { itemId:'ITEM-DEMO-004', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'トイレ 1F', maker:'TOTO', model:'CES9788F', category:'水道', assignedPartnerId:'PN002', assignedPartnerName:'関東水道サービス', unit:'台', price:180000, stock:1, description:'1F 男子トイレ', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
-            { itemId:'ITEM-DEMO-005', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'エレベーター', maker:'三菱電機', model:'AXIEZ', category:'設備', assignedPartnerId:'PN003', assignedPartnerName:'日本電気工事', unit:'基', price:5000000, stock:1, description:'本館', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() }
+            { itemId:'ITEM-DEMO-001', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'エアコン 1号機', maker:'ダイキン', model:'AN22XRS-W', category:'家電', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:150000, stock:1, description:'2F 会議室に設置', floor:'2F', location:'会議室', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            { itemId:'ITEM-DEMO-002', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'給湯器 A', maker:'リンナイ', model:'RUX-A1615W-E', category:'水道', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:80000, stock:1, description:'1F 給湯室', floor:'1F', location:'給湯室', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            { itemId:'ITEM-DEMO-003', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'照明器具 LED-01', maker:'パナソニック', model:'LGB51210', category:'家電', assignedPartnerId:'PN003', assignedPartnerName:'日本電気工事', unit:'個', price:12000, stock:10, description:'各フロア共通', floor:'共用部', location:'各フロア', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            { itemId:'ITEM-DEMO-004', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'トイレ 1F', maker:'TOTO', model:'CES9788F', category:'水道', assignedPartnerId:'PN002', assignedPartnerName:'関東水道サービス', unit:'台', price:180000, stock:1, description:'1F 男子トイレ', floor:'1F', location:'男子トイレ', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            { itemId:'ITEM-DEMO-005', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'エレベーター', maker:'三菱電機', model:'AXIEZ', category:'エレベーター/昇降機', assignedPartnerId:'PN003', assignedPartnerName:'日本電気工事', unit:'基', price:5000000, stock:1, description:'本館', floor:'共用部', location:'本館', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() }
           ];
           storage.setItem(storageKey, JSON.stringify(items));
         }
@@ -505,15 +511,17 @@
       var shown = filtered.slice(0, 50);
       var h = '';
       shown.forEach(function(item) {
-        var desc = item.description ? ' - ' + item.description : '';
+        var locParts = [item.floor, item.location].filter(Boolean);
+        var locStr = locParts.length > 0 ? locParts.join(' ') : '';
         var maker = item.maker ? '<span style="color:#888;font-size:12px;"> ' + item.maker + '</span>' : '';
         var cat = item.category ? '<span style="display:inline-block;padding:1px 6px;background:#f0f0f0;border-radius:4px;font-size:11px;color:#666;margin-left:6px;">' + item.category + '</span>' : '';
+        var locBadge = locStr ? '<span style="display:inline-block;padding:1px 6px;background:#e8f5e9;border-radius:4px;font-size:11px;color:#2e7d32;margin-left:4px;">' + locStr + '</span>' : '';
         h += '<div class="suggest-item" onclick="selectEquipment(\'' + item.itemId + '\')" '
           + 'style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f5f5f5;transition:background .1s;"'
           + ' onmouseover="this.style.background=\'#f8f9fa\'" onmouseout="this.style.background=\'white\'">'
-          + '<div style="font-size:14px;font-weight:500;">' + item.name + maker + cat + '</div>';
-        if (desc) h += '<div style="font-size:12px;color:#999;margin-top:2px;">' + desc + '</div>';
-        h += '</div>';
+          + '<div style="font-size:14px;font-weight:500;">' + item.name + maker + '</div>'
+          + '<div style="margin-top:2px;">' + cat + locBadge + '</div>'
+          + '</div>';
       });
       if (filtered.length > 50) {
         h += '<div style="padding:10px;color:#888;font-size:12px;text-align:center;">他 ' + (filtered.length - 50) + ' 件（検索で絞り込んでください）</div>';
@@ -540,8 +548,16 @@
       var selEl = document.getElementById('selectedEquipment');
       selEl.style.display = 'block';
       document.getElementById('selectedEquipmentName').textContent = item.name;
-      var detail = [item.maker, item.model, item.category, item.description].filter(Boolean).join(' / ');
+      var detail = [item.maker, item.model, item.category].filter(Boolean).join(' / ');
+      var locParts = [item.floor, item.location].filter(Boolean);
+      if (locParts.length > 0) detail += (detail ? ' — ' : '') + locParts.join(' ');
       document.getElementById('selectedEquipmentDetail').textContent = detail;
+      
+      // 場所を自動入力（空欄の場合のみ）
+      var locInput = document.getElementById('formLoc');
+      if (!locInput.value && locParts.length > 0) {
+        locInput.value = locParts.join(' ');
+      }
     }
 
     function clearEquipmentSelection() {
@@ -959,6 +975,48 @@
     }
     
     renderHistory();
+    buildQuickEquipment();
+    
+    // よく通報する設備を構築（通報履歴から集計）
+    function buildQuickEquipment() {
+      try {
+        var reports = getAllReports();
+        if (reports.length === 0) return;
+        
+        // 設備IDごとの通報回数を集計
+        var counts = {};
+        reports.forEach(function(r) {
+          if (r.title && r.itemId) {
+            if (!counts[r.itemId]) counts[r.itemId] = { name: r.title, itemId: r.itemId, count: 0 };
+            counts[r.itemId].count++;
+          }
+        });
+        
+        // 通報回数が多い順に上位3件
+        var top = Object.values(counts).sort(function(a, b) { return b.count - a.count; }).slice(0, 3);
+        if (top.length === 0) return;
+        
+        var container = document.getElementById('quickEquipment');
+        var list = document.getElementById('quickEquipmentList');
+        container.style.display = 'block';
+        
+        list.innerHTML = top.map(function(item) {
+          return '<button onclick="quickReport(\'' + item.itemId + '\')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:white;border:1px solid #e5e7eb;border-radius:8px;cursor:pointer;text-align:left;transition:border-color .15s;"'
+            + ' onmouseover="this.style.borderColor=\'#999\'" onmouseout="this.style.borderColor=\'#e5e7eb\'">'
+            + '<span style="font-size:14px;font-weight:500;color:#333;">' + item.name + '</span>'
+            + '<span style="font-size:11px;color:#999;">' + item.count + '回</span>'
+            + '</button>';
+        }).join('');
+      } catch(e) {}
+    }
+    
+    // クイック通報：設備を事前選択した状態でフォームを開く
+    function quickReport(itemId) {
+      openForm('report');
+      setTimeout(function() {
+        selectEquipment(itemId);
+      }, 100);
+    }
     
     // 履歴カードから詳細表示
     function showHistoryDetail(reportId) {
@@ -1075,20 +1133,6 @@
           if (!isComment) content += '<div class="timeline-status">' + esc(entry.status || '') + '</div>';
           if (entry.comment) content += '<div class="timeline-comment">' + esc(entry.comment) + '</div>';
           content += '</div></div>';
-        });
-        content += '</div>';
-        content += '</div>';
-      } else if (r.contractorComments && r.contractorComments.length > 0) {
-        // statusHistoryがない古いデータ用のフォールバック
-        content += '<div class="detail-row">';
-        content += '<div class="detail-label">業者コメント</div>';
-        content += '<div class="detail-value">';
-        r.contractorComments.forEach(function(comment) {
-          var commentTime = new Date(comment.timestamp).toLocaleString('ja-JP');
-          content += '<div style="background: #fafafa; padding: 12px; border-radius: 8px; margin-bottom: 8px;">';
-          content += '<div style="font-size: 12px; color: #888; margin-bottom: 4px;">' + commentTime + '</div>';
-          content += '<div style="font-size: 14px;">' + esc(comment.text) + '</div>';
-          content += '</div>';
         });
         content += '</div>';
         content += '</div>';
