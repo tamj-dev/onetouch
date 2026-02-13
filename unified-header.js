@@ -439,16 +439,25 @@ const UnifiedHeader = {
                 <h2>パスワード変更</h2>
                 <div class="uh-pw-group">
                     <label class="uh-pw-label">現在のパスワード</label>
-                    <input type="password" class="uh-pw-input" id="uhPwCurrent">
+                    <div style="position:relative;">
+                        <input type="password" class="uh-pw-input" id="uhPwCurrent" style="padding-right:40px;">
+                        <button type="button" onclick="UnifiedHeader._togglePwVis('uhPwCurrent')" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#888;font-size:13px;padding:4px;">表示</button>
+                    </div>
                 </div>
                 <div class="uh-pw-group">
                     <label class="uh-pw-label">新しいパスワード</label>
-                    <input type="password" class="uh-pw-input" id="uhPwNew">
+                    <div style="position:relative;">
+                        <input type="password" class="uh-pw-input" id="uhPwNew" style="padding-right:40px;">
+                        <button type="button" onclick="UnifiedHeader._togglePwVis('uhPwNew')" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#888;font-size:13px;padding:4px;">表示</button>
+                    </div>
                     <div class="uh-pw-hint">※ 6文字以上で入力してください</div>
                 </div>
                 <div class="uh-pw-group">
                     <label class="uh-pw-label">新しいパスワード（確認）</label>
-                    <input type="password" class="uh-pw-input" id="uhPwConfirm">
+                    <div style="position:relative;">
+                        <input type="password" class="uh-pw-input" id="uhPwConfirm" style="padding-right:40px;">
+                        <button type="button" onclick="UnifiedHeader._togglePwVis('uhPwConfirm')" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#888;font-size:13px;padding:4px;">表示</button>
+                    </div>
                 </div>
                 <div class="uh-pw-actions">
                     <button class="uh-pw-cancel" id="uhPwCancel">キャンセル</button>
@@ -980,6 +989,19 @@ const UnifiedHeader = {
         } catch(e) { console.error('監査ログエラー:', e); }
     },
 
+    _togglePwVis(fieldId) {
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+        const btn = field.parentElement.querySelector('button');
+        if (field.type === 'password') {
+            field.type = 'text';
+            if (btn) btn.textContent = '隠す';
+        } else {
+            field.type = 'password';
+            if (btn) btn.textContent = '表示';
+        }
+    },
+
     _changePassword() {
         const user = this._getUser();
         if (!user) { alert('ユーザー情報が見つかりません。'); return; }
@@ -994,21 +1016,46 @@ const UnifiedHeader = {
         if (user.password !== current) { alert('現在のパスワードが正しくありません。'); return; }
 
         try {
-            const isDemoMode = user.companyCode === 'TAMJ';
+            const isDemoMode = user.companyCode === 'TAMJ' || !!user.isDemoMode;
             if (isDemoMode) {
                 user.password = newPw;
                 user.isFirstLogin = false;
                 sessionStorage.setItem('currentUser', JSON.stringify(user));
+                // 業者の場合はcurrentContractorも更新
+                if (user.role === 'contractor') {
+                    try {
+                        const contractor = JSON.parse(sessionStorage.getItem('currentContractor'));
+                        if (contractor) {
+                            contractor.password = newPw;
+                            sessionStorage.setItem('currentContractor', JSON.stringify(contractor));
+                        }
+                    } catch(e) {}
+                }
                 alert('パスワードを変更しました。\n※ DEMOモードのため、ログアウト後は元に戻ります。');
                 this._logAudit('password_change', { userId: user.id || user.userId });
             } else {
-                let accounts = JSON.parse(localStorage.getItem('accounts') || '[]');
-                const idx = accounts.findIndex(a => (a.userId || a.id) === (user.userId || user.id));
-                if (idx !== -1) {
-                    accounts[idx].password = newPw;
-                    accounts[idx].isFirstLogin = false;
-                    accounts[idx].passwordChangedAt = new Date().toISOString();
-                    localStorage.setItem('accounts', JSON.stringify(accounts));
+                // 業者の場合はpartnersから検索
+                let updated = false;
+                if (user.role === 'contractor') {
+                    let partners = JSON.parse(localStorage.getItem('partners') || '[]');
+                    const pidx = partners.findIndex(p => p.loginId === (user.id || user.userId));
+                    if (pidx !== -1) {
+                        partners[pidx].password = newPw;
+                        localStorage.setItem('partners', JSON.stringify(partners));
+                        updated = true;
+                    }
+                } else {
+                    let accounts = JSON.parse(localStorage.getItem('accounts') || '[]');
+                    const idx = accounts.findIndex(a => (a.userId || a.id) === (user.userId || user.id));
+                    if (idx !== -1) {
+                        accounts[idx].password = newPw;
+                        accounts[idx].isFirstLogin = false;
+                        accounts[idx].passwordChangedAt = new Date().toISOString();
+                        localStorage.setItem('accounts', JSON.stringify(accounts));
+                        updated = true;
+                    }
+                }
+                if (updated) {
                     user.password = newPw;
                     user.isFirstLogin = false;
                     sessionStorage.setItem('currentUser', JSON.stringify(user));

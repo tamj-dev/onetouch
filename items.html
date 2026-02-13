@@ -795,7 +795,7 @@
 </head>
 <body>
     <!-- 統一ヘッダー -->
-    <div id="unified-header-mount" data-title="商品マスタ" data-back="master-top.html"></div>
+    <div id="unified-header-mount" data-title="商品マスタ"></div>
 
     <!-- 検索・フィルターエリア -->
     <div class="header">
@@ -915,7 +915,7 @@
                         <input type="text" class="form-input" id="itemUnit" value="個">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">カテゴリー（任意）</label>
+                        <label class="form-label">カテゴリー（推奨）</label>
                         <select class="form-input" id="itemCategory">
                             <option value="">未設定</option>
                             <option value="家具/什器">家具/什器</option>
@@ -933,7 +933,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">設置場所</label>
+                    <label class="form-label">設置場所（推奨）</label>
                     <div style="display:flex;gap:8px;">
                         <select class="form-select" id="itemFloor" style="flex:0 0 120px;">
                             <option value="">フロア</option>
@@ -981,7 +981,8 @@
         // 初期化
         async function init() {
             // 統一ヘッダー初期化
-            UnifiedHeader.init({ title: '商品マスタ', backButton: true, onBack: function() { window.location.href = 'master-top.html'; } });
+            var backUrl = currentUser.role === 'contractor' ? 'contractor-dashboard.html' : 'master-top.html';
+            UnifiedHeader.init({ title: '商品マスタ', backButton: true, onBack: function() { window.location.href = backUrl; } });
             await ItemStorage.initDemoItems();
             await loadItems();
         }
@@ -1031,8 +1032,9 @@
                         return;
                     }
                     
+                    const partnerDisplayName = currentContractor.companyName || currentContractor.name;
                     const select = document.getElementById('itemAssignedPartner');
-                    select.innerHTML = `<option value="${currentContractor.id}" data-partner-name="${currentContractor.name}" selected>${currentContractor.name}</option>`;
+                    select.innerHTML = `<option value="${currentContractor.id}" data-partner-name="${partnerDisplayName}" selected>${partnerDisplayName}</option>`;
                     select.disabled = true; // 業者は変更できない
                     
                     return;
@@ -1358,25 +1360,23 @@
             document.getElementById('itemNumberGroup').style.display = 'none';
             loadPartners(); // 業者一覧を読み込む
             
-            // 業者ログインの場合、納品先会社を選択
+            // 業者ログインの場合、納品先会社を自動セット
             if (currentUser.role === 'contractor') {
                 const currentContractor = JSON.parse(sessionStorage.getItem('currentContractor'));
                 const companyGroup = document.getElementById('contractorCompanyGroup');
-                companyGroup.style.display = 'block';
-                
-                // 契約会社一覧を表示
                 const select = document.getElementById('itemDeliveryCompany');
                 select.innerHTML = '<option value="">選択してください</option>';
                 
                 if (currentContractor && currentContractor.assignedCompanies) {
-                    // 会社マスタを取得
+                    // 会社マスタを取得（DEMOモード対応）
                     let companies = [];
-                    try { companies = JSON.parse(sessionStorage.getItem('companies') || '[]'); } catch(e) {}
-                    try { var cl = JSON.parse(localStorage.getItem('companies') || '[]'); cl.forEach(function(c){ if(!companies.find(function(m){return m.companyCode===c.companyCode;})) companies.push(c); }); } catch(e) {}
+                    try { companies = JSON.parse(sessionStorage.getItem('demo.companies') || '[]'); } catch(e) {}
+                    try { var cl = JSON.parse(sessionStorage.getItem('companies') || '[]'); cl.forEach(function(c){ if(!companies.find(function(m){return (m.companyCode||m.code)===( c.companyCode||c.code);})) companies.push(c); }); } catch(e) {}
+                    try { var cl2 = JSON.parse(localStorage.getItem('companies') || '[]'); cl2.forEach(function(c){ if(!companies.find(function(m){return (m.companyCode||m.code)===(c.companyCode||c.code);})) companies.push(c); }); } catch(e) {}
                     
                     currentContractor.assignedCompanies.forEach(companyCode => {
-                        const company = companies.find(c => c.companyCode === companyCode);
-                        const companyName = company ? company.companyName : companyCode;
+                        const company = companies.find(c => (c.companyCode||c.code) === companyCode);
+                        const companyName = company ? (company.companyName||company.name) : companyCode;
                         
                         const option = document.createElement('option');
                         option.value = companyCode;
@@ -1384,10 +1384,15 @@
                         select.appendChild(option);
                     });
                     
-                    // 1社のみなら自動選択
+                    // 1社のみなら自動選択して非表示
                     if (currentContractor.assignedCompanies.length === 1) {
                         select.value = currentContractor.assignedCompanies[0];
+                        companyGroup.style.display = 'none';
+                    } else {
+                        companyGroup.style.display = 'block';
                     }
+                } else {
+                    companyGroup.style.display = 'none';
                 }
             } else {
                 document.getElementById('contractorCompanyGroup').style.display = 'none';
@@ -1494,6 +1499,16 @@
                 location: document.getElementById('itemLocation').value,
                 endDate: document.getElementById('itemEndDate').value
             };
+
+            // 推奨項目の未入力チェック
+            var warnings = [];
+            if (!item.category || item.category === 'その他') warnings.push('カテゴリー');
+            if (!item.floor) warnings.push('設置場所（フロア）');
+            if (warnings.length > 0) {
+                if (!confirm(warnings.join('・') + ' が未入力です。\nあとから検索・絞り込みしやすくなるため、入力を推奨します。\n\nこのまま保存しますか？')) {
+                    return;
+                }
+            }
             
 
             try {

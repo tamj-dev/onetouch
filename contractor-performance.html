@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>対応実績 | ワンタッチ管理</title>
+    <script src="demo-mode.js"></script>
+    <script src="unified-header.js"></script>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Hiragino Sans",sans-serif; background:#f5f5f5; min-height:100vh; }
+        .container { max-width:800px; margin:0 auto; padding:24px; }
+
+        /* サマリーカード */
+        .summary-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:12px; margin-bottom:28px; }
+        .summary-card { background:#fff; border-radius:12px; padding:16px; border:1px solid #e8e8e8; text-align:center; }
+        .summary-card .label { font-size:12px; color:#888; margin-bottom:6px; }
+        .summary-card .value { font-size:28px; font-weight:700; color:#333; }
+        .summary-card .unit { font-size:12px; color:#888; font-weight:400; }
+        .summary-card.highlight { border-color:#4361ee; background:#f8faff; }
+        .summary-card.highlight .value { color:#4361ee; }
+
+        /* セクション */
+        .section-title { font-size:16px; font-weight:700; color:#1a1a1a; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+
+        /* 期間フィルタ */
+        .period-filter { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+        .period-btn { padding:6px 14px; border:1px solid #ddd; border-radius:6px; background:#fff; cursor:pointer; font-size:13px; color:#666; }
+        .period-btn.active { background:#333; color:#fff; border-color:#333; }
+
+        /* バーチャート */
+        .chart-container { background:#fff; border-radius:12px; padding:20px; border:1px solid #e8e8e8; margin-bottom:20px; }
+        .chart-title { font-size:14px; font-weight:600; color:#333; margin-bottom:16px; }
+        .bar-row { display:flex; align-items:center; margin-bottom:10px; }
+        .bar-label { width:120px; font-size:12px; color:#666; flex-shrink:0; }
+        .bar-track { flex:1; height:24px; background:#f3f4f6; border-radius:4px; overflow:hidden; position:relative; }
+        .bar-fill { height:100%; border-radius:4px; transition:width 0.5s ease; }
+        .bar-value { position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:11px; font-weight:600; color:#333; }
+
+        /* テーブル */
+        .history-table { width:100%; border-collapse:collapse; font-size:13px; }
+        .history-table th { text-align:left; padding:10px 12px; background:#f9fafb; color:#666; font-weight:600; border-bottom:1px solid #e5e7eb; font-size:12px; }
+        .history-table td { padding:10px 12px; border-bottom:1px solid #f3f4f6; color:#333; }
+        .status-badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:600; }
+        .status-badge.completed { background:#ecfdf5; color:#059669; }
+        .status-badge.in-progress { background:#eff6ff; color:#2563eb; }
+        .status-badge.rejected { background:#fef2f2; color:#dc2626; }
+
+        /* 空状態 */
+        .empty-state { text-align:center; padding:60px 20px; color:#999; }
+        .empty-state .icon { font-size:48px; margin-bottom:12px; }
+    </style>
+</head>
+<body>
+    <div id="unified-header-mount"></div>
+
+    <!-- ページ切替ナビ -->
+    <div style="max-width:800px;margin:0 auto;padding:16px 24px 0;">
+        <select id="pageNav" onchange="navigatePage(this.value)" style="
+            padding:8px 32px 8px 12px;
+            font-size:14px;font-weight:600;color:#333;
+            border:1px solid #ddd;border-radius:8px;background:#fff;
+            cursor:pointer;appearance:none;
+            background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23666%22 stroke-width=%222%22><polyline points=%226,9 12,15 18,9%22/></svg>');
+            background-repeat:no-repeat;background-position:right 10px center;
+        ">
+            <option value="contractor-dashboard.html">対応依頼一覧</option>
+            <option value="contractor-performance.html" selected>対応実績</option>
+            <option value="items.html">商品マスタ</option>
+            <option value="import.html">商品インポート</option>
+        </select>
+    </div>
+
+    <div class="container">
+        <!-- サマリー -->
+        <div class="section-title">実績サマリー</div>
+        <div class="summary-grid">
+            <div class="summary-card highlight">
+                <div class="label">対応完了</div>
+                <div class="value" id="totalCompleted">0<span class="unit">件</span></div>
+            </div>
+            <div class="summary-card">
+                <div class="label">平均対応時間</div>
+                <div class="value" id="avgTime">-<span class="unit"></span></div>
+            </div>
+            <div class="summary-card">
+                <div class="label">対応不可</div>
+                <div class="value" id="totalRejected">0<span class="unit">件</span></div>
+            </div>
+            <div class="summary-card">
+                <div class="label">対応率</div>
+                <div class="value" id="completionRate">-<span class="unit">%</span></div>
+            </div>
+        </div>
+
+        <!-- 期間フィルタ -->
+        <div class="period-filter">
+            <button class="period-btn" onclick="setPeriod('week', this)">今週</button>
+            <button class="period-btn active" onclick="setPeriod('month', this)">今月</button>
+            <button class="period-btn" onclick="setPeriod('3months', this)">3ヶ月</button>
+            <button class="period-btn" onclick="setPeriod('all', this)">全期間</button>
+        </div>
+
+        <!-- カテゴリ別実績 -->
+        <div class="chart-container">
+            <div class="chart-title">カテゴリ別 対応件数</div>
+            <div id="categoryChart"></div>
+        </div>
+
+        <!-- 対応履歴 -->
+        <div class="section-title">対応履歴</div>
+        <div class="chart-container" style="padding:0;overflow:hidden;">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>日時</th>
+                        <th>設備名</th>
+                        <th>カテゴリ</th>
+                        <th>ステータス</th>
+                        <th>対応時間</th>
+                    </tr>
+                </thead>
+                <tbody id="historyBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+    function navigatePage(url) {
+        if (url && url !== window.location.pathname.split('/').pop()) {
+            window.location.href = url;
+        }
+    }
+
+    UnifiedHeader.init({
+        title: '対応実績',
+        backButton: false
+    });
+
+    // ログインチェック
+    var currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+    if (!currentUser) { window.location.href = 'login.html'; }
+    var currentContractor = JSON.parse(sessionStorage.getItem('currentContractor') || 'null');
+
+    var allReports = [];
+    var currentPeriod = 'month';
+    var COLORS = ['#4361ee','#059669','#d97706','#dc2626','#8b5cf6','#0891b2','#e11d48','#65a30d','#9333ea'];
+
+    // 通報データ読み込み
+    function loadReports() {
+        var reports = [];
+        try { reports = JSON.parse(sessionStorage.getItem('demo.reports') || '[]'); } catch(e) {}
+        try { var r2 = JSON.parse(localStorage.getItem('onetouch.reports') || '[]'); r2.forEach(function(r){ if(!reports.find(function(m){return m.id===r.id;})) reports.push(r); }); } catch(e) {}
+        try { var r3 = JSON.parse(sessionStorage.getItem('reports') || '[]'); r3.forEach(function(r){ if(!reports.find(function(m){return m.id===r.id;})) reports.push(r); }); } catch(e) {}
+
+        // 自分に割り当てられた通報のみ
+        if (currentContractor) {
+            reports = reports.filter(function(r) {
+                return r.assignedPartnerId === currentContractor.id ||
+                       r.assignedPartnerId === currentContractor.partnerCode;
+            });
+        }
+
+        allReports = reports;
+        renderAll();
+    }
+
+    function setPeriod(period, btn) {
+        currentPeriod = period;
+        document.querySelectorAll('.period-btn').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        renderAll();
+    }
+
+    function getFilteredReports() {
+        var now = new Date();
+        return allReports.filter(function(r) {
+            if (currentPeriod === 'all') return true;
+            var d = new Date(r.timestamp || r.createdAt);
+            if (isNaN(d.getTime())) return true;
+            var diff = now - d;
+            if (currentPeriod === 'week') return diff < 7 * 24 * 60 * 60 * 1000;
+            if (currentPeriod === 'month') return diff < 30 * 24 * 60 * 60 * 1000;
+            if (currentPeriod === '3months') return diff < 90 * 24 * 60 * 60 * 1000;
+            return true;
+        });
+    }
+
+    function renderAll() {
+        var filtered = getFilteredReports();
+
+        // サマリー
+        var completed = filtered.filter(function(r) { return r.status === '完了'; });
+        var rejected = filtered.filter(function(r) { return r.status === '対応不可'; });
+        var total = completed.length + rejected.length;
+
+        document.getElementById('totalCompleted').innerHTML = completed.length + '<span class="unit">件</span>';
+        document.getElementById('totalRejected').innerHTML = rejected.length + '<span class="unit">件</span>';
+
+        // 対応率
+        if (filtered.length > 0) {
+            var rate = Math.round((completed.length / filtered.length) * 100);
+            document.getElementById('completionRate').innerHTML = rate + '<span class="unit">%</span>';
+        } else {
+            document.getElementById('completionRate').innerHTML = '-<span class="unit">%</span>';
+        }
+
+        // 平均対応時間
+        var times = [];
+        completed.forEach(function(r) {
+            if (r.timestamp && r.completedAt) {
+                var start = new Date(r.timestamp);
+                var end = new Date(r.completedAt);
+                if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+                    times.push(end - start);
+                }
+            } else if (r.statusHistory && r.statusHistory.length > 0) {
+                var created = new Date(r.timestamp || r.createdAt);
+                var last = r.statusHistory[r.statusHistory.length - 1];
+                var done = new Date(last.timestamp || last.changedAt);
+                if (!isNaN(created.getTime()) && !isNaN(done.getTime())) {
+                    times.push(done - created);
+                }
+            }
+        });
+
+        if (times.length > 0) {
+            var avg = times.reduce(function(a, b) { return a + b; }, 0) / times.length;
+            var hours = Math.floor(avg / (1000 * 60 * 60));
+            var minutes = Math.floor((avg % (1000 * 60 * 60)) / (1000 * 60));
+            if (hours > 24) {
+                var days = Math.floor(hours / 24);
+                document.getElementById('avgTime').innerHTML = days + '<span class="unit">日</span>';
+            } else if (hours > 0) {
+                document.getElementById('avgTime').innerHTML = hours + '<span class="unit">時間</span>' + minutes + '<span class="unit">分</span>';
+            } else {
+                document.getElementById('avgTime').innerHTML = minutes + '<span class="unit">分</span>';
+            }
+        } else {
+            document.getElementById('avgTime').innerHTML = '-<span class="unit"></span>';
+        }
+
+        // カテゴリ別チャート
+        renderCategoryChart(filtered);
+
+        // 対応履歴テーブル
+        renderHistory(filtered);
+    }
+
+    function renderCategoryChart(reports) {
+        var cats = {};
+        reports.forEach(function(r) {
+            var cat = r.category || 'その他';
+            cats[cat] = (cats[cat] || 0) + 1;
+        });
+
+        var sorted = Object.entries(cats).sort(function(a, b) { return b[1] - a[1]; });
+        var max = sorted.length > 0 ? sorted[0][1] : 1;
+
+        var container = document.getElementById('categoryChart');
+        if (sorted.length === 0) {
+            container.innerHTML = '<div class="empty-state"><div class="icon">📊</div><p>データがありません</p></div>';
+            return;
+        }
+
+        container.innerHTML = sorted.map(function(entry, idx) {
+            var pct = Math.round((entry[1] / max) * 100);
+            var color = COLORS[idx % COLORS.length];
+            return '<div class="bar-row">' +
+                '<div class="bar-label">' + entry[0] + '</div>' +
+                '<div class="bar-track">' +
+                    '<div class="bar-fill" style="width:' + pct + '%;background:' + color + ';"></div>' +
+                    '<div class="bar-value">' + entry[1] + '件</div>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    function renderHistory(reports) {
+        var tbody = document.getElementById('historyBody');
+
+        // 完了・対応不可のみ、新しい順
+        var history = reports.filter(function(r) {
+            return r.status === '完了' || r.status === '対応不可';
+        }).sort(function(a, b) {
+            return new Date(b.completedAt || b.timestamp) - new Date(a.completedAt || a.timestamp);
+        });
+
+        if (history.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:#999;">対応済みの履歴がありません</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = history.slice(0, 50).map(function(r) {
+            var date = new Date(r.completedAt || r.timestamp);
+            var dateStr = isNaN(date.getTime()) ? '-' :
+                date.getFullYear() + '/' + String(date.getMonth()+1).padStart(2,'0') + '/' + String(date.getDate()).padStart(2,'0');
+
+            var statusClass = r.status === '完了' ? 'completed' : 'rejected';
+            var statusLabel = r.status;
+
+            // 対応時間計算
+            var timeStr = '-';
+            var start = new Date(r.timestamp || r.createdAt);
+            var end = new Date(r.completedAt);
+            if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+                var diff = end - start;
+                var h = Math.floor(diff / (1000*60*60));
+                var m = Math.floor((diff % (1000*60*60)) / (1000*60));
+                if (h > 24) {
+                    timeStr = Math.floor(h/24) + '日';
+                } else if (h > 0) {
+                    timeStr = h + '時間' + m + '分';
+                } else {
+                    timeStr = m + '分';
+                }
+            }
+
+            return '<tr>' +
+                '<td>' + dateStr + '</td>' +
+                '<td>' + (r.title || '-') + '</td>' +
+                '<td>' + (r.category || '-') + '</td>' +
+                '<td><span class="status-badge ' + statusClass + '">' + statusLabel + '</span></td>' +
+                '<td>' + timeStr + '</td>' +
+            '</tr>';
+        }).join('');
+    }
+
+    loadReports();
+    </script>
+</body>
+</html>

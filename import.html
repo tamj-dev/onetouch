@@ -415,13 +415,59 @@
     <div id="fileList"></div>
     <div id="resultArea"></div>
 
-    <div class="help">
-      <h3>対応フォーマット</h3>
-      <div class="hgrid">
-        <div class="hcard"><h4>CSV / TXT</h4><p>カンマ・タブ区切り</p></div>
-        <div class="hcard"><h4>Excel</h4><p>.xlsx / .xls</p></div>
-        <div class="hcard"><h4>PDF</h4><p>テキスト抽出</p></div>
-        <div class="hcard"><h4>画像</h4><p>JPG / PNG</p></div>
+    <div class="help" id="importHelp">
+      <h3>インポートガイド</h3>
+      
+      <div style="background:#fffbeb;border:1px solid #f59e0b;border-radius:8px;padding:14px;margin-bottom:16px;font-size:13px;line-height:1.7;">
+        <div style="font-weight:700;color:#b45309;margin-bottom:6px;">新規登録と上書き更新の違い</div>
+        <div style="color:#78350f;">
+          <b>商品No.なし</b> → 新規登録（商品No.は自動採番）<br>
+          <b>商品No.あり</b> → 既存データを上書き更新<br>
+          ※ 商品マスタからエクスポートしたCSVには商品No.が含まれています。<br>
+          ※ 上書き更新したい場合は、商品No.列を残したままインポートしてください。
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <div style="font-weight:600;font-size:14px;margin-bottom:8px;">対応ファイル形式</div>
+        <div class="hgrid">
+          <div class="hcard"><h4>CSV / TXT</h4><p>カンマ・タブ区切り</p></div>
+          <div class="hcard"><h4>Excel</h4><p>.xlsx / .xls</p></div>
+          <div class="hcard"><h4>PDF</h4><p>テキスト抽出</p></div>
+          <div class="hcard"><h4>画像</h4><p>JPG / PNG</p></div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <div style="font-weight:600;font-size:14px;margin-bottom:8px;">列の対応（ヘッダー名で自動認識）</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead>
+            <tr style="background:#f3f4f6;">
+              <th style="text-align:left;padding:8px;border-bottom:1px solid #e5e7eb;">項目</th>
+              <th style="text-align:left;padding:8px;border-bottom:1px solid #e5e7eb;">必須</th>
+              <th style="text-align:left;padding:8px;border-bottom:1px solid #e5e7eb;">認識されるヘッダー名（例）</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;font-weight:600;">商品No.</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;"><span style="color:#b45309;">上書き時のみ</span></td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#666;">商品No, 商品ナンバー, 品番</td></tr>
+            <tr><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;font-weight:600;">商品名</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;"><span style="color:#dc2626;font-weight:600;">必須</span></td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#666;">商品名, 品名, 名称, 摘要</td></tr>
+            <tr><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;font-weight:600;">担当業者</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;"><span style="color:#dc2626;font-weight:600;">必須</span></td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#666;">担当業者, 業者名, 取引先, 外注先</td></tr>
+            <tr><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;">メーカー</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#999;">任意</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#666;">メーカー, 製造元</td></tr>
+            <tr><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;">型番</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#999;">任意</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#666;">型番, 品番, 型式, 規格</td></tr>
+            <tr><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;">数量</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#999;">任意</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#666;">数量, 個数</td></tr>
+            <tr><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;">単価</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#999;">任意</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#666;">単価, 定価</td></tr>
+            <tr><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;">カテゴリ</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#999;">任意</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#666;">カテゴリ, 分類, 種別</td></tr>
+            <tr><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;">フロア</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#999;">任意</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#666;">フロア, 階</td></tr>
+            <tr><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;">設置場所</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#999;">任意</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#666;">設置場所, 場所, 部屋</td></tr>
+            <tr><td style="padding:6px 8px;">備考</td><td style="padding:6px 8px;color:#999;">任意</td><td style="padding:6px 8px;color:#666;">備考, 摘要, コメント</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="background:#f0fdf4;border:1px solid #22c55e;border-radius:8px;padding:14px;font-size:13px;line-height:1.7;color:#166534;">
+        <div style="font-weight:700;margin-bottom:4px;">ヒント</div>
+        ヘッダー名が自動認識されない場合は、プレビュー画面の「列の割当」で手動変更できます。<br>
+        商品マスタからCSVエクスポートしたファイルはそのままインポート可能です。
       </div>
     </div>
   </div>
@@ -719,7 +765,7 @@
     }
 
     var FIELDS=[
-      {key:'itemId',label:'商品No.',req:false,p:['商品No','商品ナンバー','商品番号','商品no','itemId','item_id','品番','No','NO','no']},
+      {key:'itemId',label:'商品No.（上書き時必須）',req:false,p:['商品No','商品ナンバー','商品番号','商品no','itemId','item_id','品番','No','NO','no']},
       {key:'name',label:'商品名 必須',req:true,p:['商品名','品名','名称','item','name','品目','product','摘要','内容','明細']},
       {key:'assignedPartnerName',label:'担当業者 必須',req:true,p:['担当業者','業者','業者名','取引先','外注先','販売会社','partner','vendor','supplier']},
       {key:'qty',label:'数量',req:false,p:['数量','個数','qty','quantity','入数','本数','数']},
