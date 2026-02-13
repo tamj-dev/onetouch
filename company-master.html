@@ -399,47 +399,20 @@
     </div>
 
     <!-- 認証情報表示モーダル -->
-    <div class="modal" id="credentialsModal">
-        <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-header" style="color: #1a1a1a;">会社を登録しました</div>
-            
-            <div style="background: #fff; padding: 20px; border-radius: 14px; margin-bottom: 20px; border: 2px solid #1a1a1a;">
-                <div style="font-weight: 700; color: #1a1a1a; margin-bottom: 16px; font-size: 16px;">本社管理者アカウント情報</div>
-                
-                <div style="margin-bottom: 12px;">
-                    <div style="font-size: 12px; color: #666; margin-bottom: 4px;">会社コード</div>
-                    <div style="display: flex; gap: 8px; align-items: center;">
-                        <input type="text" id="displayCompanyCode" readonly style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: white; font-family: monospace; font-size: 14px;">
-                        <button onclick="copyToClipboard('displayCompanyCode')" style="padding: 8px 16px; background: #1a1a1a; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; white-space: nowrap;">コピー</button>
-                    </div>
+    <div id="credentialsModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:10000;justify-content:center;align-items:center;">
+        <div style="background:white;border-radius:12px;padding:32px;max-width:480px;width:90%;margin:20px;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+            <div style="text-align:center;margin-bottom:20px;">
+                <div style="display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;background:#e8f5e9;border-radius:50%;margin-bottom:12px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
                 </div>
-
-                <div style="margin-bottom: 12px;">
-                    <div style="font-size: 12px; color: #666; margin-bottom: 4px;">ユーザーID</div>
-                    <div style="display: flex; gap: 8px; align-items: center;">
-                        <input type="text" id="displayUserId" readonly style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: white; font-family: monospace; font-size: 14px;">
-                        <button onclick="copyToClipboard('displayUserId')" style="padding: 8px 16px; background: #1a1a1a; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; white-space: nowrap;">コピー</button>
-                    </div>
-                </div>
-
-                <div style="margin-bottom: 12px;">
-                    <div style="font-size: 12px; color: #666; margin-bottom: 4px;">初期パスワード</div>
-                    <div style="display: flex; gap: 8px; align-items: center;">
-                        <input type="text" id="displayPassword" readonly style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: white; font-family: monospace; font-size: 14px; font-weight: 700; letter-spacing: 1px;">
-                        <button onclick="copyToClipboard('displayPassword')" style="padding: 8px 16px; background: #1a1a1a; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; white-space: nowrap;">コピー</button>
-                    </div>
-                </div>
+                <h3 style="font-size:18px;color:#1a1a1a;margin:0;">会社を登録しました</h3>
             </div>
-
-            <div style="background: #fff3e0; padding: 16px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #ff9800;">
-                <div style="font-size: 13px; color: #e65100; line-height: 1.6;">
-                    <strong>重要</strong><br>
-                    この情報を本社担当者にお伝えください。<br>
-                    初回ログイン後、パスワードの変更を推奨します。
-                </div>
+            <div id="companyLoginInfoContent" style="background:#f8f9fa;border-radius:8px;padding:20px;font-family:monospace;font-size:13px;line-height:2;white-space:pre-wrap;color:#333;border:1px solid #e5e7eb;"></div>
+            <div style="display:flex;gap:8px;margin-top:20px;">
+                <button onclick="copyCompanyLoginInfo()" style="flex:1;padding:12px;background:#333;color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;" id="btnCopyCompanyLogin">コピー</button>
+                <button onclick="downloadCompanyLoginInfo()" style="flex:1;padding:12px;background:white;color:#333;border:1px solid #ddd;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">TXTダウンロード</button>
             </div>
-
-            <button onclick="closeCredentialsModal()" style="width: 100%; padding: 12px; background: #1a1a1a; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px;">閉じる</button>
+            <button onclick="closeCredentialsModal()" style="width:100%;padding:12px;background:none;color:#888;border:none;font-size:14px;cursor:pointer;margin-top:8px;">閉じる</button>
         </div>
     </div>
 
@@ -457,39 +430,47 @@
         }
 
         // 本社管理者の認証情報を表示
+        var _companyLoginInfoText = '';
         function showHonshaCredentials(companyCode, userId, password) {
-            document.getElementById('displayCompanyCode').value = companyCode;
-            document.getElementById('displayUserId').value = userId;
-            document.getElementById('displayPassword').value = password;
-            document.getElementById('credentialsModal').classList.add('show');
+            var url = 'https://tamj-dev.github.io/onetouch/login.html';
+            _companyLoginInfoText = '━━━━━━━━━━━━━━━━━━━━\n'
+                + 'ワンタッチ管理 - ログイン情報\n'
+                + '━━━━━━━━━━━━━━━━━━━━\n'
+                + '会社コード: ' + companyCode + '\n'
+                + 'ユーザーID: ' + userId + '\n'
+                + 'パスワード: ' + password + '\n\n'
+                + 'ログインURL:\n' + url + '\n'
+                + '━━━━━━━━━━━━━━━━━━━━\n'
+                + '【ログイン方法】\n'
+                + '会社コード欄: ' + companyCode + '\n'
+                + 'ID欄: ' + userId + '\n'
+                + 'パスワード欄: ' + password + '\n'
+                + '━━━━━━━━━━━━━━━━━━━━\n'
+                + '※ 初回ログイン後にパスワードを変更してください\n'
+                + '※ ID・パスワードは大文字小文字を区別します';
+            document.getElementById('companyLoginInfoContent').textContent = _companyLoginInfoText;
+            document.getElementById('credentialsModal').style.display = 'flex';
         }
 
-        // 認証情報モーダルを閉じる
         function closeCredentialsModal() {
-            document.getElementById('credentialsModal').classList.remove('show');
+            document.getElementById('credentialsModal').style.display = 'none';
         }
 
-        // クリップボードにコピー
-        function copyToClipboard(elementId) {
-            const input = document.getElementById(elementId);
-            input.select();
-            input.setSelectionRange(0, 99999); // モバイル対応
-            
-            try {
-                document.execCommand('copy');
-                // コピー成功のフィードバック
-                const button = event.target;
-                const originalText = button.textContent;
-                button.textContent = '✓ コピー完了';
-                button.style.background = '#1b5e20';
-                
-                setTimeout(() => {
-                    button.textContent = originalText;
-                    button.style.background = '#1a1a1a';
-                }, 2000);
-            } catch (err) {
-                alert('コピーに失敗しました。手動で選択してコピーしてください。');
-            }
+        function copyCompanyLoginInfo() {
+            navigator.clipboard.writeText(_companyLoginInfoText).then(function() {
+                var btn = document.getElementById('btnCopyCompanyLogin');
+                btn.textContent = '✓ コピーしました';
+                btn.style.background = '#22c55e';
+                setTimeout(function() { btn.textContent = 'コピー'; btn.style.background = '#333'; }, 2000);
+            });
+        }
+
+        function downloadCompanyLoginInfo() {
+            var blob = new Blob([_companyLoginInfoText], { type: 'text/plain;charset=utf-8' });
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'login-info.txt';
+            a.click();
         }
 
         // 会社コード入力時に本社IDプレビューを更新

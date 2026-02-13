@@ -10,7 +10,10 @@ function isDemoMode() {
         if (!currentUser) return false;
         
         // 会社コードが「TAMJ」の場合はデモモード
-        return currentUser.companyCode === 'TAMJ';
+        if (currentUser.companyCode === 'TAMJ') return true;
+        // 業者ログインでTAMJに紐づいている場合もデモモード
+        if (currentUser.isDemoMode) return true;
+        return false;
     } catch (e) {
         return false;
     }

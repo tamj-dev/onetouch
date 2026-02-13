@@ -49,7 +49,10 @@ async function openDB() {
 function isDemoMode() {
   try {
     const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
-    return currentUser && currentUser.companyCode === 'TAMJ';
+    if (!currentUser) return false;
+    if (currentUser.companyCode === 'TAMJ') return true;
+    if (currentUser.isDemoMode) return true;
+    return false;
   } catch (e) {
     return false;
   }

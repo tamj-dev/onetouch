@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>取引先マスタ管理</title>
+    <title>取引先マスタ | ワンタッチ管理</title>
     <style>
         * {
             margin: 0;
@@ -969,7 +969,13 @@
             + 'パスワード: ' + (data.password || '') + '\n\n'
             + 'ログインURL:\n' + url + '\n'
             + '━━━━━━━━━━━━━━━━━━━━\n'
-            + '※ 初回ログイン後にパスワードを変更してください';
+            + '【ログイン方法】\n'
+            + '会社コード欄: ' + (data.partnerCode || data.id || '') + '\n'
+            + 'ID欄: ' + (data.loginId || '') + '\n'
+            + 'パスワード欄: ' + (data.password || '') + '\n'
+            + '━━━━━━━━━━━━━━━━━━━━\n'
+            + '※ 初回ログイン後にパスワードを変更してください\n'
+            + '※ ID・パスワードは大文字小文字を区別します';
         document.getElementById('loginInfoContent').textContent = _loginInfoText;
         var overlay = document.getElementById('loginInfoOverlay');
         overlay.style.display = 'flex';

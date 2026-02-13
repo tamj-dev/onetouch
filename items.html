@@ -32,8 +32,10 @@
         function isDemoMode() {
           try {
             const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
-            const result = currentUser && currentUser.companyCode === 'TAMJ';
-            return result;
+            if (!currentUser) return false;
+            if (currentUser.companyCode === 'TAMJ') return true;
+            if (currentUser.isDemoMode) return true;
+            return false;
           } catch (e) { 
             return false; 
           }
@@ -1043,7 +1045,7 @@
                 partnersLocal.forEach(p => { if (!partners.find(m => m.id === p.id)) partners.push(p); });
                 
                 // DEMOモードで業者データが空の場合、デフォルトデータを使用
-                if (partners.length === 0 && currentUser.companyCode === 'TAMJ') {
+                if (partners.length === 0 && isDemoMode()) {
                     partners = [
                         {
                             id: 'PN001',
@@ -1107,7 +1109,7 @@
                 allItems = await ItemStorage.getItems();
                 
                 // DEMOモード（TAMJ）で商品が0件の場合、ダミー商品を自動生成
-                if (allItems.length === 0 && currentUser?.companyCode === 'TAMJ') {
+                if (allItems.length === 0 && isDemoMode()) {
                     const demoItems = [
                         { itemId:'ITEM-DEMO-001', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'介護ベッド 101号室', maker:'パラマウントベッド', model:'KQ-60330', category:'家具/什器', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:280000, stock:1, description:'電動3モーター', floor:'1F', location:'居室101', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
                         { itemId:'ITEM-DEMO-002', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'食堂テーブル A', maker:'コクヨ', model:'MT-V159', category:'家具/什器', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:45000, stock:1, description:'6人掛け', floor:'1F', location:'食堂', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
@@ -1648,7 +1650,7 @@
         init();
         
         // DEMOモード表示
-        if (currentUser && currentUser.companyCode === 'TAMJ') {
+        if (currentUser && isDemoMode()) {
             document.getElementById('demoModeBadge').style.display = 'block';
         }
         
@@ -1698,9 +1700,9 @@
             
             // パスワード更新
             try {
-                const isDemoMode = currentUser.companyCode === 'TAMJ';
+                const isDemo = isDemoMode();
                 
-                if (isDemoMode) {
+                if (isDemo) {
                     // DEMOモード: currentUserのみ更新（セッション中のみ有効）
                     currentUser.password = newPassword;
                     currentUser.isFirstLogin = false;  // 初回ログインフラグをfalseに
