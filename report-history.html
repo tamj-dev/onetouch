@@ -67,7 +67,7 @@
         }
 
         th {
-            padding: 16px;
+            padding: 8px 10px; font-size: 12px;
             text-align: left;
             font-weight: 600;
             color: #555;
@@ -76,7 +76,7 @@
         }
 
         td {
-            padding: 16px;
+            padding: 8px 10px; font-size: 13px;
             border-bottom: 1px solid #f0f0f0;
             white-space: nowrap;
         }
@@ -446,29 +446,46 @@
                 content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
                 content += '<div style="font-size: 12px; color: #999; margin-bottom: 12px;">ステータス変更履歴</div>';
                 
-                report.statusHistory.forEach(function(history, idx) {
-                    const historyTime = new Date(history.timestamp);
-                    const historyDateStr = historyTime.toLocaleDateString('ja-JP') + ' ' + 
-                                          historyTime.toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'});
+                report.statusHistory.forEach(function(entry, idx) {
+                    const entryTime = new Date(entry.timestamp);
+                    const entryDateStr = entryTime.toLocaleDateString('ja-JP') + ' ' + 
+                                          entryTime.toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'});
                     
-                    const statusFromClass = history.from === '未対応' ? 'status-pending' :
-                                           history.from === '対応中' ? 'status-processing' :
-                                           'status-completed';
-                    const statusToClass = history.to === '未対応' ? 'status-pending' :
-                                         history.to === '対応中' ? 'status-processing' :
-                                         'status-completed';
+                    // データ形式対応: { status, author } または { from, to, changedBy }
+                    var statusText = entry.status || '';
+                    var authorText = entry.author || entry.changedBy || '不明';
+                    var isComment = entry.type === 'comment';
                     
+                    var dotColor = '#999';
+                    if (statusText === '未対応') dotColor = '#f59e0b';
+                    else if (statusText === '対応中') dotColor = '#3b82f6';
+                    else if (statusText === '完了') dotColor = '#22c55e';
+                    else if (statusText === '対応不可') dotColor = '#ef4444';
+
                     content += '<div style="display: flex; gap: 12px; margin-bottom: ' + (idx === report.statusHistory.length - 1 ? '0' : '12px') + '; padding: 12px; background: #f8f9fa; border-radius: 8px;">';
-                    content += '<div style="flex-shrink: 0; width: 4px; background: #E53935; border-radius: 2px;"></div>';
+                    content += '<div style="flex-shrink: 0; width: 4px; background: ' + dotColor + '; border-radius: 2px;"></div>';
                     content += '<div style="flex: 1;">';
-                    content += '<div style="font-size: 11px; color: #666; margin-bottom: 6px;">' + historyDateStr + ' • ' + (history.changedBy || '不明') + '</div>';
-                    content += '<div style="display: flex; align-items: center; gap: 8px;">';
-                    content += '<span class="status-badge ' + statusFromClass + '" style="font-size: 12px;">' + history.from + '</span>';
-                    content += '<span style="color: #666;">→</span>';
-                    content += '<span class="status-badge ' + statusToClass + '" style="font-size: 12px;">' + history.to + '</span>';
-                    content += '</div>';
-                    if (history.note) {
-                        content += '<div style="font-size: 12px; color: #666; margin-top: 4px;">' + history.note + '</div>';
+                    content += '<div style="font-size: 11px; color: #666; margin-bottom: 6px;">' + entryDateStr + ' • ' + authorText + '</div>';
+                    
+                    if (entry.from && entry.to) {
+                        // from → to 形式
+                        content += '<div style="display: flex; align-items: center; gap: 8px;">';
+                        content += '<span class="status-badge status-pending" style="font-size: 12px;">' + entry.from + '</span>';
+                        content += '<span style="color: #666;">→</span>';
+                        content += '<span class="status-badge status-processing" style="font-size: 12px;">' + entry.to + '</span>';
+                        content += '</div>';
+                    } else if (statusText) {
+                        // status 形式
+                        content += '<div style="display: flex; align-items: center; gap: 8px;">';
+                        content += '<span class="status-badge" style="font-size: 12px; background: ' + dotColor + '15; color: ' + dotColor + ';">' + statusText + '</span>';
+                        content += '</div>';
+                    }
+                    
+                    if (entry.comment) {
+                        content += '<div style="font-size: 13px; color: #555; margin-top: 6px; background: white; padding: 8px 12px; border-radius: 6px;">' + entry.comment + '</div>';
+                    }
+                    if (entry.note) {
+                        content += '<div style="font-size: 12px; color: #666; margin-top: 4px;">' + entry.note + '</div>';
                     }
                     content += '</div>';
                     content += '</div>';
@@ -755,6 +772,13 @@
             filterReports();
         }
 
+        // 確認済みにする（新着バナーを消す）
+        function markReportsViewed() {
+            const userId = currentUser.userId || currentUser.id || '';
+            localStorage.setItem('ONE_report_lastViewed_' + userId, new Date().toISOString());
+            filterReports(); // 再描画
+        }
+
         function updateStatusCounts(reports) {
             var counts = { all: reports.length, '未対応': 0, '対応中': 0, '完了': 0, '対応不可': 0 };
             reports.forEach(function(r) {
@@ -774,6 +798,30 @@
             
             // フィルタリング後の通報をグローバル変数に保存
             allReports = reports;
+
+            // 新着判定（最終閲覧時刻より新しい通報）
+            const userId = currentUser.userId || currentUser.id || '';
+            const lastViewed = localStorage.getItem('ONE_report_lastViewed_' + userId) || '1970-01-01';
+            const newCount = reports.filter(function(r) { return r.timestamp > lastViewed; }).length;
+
+            // 新着バナー表示
+            var banner = document.getElementById('newReportBanner');
+            if (!banner) {
+                banner = document.createElement('div');
+                banner.id = 'newReportBanner';
+                banner.style.cssText = 'background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px;padding:12px 20px;margin-bottom:16px;display:none;align-items:center;justify-content:space-between;';
+                var tableEl = document.getElementById('reportList');
+                if (tableEl && tableEl.closest('.table-wrap')) {
+                    tableEl.closest('.table-wrap').parentNode.insertBefore(banner, tableEl.closest('.table-wrap'));
+                }
+            }
+            if (newCount > 0 && banner) {
+                banner.style.display = 'flex';
+                banner.innerHTML = '<span style="font-weight:600;color:#2e7d32;">新着 ' + newCount + ' 件の通報があります</span>'
+                    + '<button onclick="markReportsViewed()" style="background:#333;color:#fff;border:none;border-radius:6px;padding:6px 16px;cursor:pointer;font-size:13px;">確認済みにする</button>';
+            } else if (banner) {
+                banner.style.display = 'none';
+            }
             
             if (reports.length === 0) {
                 reportList.innerHTML = `
@@ -851,9 +899,12 @@
                     }
                 }
                 
+                const isNew = report.timestamp > lastViewed;
+                const rowStyle = isNew ? 'cursor:pointer;background:#f0fdf4;' : 'cursor:pointer;';
+                
                 return `
-                    <tr onclick="showDetail(${index})" style="cursor: pointer;">
-                        <td>${dateStr}</td>
+                    <tr onclick="showDetail(${index})" style="${rowStyle}">
+                        <td>${isNew ? '<span style="display:inline-block;width:8px;height:8px;background:#22c55e;border-radius:50%;margin-right:6px;"></span>' : ''}${dateStr}</td>
                         <td>${report.reporter || '-'}</td>
                         <td>${officeName}</td>
                         <td>${category}</td>
@@ -918,7 +969,9 @@
             try { partnersLocal = JSON.parse(localStorage.getItem('partners') || '[]'); } catch(e) {}
             partnersLocal.forEach(p => { if (!partners.find(m => m.id === p.id)) partners.push(p); });
 
-            const headers = ['通報日時','通報者','会社コード','事業所','カテゴリ','内容','ステータス','対応時間','対応者'];
+            var esc = function(v) { return '"' + String(v || '').replace(/"/g, '""').replace(/\n/g, ' ') + '"'; };
+
+            const headers = ['通報ID','通報日時','通報者','会社コード','事業所','設備名','カテゴリ','緊急度','場所','状況詳細','割当業者','業者ステータス','対応時間','最新コメント','写真枚数'];
             const rows = allReports.map(r => {
                 const date = r.timestamp ? new Date(r.timestamp).toLocaleString('ja-JP') : '';
                 let responseTime = '';
@@ -928,17 +981,42 @@
                     const m = Math.floor((diffMs % 3600000) / 60000);
                     responseTime = h > 0 ? h + '時間' + m + '分' : m + '分';
                 }
+                // 割当業者名
+                var partnerName = r.assignedPartnerName || '';
+                if (!partnerName && r.assignedPartnerId) {
+                    var p = partners.find(function(x) { return x.id === r.assignedPartnerId; });
+                    partnerName = p ? p.name : r.assignedPartnerId;
+                }
+                // 最新コメント
+                var latestComment = '';
+                if (r.statusHistory && r.statusHistory.length > 0) {
+                    for (var i = r.statusHistory.length - 1; i >= 0; i--) {
+                        if (r.statusHistory[i].comment) { latestComment = r.statusHistory[i].comment; break; }
+                    }
+                }
+                if (!latestComment && r.contractorComments && r.contractorComments.length > 0) {
+                    latestComment = r.contractorComments[r.contractorComments.length - 1].text || '';
+                }
+                // 写真枚数
+                var photoCount = (r.photos && r.photos.length) || 0;
+
                 return [
-                    date,
-                    r.reporter || '',
-                    r.companyCode || '',
-                    r.officeName || '',
-                    r.category || '',
-                    (r.description || r.category || '').replace(/,/g, '，'),
-                    r.contractorStatus || '',
-                    responseTime,
-                    r.handler || ''
-                ].map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',');
+                    esc(r.id),
+                    esc(date),
+                    esc(r.reporter),
+                    esc(r.companyCode),
+                    esc(r.officeName),
+                    esc(r.title),
+                    esc(r.category),
+                    esc(r.priority),
+                    esc(r.location),
+                    esc(r.description),
+                    esc(partnerName),
+                    esc(r.contractorStatus),
+                    esc(responseTime),
+                    esc(latestComment),
+                    esc(photoCount)
+                ].join(',');
             });
 
             const bom = '\uFEFF';

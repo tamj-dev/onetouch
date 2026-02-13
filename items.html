@@ -58,7 +58,7 @@
         }
 
         // 商品ナンバー生成: 業者コード + yymm + 4桁連番
-        // 例: P001250200001
+        // 例: PN001250200001
         function generateItemNumber(assignedPartnerId) {
           // 業者コードを取得
           var partnerCode = '';
@@ -69,7 +69,7 @@
             var partner = partners.find(function(p) { return p.id === assignedPartnerId; });
             if (partner && partner.partnerCode) partnerCode = partner.partnerCode;
           }
-          if (!partnerCode) partnerCode = 'P000';
+          if (!partnerCode) partnerCode = 'PN000';
 
           // yymm
           var now = new Date();
@@ -1024,25 +1024,25 @@
                 if (partners.length === 0 && currentUser.companyCode === 'TAMJ') {
                     partners = [
                         {
-                            id: 'P001',
+                            id: 'PN001',
                             name: '東京設備工業株式会社',
-                            partnerCode: 'P001',
+                            partnerCode: 'PN001',
                             categories: ['空調', '給湯', '電気'],
                             assignedCompanies: ['TAMJ'],
                             status: 'active'
                         },
                         {
-                            id: 'P002',
+                            id: 'PN002',
                             name: '関東水道サービス',
-                            partnerCode: 'P002',
+                            partnerCode: 'PN002',
                             categories: ['水道', '給湯', '排水'],
                             assignedCompanies: ['TAMJ'],
                             status: 'active'
                         },
                         {
-                            id: 'P003',
+                            id: 'PN003',
                             name: '日本電気工事',
-                            partnerCode: 'P003',
+                            partnerCode: 'PN003',
                             categories: ['電気', '照明', '設備'],
                             assignedCompanies: ['TAMJ'],
                             status: 'active'
@@ -1088,14 +1088,14 @@
                 if (allItems.length === 0 && currentUser?.companyCode === 'TAMJ') {
                     const demoItems = [
                         {
-                            itemId: 'P00125020001',
+                            itemId: 'PN00125020001',
                             companyCode: 'TAMJ',
                             officeCode: 'TAMJ-J0001',
                             name: 'エアコン 1号機',
                             maker: 'ダイキン',
                             model: 'AN22XRS-W',
                             category: '空調',
-                            assignedPartnerId: 'P001',
+                            assignedPartnerId: 'PN001',
                             assignedPartnerName: '東京設備工業株式会社',
                             unit: '台',
                             price: 150000,
@@ -1105,14 +1105,14 @@
                             updatedAt: new Date().toISOString()
                         },
                         {
-                            itemId: 'P00125020002',
+                            itemId: 'PN00125020002',
                             companyCode: 'TAMJ',
                             officeCode: 'TAMJ-J0001',
                             name: '給湯器 A',
                             maker: 'リンナイ',
                             model: 'RUX-A1615W-E',
                             category: '給湯',
-                            assignedPartnerId: 'P001',
+                            assignedPartnerId: 'PN001',
                             assignedPartnerName: '東京設備工業株式会社',
                             unit: '台',
                             price: 80000,
@@ -1122,14 +1122,14 @@
                             updatedAt: new Date().toISOString()
                         },
                         {
-                            itemId: 'P00325020001',
+                            itemId: 'PN00325020001',
                             companyCode: 'TAMJ',
                             officeCode: 'TAMJ-J0001',
                             name: '照明器具 LED-01',
                             maker: 'パナソニック',
                             model: 'LGB51210',
                             category: '電気',
-                            assignedPartnerId: 'P003',
+                            assignedPartnerId: 'PN003',
                             assignedPartnerName: '日本電気工事',
                             unit: '個',
                             price: 12000,
@@ -1139,14 +1139,14 @@
                             updatedAt: new Date().toISOString()
                         },
                         {
-                            itemId: 'P00225020001',
+                            itemId: 'PN00225020001',
                             companyCode: 'TAMJ',
                             officeCode: 'TAMJ-J0001',
                             name: 'トイレ 1F',
                             maker: 'TOTO',
                             model: 'CES9788F',
                             category: '水道',
-                            assignedPartnerId: 'P002',
+                            assignedPartnerId: 'PN002',
                             assignedPartnerName: '関東水道サービス',
                             unit: '台',
                             price: 180000,
@@ -1156,14 +1156,14 @@
                             updatedAt: new Date().toISOString()
                         },
                         {
-                            itemId: 'P00125020003',
+                            itemId: 'PN00125020003',
                             companyCode: 'TAMJ',
                             officeCode: 'TAMJ-J0001',
                             name: 'エレベーター',
                             maker: '三菱電機',
                             model: 'NEXIEZ-MR',
                             category: '設備',
-                            assignedPartnerId: 'P003',
+                            assignedPartnerId: 'PN003',
                             assignedPartnerName: '日本電気工事',
                             unit: '台',
                             price: 5000000,
@@ -1204,8 +1204,16 @@
         }
 
         // フィルター適用
+        // 全角→半角変換＋小文字化
+        function normalizeSearch(str) {
+            if (!str) return '';
+            return str.replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) {
+                return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+            }).replace(/[\u3000]/g, ' ').toLowerCase();
+        }
+
         function applyFilters() {
-            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            const searchQuery = normalizeSearch(document.getElementById('searchInput').value);
             const partnerFilter = document.getElementById('partnerFilter').value;
 
             filteredItems = allItems.filter(item => {
@@ -1217,11 +1225,13 @@
                     }
                 }
                 
-                // 検索
+                // 検索（大文字小文字＋全角半角を無視）
                 const matchSearch = !searchQuery || 
-                    (item.name && item.name.toLowerCase().includes(searchQuery)) ||
-                    (item.model && item.model.toLowerCase().includes(searchQuery)) ||
-                    (item.maker && item.maker.toLowerCase().includes(searchQuery));
+                    normalizeSearch(item.name).includes(searchQuery) ||
+                    normalizeSearch(item.model).includes(searchQuery) ||
+                    normalizeSearch(item.maker).includes(searchQuery) ||
+                    normalizeSearch(item.itemId).includes(searchQuery) ||
+                    normalizeSearch(item.category).includes(searchQuery);
 
                 // 担当業者
                 const matchPartner = !partnerFilter || item.assignedPartnerName === partnerFilter;

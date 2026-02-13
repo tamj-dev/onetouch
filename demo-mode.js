@@ -190,29 +190,29 @@ window.DEMO_ACCOUNTS = {
         status: 'active', isFirstLogin: false, isDemoMode: true
     },
     contractor: {
-        companyCode: 'P001', id: 'p001-yamada', password: 'demo',
+        companyCode: 'PN001', id: 'pn001-yamada', password: 'demo',
         name: '山田 太郎', role: 'contractor',
-        companyName: '東京設備工業株式会社', partnerId: 'P001',
-        partnerCode: 'P001', categories: ['空調', '給湯', '電気'],
+        companyName: '東京設備工業株式会社', partnerId: 'PN001',
+        partnerCode: 'PN001', categories: ['空調', '給湯', '電気'],
         assignedCompanies: ['TAMJ'], status: 'active', isDemoMode: true
     }
 };
 
 window.DEMO_PARTNERS = [
     {
-        id: 'P001', name: '東京設備工業株式会社', partnerCode: 'P001',
+        id: 'PN001', name: '東京設備工業株式会社', partnerCode: 'PN001',
         categories: ['空調', '給湯', '電気'], assignedCompanies: ['TAMJ'],
         status: 'active', contactName: '山田 太郎',
-        loginId: 'p001-yamada', password: 'demo'
+        loginId: 'pn001-yamada', password: 'demo'
     },
     {
-        id: 'P002', name: '関東水道サービス', partnerCode: 'P002',
+        id: 'PN002', name: '関東水道サービス', partnerCode: 'PN002',
         categories: ['水道', '給湯', '排水'], assignedCompanies: ['TAMJ'],
         status: 'active', contactName: '佐藤 花子',
         loginId: 'p002-sato', password: 'demo'
     },
     {
-        id: 'P003', name: '日本電気工事', partnerCode: 'P003',
+        id: 'PN003', name: '日本電気工事', partnerCode: 'PN003',
         categories: ['電気', '照明', '設備'], assignedCompanies: ['TAMJ'],
         status: 'active', contactName: '鈴木 一郎',
         loginId: 'p003-suzuki', password: 'demo'

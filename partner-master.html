@@ -167,7 +167,7 @@
         }
 
         th {
-            padding: 12px;
+            padding: 8px 10px; font-size: 12px;
             text-align: left;
             font-weight: 600;
             color: #555;
@@ -176,7 +176,7 @@
         }
 
         td {
-            padding: 12px;
+            padding: 8px 10px; font-size: 13px;
             border-bottom: 1px solid #f0f0f0;
             white-space: nowrap;
         }
@@ -379,7 +379,7 @@
         <div class="search-panel">
             <div class="search-row">
                 <div class="search-label">業者コード</div>
-                <input type="text" id="searchId" class="search-input" placeholder="例: P001">
+                <input type="text" id="searchId" class="search-input" placeholder="例: PN001">
             </div>
 
             <div class="search-row">
@@ -623,14 +623,14 @@
             }
         }
 
-        // 業者コード自動生成（P001, P002, ...）
+        // 業者コード自動生成（PN001, PN002, ...）
         function generatePartnerCode() {
             const existingCodes = allPartners
                 .map(p => p.partnerCode || '')
-                .filter(c => /^P\d+$/.test(c))
-                .map(c => parseInt(c.replace('P', ''), 10));
+                .filter(c => /^PN\d+$/.test(c))
+                .map(c => parseInt(c.replace('PN', ''), 10));
             const nextNum = existingCodes.length > 0 ? Math.max(...existingCodes) + 1 : 1;
-            return 'P' + String(nextNum).padStart(3, '0');
+            return 'PN' + String(nextNum).padStart(3, '0');
         }
 
         // パスワード自動生成（8文字: 英大小+数字）
@@ -810,8 +810,8 @@
             } else {
                 allPartners.push(partnerData);
                 logEvent('add_partner', { partnerId: partnerCode, partnerName: partnerData.name });
-                // 登録完了時にログイン情報を表示
-                alert('取引先を登録しました\n\n【業者ログイン情報】\n業者コード: ' + partnerCode + '\nログインID: ' + loginId + '\nパスワード: ' + password + '\n\n※この情報を業者にお伝えください');
+                // 登録完了時にログイン情報モーダルを表示
+                showLoginInfoModal(partnerData);
             }
 
             // LocalStorageに保存
@@ -936,6 +936,75 @@
         title: '取引先マスタ',
         backButton: true
     });
+    </script>
+
+    <!-- ログイン情報モーダル -->
+    <div id="loginInfoOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:10000;justify-content:center;align-items:center;">
+        <div style="background:white;border-radius:12px;padding:32px;max-width:480px;width:90%;margin:20px;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+            <div style="text-align:center;margin-bottom:20px;">
+                <div style="display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;background:#e8f5e9;border-radius:50%;margin-bottom:12px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+                </div>
+                <h3 style="font-size:18px;color:#1a1a1a;margin:0;">取引先を登録しました</h3>
+            </div>
+            <div id="loginInfoContent" style="background:#f8f9fa;border-radius:8px;padding:20px;font-family:monospace;font-size:13px;line-height:2;white-space:pre-wrap;color:#333;border:1px solid #e5e7eb;"></div>
+            <div style="display:flex;gap:8px;margin-top:20px;">
+                <button onclick="copyLoginInfo()" style="flex:1;padding:12px;background:#333;color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;" id="btnCopyLogin">コピー</button>
+                <button onclick="downloadLoginInfo()" style="flex:1;padding:12px;background:white;color:#333;border:1px solid #ddd;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">TXTダウンロード</button>
+            </div>
+            <button onclick="closeLoginInfoModal()" style="width:100%;padding:12px;background:none;color:#888;border:none;font-size:14px;cursor:pointer;margin-top:8px;">閉じる</button>
+        </div>
+    </div>
+    <script>
+    var _loginInfoText = '';
+    function showLoginInfoModal(data) {
+        var url = 'https://tamj-dev.github.io/onetouch/login.html';
+        _loginInfoText = '━━━━━━━━━━━━━━━━━━━━\n'
+            + 'ワンタッチ管理 - ログイン情報\n'
+            + '━━━━━━━━━━━━━━━━━━━━\n'
+            + '会社名: ' + (data.name || '') + '\n'
+            + '担当者: ' + (data.contactName || '') + '\n'
+            + '業者コード: ' + (data.partnerCode || data.id || '') + '\n'
+            + 'ログインID: ' + (data.loginId || '') + '\n'
+            + 'パスワード: ' + (data.password || '') + '\n\n'
+            + 'ログインURL:\n' + url + '\n'
+            + '━━━━━━━━━━━━━━━━━━━━\n'
+            + '※ 初回ログイン後にパスワードを変更してください';
+        document.getElementById('loginInfoContent').textContent = _loginInfoText;
+        var overlay = document.getElementById('loginInfoOverlay');
+        overlay.style.display = 'flex';
+    }
+    function closeLoginInfoModal() {
+        document.getElementById('loginInfoOverlay').style.display = 'none';
+    }
+    function copyLoginInfo() {
+        navigator.clipboard.writeText(_loginInfoText).then(function() {
+            var btn = document.getElementById('btnCopyLogin');
+            btn.textContent = '✓ コピーしました';
+            btn.style.background = '#22c55e';
+            setTimeout(function() { btn.textContent = 'コピー'; btn.style.background = '#333'; }, 2000);
+        }).catch(function() {
+            // fallback
+            var ta = document.createElement('textarea');
+            ta.value = _loginInfoText;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            var btn = document.getElementById('btnCopyLogin');
+            btn.textContent = '✓ コピーしました';
+            btn.style.background = '#22c55e';
+            setTimeout(function() { btn.textContent = 'コピー'; btn.style.background = '#333'; }, 2000);
+        });
+    }
+    function downloadLoginInfo() {
+        var blob = new Blob([_loginInfoText], { type: 'text/plain;charset=utf-8' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'login-info.txt';
+        a.click();
+        URL.revokeObjectURL(a.href);
+    }
     </script>
 </body>
 </html>

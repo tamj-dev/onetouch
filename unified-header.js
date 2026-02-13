@@ -361,7 +361,7 @@ const UnifiedHeader = {
 
         // DEMOモード切替メニュー
         var demoSwitchMenu = '';
-        const isDemoMode = user && (user.isDemoMode || user.companyCode === 'TAMJ' || user.companyCode === 'P001');
+        const isDemoMode = user && (user.isDemoMode || user.companyCode === 'TAMJ' || user.companyCode === 'PN001');
         if (isDemoMode) {
             const currentRole = user.role;
             const roles = [

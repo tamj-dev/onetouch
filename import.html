@@ -138,9 +138,11 @@
     .wrap{max-width:640px;margin:0 auto;padding:20px;}
 
     .steps-bar{display:flex;gap:4px;margin-bottom:20px;}
-    .step-dot{flex:1;height:4px;border-radius:2px;background:var(--border);}
+    .step-item{flex:1;text-align:center;}
+    .step-dot{height:4px;border-radius:2px;background:var(--border);}
     .step-dot.active{background:var(--yellow);}
     .step-dot.done{background:var(--ok);}
+    .step-label{font-size:11px;color:#999;margin-top:4px;}
 
     .drop{background:var(--bg);border:2px dashed var(--border);border-radius:16px;padding:48px 24px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px;}
     .drop:hover,.drop.over{border-color:var(--yellow);background:#fffbf0;}
@@ -367,19 +369,32 @@
 
   <div class="wrap">
     <div class="steps-bar">
-      <div class="step-dot active" id="s1"></div>
-      <div class="step-dot" id="s2"></div>
-      <div class="step-dot" id="s3"></div>
-      <div class="step-dot" id="s4"></div>
+      <div class="step-item">
+        <div class="step-dot active" id="s1"></div>
+        <div class="step-label">ファイル選択</div>
+      </div>
+      <div class="step-item">
+        <div class="step-dot" id="s2"></div>
+        <div class="step-label">解析</div>
+      </div>
+      <div class="step-item">
+        <div class="step-dot" id="s3"></div>
+        <div class="step-label">プレビュー</div>
+      </div>
+      <div class="step-item">
+        <div class="step-dot" id="s4"></div>
+        <div class="step-label">取込完了</div>
+      </div>
     </div>
 
-    <div class="enc-row">
+    <div class="enc-row" id="encRow" style="display:none;">
       <label>文字コード:</label>
       <select id="encSel">
         <option value="auto">自動判定</option>
         <option value="UTF-8">UTF-8</option>
         <option value="Shift_JIS">Shift_JIS</option>
       </select>
+      <span style="font-size:12px;color:#888;margin-left:8px;">文字化けした場合に変更してください</span>
     </div>
 
     <!-- アップロード制限情報 -->
@@ -400,24 +415,12 @@
     <div id="resultArea"></div>
 
     <div class="help">
-      <h3>Bob案: 3レイヤー 取り込みアーキテクチャ</h3>
-      <div class="hgrid" style="grid-template-columns:repeat(3,1fr);margin-bottom:18px;">
-        <div class="hcard" style="border-color:var(--ok);"><h4>L1 直接パース</h4><p>Excel/CSV/TXT → OCR不要（最安・最速）。列マッピングでほぼ99%</p></div>
-        <div class="hcard" style="border-color:var(--warn);"><h4>L2 Vision OCR</h4><p>PDF/画像 → テキスト抽出 → ダメならGCP Vision OCR</p></div>
-        <div class="hcard" style="border-color:#7c3aed;"><h4>L3 構造化</h4><p>A) ルール抽出（無料）→ B) 失敗時のみAI整形（Gemini）</p></div>
-      </div>
       <h3>対応フォーマット</h3>
       <div class="hgrid">
-        <div class="hcard"><h4>CSV / TXT</h4><p>カンマ・タブ区切り（直接パース）</p></div>
-        <div class="hcard"><h4>Excel</h4><p>.xlsx / .xls（直接パース・結合セル対応）</p></div>
-        <div class="hcard"><h4>PDF</h4><p>テキスト抽出 → ダメならOCR</p></div>
-        <div class="hcard"><h4>画像</h4><p>JPG / PNG → GCP Vision OCR</p></div>
-      </div>
-      <div style="margin-top:14px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:10px;font-size:0.8rem;color:var(--muted);">
-        <b style="color:var(--text);">必須抽出:</b> 販売会社・商品名・型番・単価<br>
-        <b style="color:var(--text);">confidence:</b> +0.35 商品名 +0.25 単価 +0.15 型番 +0.15 販売会社 +0.10 明細3行以上（テンプレ適用時+0.20）<br>
-        <b style="color:var(--text);">AI整形:</b> 明細2行未満 / 単価欠損 / 販売会社不明 / 合計しか拾えない → 自動発動<br>
-        <b style="color:var(--text);">商用制御:</b> ファイル10MB制限・OCR最大10ページ・タイムアウト30秒・エラーログ保存
+        <div class="hcard"><h4>CSV / TXT</h4><p>カンマ・タブ区切り</p></div>
+        <div class="hcard"><h4>Excel</h4><p>.xlsx / .xls</p></div>
+        <div class="hcard"><h4>PDF</h4><p>テキスト抽出</p></div>
+        <div class="hcard"><h4>画像</h4><p>JPG / PNG</p></div>
       </div>
     </div>
   </div>
@@ -430,10 +433,9 @@
 
       <div class="mtabs">
         <button class="mtab active" onclick="showPanel('colMap')">① 列の割当</button>
-        <button class="mtab" onclick="showPanel('vendor')">② 販売会社</button>
+        <button class="mtab" onclick="showPanel('vendor')">② 販売会社・業者</button>
         <button class="mtab" onclick="showPanel('rules')">③ 除外ルール</button>
         <button class="mtab" onclick="showPanel('rows')">④ 行プレビュー</button>
-        <button class="mtab" onclick="showPanel('reflect')">⑤ 反映先</button>
       </div>
 
       <!-- パネル1: 列マッピング -->
@@ -446,10 +448,14 @@
         <label class="msave"><input type="checkbox" id="mapSave" checked>この設定を次回も使う</label>
       </div>
 
-      <!-- パネル2: 販売会社情報 -->
+      <!-- パネル2: 販売会社・担当業者 -->
       <div class="mpanel" id="panelVendor">
         <p style="font-size:0.82rem;color:var(--muted);margin-bottom:12px;">書類から自動検出した販売会社情報です。必要に応じて修正してください。</p>
         <div id="vendorFields"></div>
+        <div id="partnerMatchSection" style="margin-top:20px;display:none;">
+          <div style="font-weight:600;font-size:14px;margin-bottom:8px;padding-top:16px;border-top:1px solid #e5e7eb;">担当業者のマッチング状況</div>
+          <div id="partnerMatchResult"></div>
+        </div>
       </div>
 
       <!-- パネル3: 除外ルール -->
@@ -467,38 +473,6 @@
           </div>
         </div>
         <div class="pvwrap" id="pvTable"></div>
-      </div>
-
-      <!-- パネル5: 反映先マッピング -->
-      <div class="mpanel" id="panelReflect">
-        <p style="font-size:0.82rem;color:var(--muted);margin-bottom:12px;">抽出した正規データを「どの画面・どの項目」に反映するかを選択してください。</p>
-
-        <div class="req-status incomplete" id="reqStatusBar">
-          <span>必須項目: </span>
-          <span id="reqStatusItems">確認中…</span>
-        </div>
-
-        <!-- テンプレート選択バー -->
-        <div class="tpl-bar" id="tplBar">
-          <span style="font-weight:600;white-space:nowrap;"> テンプレ:</span>
-          <select id="tplSelect" onchange="onTplSelect()">
-            <option value="">（手動設定）</option>
-          </select>
-          <button onclick="saveCurrentAsTemplate()">保存</button>
-          <button onclick="deleteTplCurrent()" id="tplDelBtn" style="display:none;color:var(--err);"></button>
-        </div>
-        <div id="tplAutoApplied" style="display:none;font-size:0.78rem;color:var(--ok);margin-bottom:8px;padding:6px 10px;background:#d1fae5;border-radius:6px;">
-           販売会社に一致するテンプレートを自動適用しました
-        </div>
-
-        <div class="ref-section">反映先の画面</div>
-        <div id="reflectTargets"></div>
-
-        <div class="ref-summary" id="reflectSummary">
-          反映先が未設定です。上のチェックボックスで画面を選択してください。
-        </div>
-
-        <label class="msave" style="margin-top:10px;"><input type="checkbox" id="reflectSave" checked>この反映設定を次回も使う</label>
       </div>
 
       <div class="mfoot">
@@ -1988,6 +1962,8 @@
         h+='</div>';
       });
       document.getElementById('vendorFields').innerHTML=h;
+      // 担当業者マッチング状況を表示
+      buildPartnerMatchPanel();
     }
 
     function getVendorFromUI(){
@@ -1998,6 +1974,90 @@
         contact:(document.getElementById('vi_contact')||{}).value||'',
         email:(document.getElementById('vi_email')||{}).value||'',
       };
+    }
+
+    // 担当業者マッチング状況パネル
+    function buildPartnerMatchPanel(){
+      var section=document.getElementById('partnerMatchSection');
+      var result=document.getElementById('partnerMatchResult');
+      if(!section||!result)return;
+
+      // 列マッピングで担当業者が割り当てられているか確認
+      var hasPartnerCol=false;
+      if(currentFile&&currentFile.colMap){
+        for(var k in currentFile.colMap){
+          if(currentFile.colMap[k]==='assignedPartnerName'){hasPartnerCol=true;break;}
+        }
+      }
+      if(!hasPartnerCol){section.style.display='none';return;}
+      section.style.display='block';
+
+      // 業者マスタを読み込み
+      var partners=[];
+      try{partners=JSON.parse(sessionStorage.getItem('partners')||'[]');}catch(e){}
+      try{var pl=JSON.parse(localStorage.getItem('partners')||'[]');pl.forEach(function(p){if(!partners.find(function(m){return m.id===p.id;}))partners.push(p);});}catch(e){}
+
+      // プレビューの行データから担当業者名を抽出
+      var partnerNames={};
+      if(currentFile&&currentFile.dataRows&&currentFile.colMap){
+        var colIdx=-1;
+        for(var k in currentFile.colMap){
+          if(currentFile.colMap[k]==='assignedPartnerName'){colIdx=parseInt(k);break;}
+        }
+        if(colIdx>=0){
+          currentFile.dataRows.forEach(function(row){
+            var name=String(row[colIdx]||'').trim();
+            if(name)partnerNames[name]=(partnerNames[name]||0)+1;
+          });
+        }
+      }
+
+      var names=Object.keys(partnerNames);
+      if(names.length===0){
+        result.innerHTML='<div style="font-size:13px;color:#888;">担当業者のデータがありません</div>';
+        return;
+      }
+
+      var h='';
+      var matchCount=0;
+      var unmatchCount=0;
+      names.forEach(function(name){
+        var matched=partners.find(function(p){
+          return (p.name&&p.name===name)||(p.companyName&&p.companyName===name);
+        });
+        var count=partnerNames[name];
+        if(matched){
+          matchCount++;
+          h+='<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;margin-bottom:4px;background:#f0fdf4;border-radius:6px;font-size:13px;">';
+          h+='<span style="color:#22c55e;font-weight:600;">✓</span>';
+          h+='<span style="flex:1;">'+esc(name)+'</span>';
+          h+='<span style="color:#888;font-size:12px;">'+count+'件</span>';
+          h+='<span style="color:#22c55e;font-size:12px;">→ '+esc(matched.id)+'</span>';
+          h+='</div>';
+        }else{
+          unmatchCount++;
+          h+='<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;margin-bottom:4px;background:#fef2f2;border-radius:6px;font-size:13px;">';
+          h+='<span style="color:#ef4444;font-weight:600;">!</span>';
+          h+='<span style="flex:1;">'+esc(name)+'</span>';
+          h+='<span style="color:#888;font-size:12px;">'+count+'件</span>';
+          h+='<span style="color:#ef4444;font-size:12px;">未登録</span>';
+          h+='</div>';
+        }
+      });
+
+      // サマリー
+      var summary='<div style="font-size:12px;color:#888;margin-bottom:8px;">';
+      summary+=names.length+'社中 '+matchCount+'社マッチ';
+      if(unmatchCount>0)summary+='、<span style="color:#ef4444;font-weight:600;">'+unmatchCount+'社未登録</span>';
+      summary+='</div>';
+
+      if(unmatchCount>0){
+        summary+='<div style="font-size:12px;color:#ef4444;margin-bottom:12px;padding:8px;background:#fef2f2;border-radius:6px;">';
+        summary+='未登録の業者は取引先マスタに先に登録するか、取り込み後に商品マスタで紐づけてください';
+        summary+='</div>';
+      }
+
+      result.innerHTML=summary+h;
     }
 
     // ========================================================================
@@ -2092,7 +2152,7 @@
       if(document.getElementById('mapSave').checked)saveMap(getMapByHeader());
 
       //  反映先設定を保存
-      if(document.getElementById('reflectSave')&&document.getElementById('reflectSave').checked){
+      if((document.getElementById('reflectSave')document.getElementById('reflectSave')&&document.getElementById('reflectSave').checkeddocument.getElementById('reflectSave')&&document.getElementById('reflectSave').checkeddocument.getElementById('reflectSave').checked)){
         onReflectMapChange();
         saveReflectConfig();
       }
@@ -2174,8 +2234,11 @@
         //  商品ナンバーによる新規/上書き判定
         // ========================================================================
         var existingItems = [];
-        try { existingItems = JSON.parse(sessionStorage.getItem('items') || '[]'); } catch(e) {}
-        try { var il = JSON.parse(localStorage.getItem('items') || '[]'); il.forEach(function(i){ if(!existingItems.find(function(m){return m.itemId===i.itemId;})) existingItems.push(i); }); } catch(e) {}
+        // DEMOモード・本番モード両方のキーから読み込み
+        try { existingItems = JSON.parse(sessionStorage.getItem('demo.items') || '[]'); } catch(e) {}
+        try { var il2 = JSON.parse(localStorage.getItem('onetouch.items') || '[]'); il2.forEach(function(i){ if(!existingItems.find(function(m){return m.itemId===i.itemId;})) existingItems.push(i); }); } catch(e) {}
+        try { var il3 = JSON.parse(sessionStorage.getItem('items') || '[]'); il3.forEach(function(i){ if(!existingItems.find(function(m){return m.itemId===i.itemId;})) existingItems.push(i); }); } catch(e) {}
+        try { var il4 = JSON.parse(localStorage.getItem('items') || '[]'); il4.forEach(function(i){ if(!existingItems.find(function(m){return m.itemId===i.itemId;})) existingItems.push(i); }); } catch(e) {}
 
         var newItems = [];
         var updateItems = [];
@@ -2227,8 +2290,14 @@
 
         // 保存
         if (updateItems.length > 0) {
-          sessionStorage.setItem('items', JSON.stringify(existingItems));
-          localStorage.setItem('items', JSON.stringify(existingItems));
+          // DEMOモード判定
+          var cu = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+          var isDemo = cu.companyCode === 'TAMJ' || sessionStorage.getItem('demo.mode') === 'true';
+          if (isDemo) {
+            sessionStorage.setItem('demo.items', JSON.stringify(existingItems));
+          } else {
+            localStorage.setItem('onetouch.items', JSON.stringify(existingItems));
+          }
         }
 
 
@@ -2783,12 +2852,12 @@
         {label:'販売会社',ok:!!(vi.name)},
       ];
       var allOk=reqChecks.every(function(r){return r.ok;});
-      var statusEl=document.getElementById('reqStatusBar');
+      var statusEl=document.getElementById('reqStatusBar'); if(!statusEl)return;
       statusEl.className='req-status '+(allOk?'complete':'incomplete');
       var itemsH=reqChecks.map(function(r){
         return '<span class="'+(r.ok?'mapped-ok':'mapped-ng')+'">'+(r.ok?'':'')+' '+r.label+'</span>';
       }).join(' ');
-      document.getElementById('reqStatusItems').innerHTML=itemsH;
+      var rsi=document.getElementById('reqStatusItems'); if(rsi) rsi.innerHTML=itemsH;
 
       //  テンプレート選択肢を更新
       buildTplSelect();
@@ -2827,13 +2896,13 @@
         h+='</div>';
         h+='</div>';
       });
-      document.getElementById('reflectTargets').innerHTML=h;
+      var rt=document.getElementById('reflectTargets'); if(rt)rt.innerHTML=h;
       updateReflectSummary();
     }
 
     //  テンプレート選択UI
     function buildTplSelect(){
-      var sel=document.getElementById('tplSelect');
+      var sel=document.getElementById('tplSelect')||document.createElement('select');
       if(!sel)return;
       sel.innerHTML='<option value="">（手動設定）</option>';
       allTemplates.forEach(function(tpl,idx){
@@ -2845,7 +2914,7 @@
     }
 
     function onTplSelect(){
-      var sel=document.getElementById('tplSelect');
+      var sel=document.getElementById('tplSelect')||document.createElement('select');
       var idx=parseInt(sel.value);
       var delBtn=document.getElementById('tplDelBtn');
       if(isNaN(idx)||idx<0||idx>=allTemplates.length){
@@ -2860,7 +2929,7 @@
     }
 
     function deleteTplCurrent(){
-      var sel=document.getElementById('tplSelect');
+      var sel=document.getElementById('tplSelect')||document.createElement('select');
       var idx=parseInt(sel.value);
       if(isNaN(idx)||idx<0)return;
       var name=allTemplates[idx].name;
@@ -2878,9 +2947,9 @@
       var tpl=findTemplateByVendor(vi.name);
       if(!tpl)return false;
       applyTemplate(tpl);
-      document.getElementById('tplAutoApplied').style.display='';
+      var tae=document.getElementById('tplAutoApplied'); if(tae) tae.style.display='';
       // テンプレート選択を合わせる
-      var sel=document.getElementById('tplSelect');
+      var sel=document.getElementById('tplSelect')||document.createElement('select');
       if(sel){
         for(var i=0;i<allTemplates.length;i++){
           if(allTemplates[i].name===tpl.name){sel.value=String(i);break;}
@@ -2921,7 +2990,7 @@
           }
         }
       });
-      var el=document.getElementById('reflectSummary');
+      var el=(document.getElementById('reflectSummary')||document.createElement('div'));
       if(enabled.length===0){
         el.innerHTML='反映先が未設定です。上のチェックボックスで画面を選択してください。';
       }else{

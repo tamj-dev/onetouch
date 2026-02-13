@@ -217,35 +217,32 @@
       
       <div class="field">
         <label>設備名</label>
-        <select id="formTitleInput" required>
+        <div id="equipmentSelector">
+          <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;" id="categoryTabs"></div>
+          <div style="position:relative;">
+            <input type="text" id="equipmentSearch" placeholder="設備名・型番・メーカーで検索" autocomplete="off"
+              style="width:100%;padding:12px 14px;border:1px solid #ddd;border-radius:8px;font-size:15px;background:#fafafa;">
+            <div id="suggestList" style="display:none;position:absolute;left:0;right:0;top:100%;background:white;border:1px solid #ddd;border-top:none;border-radius:0 0 8px 8px;max-height:240px;overflow-y:auto;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,.12);"></div>
+          </div>
+          <div id="selectedEquipment" style="display:none;margin-top:8px;padding:10px 14px;background:#f0fdf4;border:1px solid #a5d6a7;border-radius:8px;font-size:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span id="selectedEquipmentName" style="font-weight:600;"></span>
+              <button onclick="clearEquipmentSelection()" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer;padding:0 4px;">x</button>
+            </div>
+            <div id="selectedEquipmentDetail" style="font-size:12px;color:#666;margin-top:2px;"></div>
+          </div>
+        </div>
+        <select id="formTitleInput" style="display:none;" required>
           <option value="">選択してください</option>
         </select>
-        <div style="font-size: 12px; color: #555; margin-top: 4px;">
-          ※ 商品マスタに登録されている設備から選択してください
+        <div style="display:none;">
+          <input type="hidden" id="selectedItemId">
+          <input type="hidden" id="selectedPartnerId">
+          <input type="hidden" id="selectedPartnerName">
         </div>
       </div>
       
-      <div class="field" style="display: none;">
-        <input type="hidden" id="selectedItemId">
-        <input type="hidden" id="selectedPartnerId">
-        <input type="hidden" id="selectedPartnerName">
-      </div>
-      
-      <div class="field">
-        <label>種別（カテゴリー）</label>
-        <select id="formCat" disabled style="background: #f5f5f5;">
-          <option value="空調">空調</option>
-          <option value="給湯">給湯</option>
-          <option value="電気">電気</option>
-          <option value="水道">水道</option>
-          <option value="ガス">ガス</option>
-          <option value="設備">設備</option>
-          <option value="その他">その他</option>
-        </select>
-        <div style="font-size: 12px; color: #555; margin-top: 4px;">
-          ※ 設備を選択すると自動で設定されます
-        </div>
-      </div>
+      <input type="hidden" id="formCat" value="その他">
       
       <div class="field">
         <label>緊急度</label>
@@ -391,8 +388,10 @@
     }
     
     // 商品一覧を読み込む
+    var _allEquipments = [];
+    var _activeCategory = '';
+
     function loadItems() {
-      
       try {
         const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
         const isDemoMode = currentUser && currentUser.companyCode === 'TAMJ';
@@ -401,32 +400,29 @@
         
         let items = JSON.parse(storage.getItem(storageKey) || '[]');
         
-        // DEMOモードで商品が0件の場合、ダミー商品を自動生成
         if (items.length === 0 && isDemoMode) {
           items = [
-            { itemId:'ITEM-DEMO-001', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'エアコン 1号機', maker:'ダイキン', model:'AN22XRS-W', category:'空調', assignedPartnerId:'P001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:150000, stock:1, description:'2F 会議室に設置', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
-            { itemId:'ITEM-DEMO-002', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'給湯器 A', maker:'リンナイ', model:'RUX-A1615W-E', category:'給湯', assignedPartnerId:'P001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:80000, stock:1, description:'1F 給湯室', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
-            { itemId:'ITEM-DEMO-003', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'照明器具 LED-01', maker:'パナソニック', model:'LGB51210', category:'電気', assignedPartnerId:'P003', assignedPartnerName:'日本電気工事', unit:'個', price:12000, stock:10, description:'各フロア共通', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
-            { itemId:'ITEM-DEMO-004', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'トイレ 1F', maker:'TOTO', model:'CES9788F', category:'水道', assignedPartnerId:'P002', assignedPartnerName:'関東水道サービス', unit:'台', price:180000, stock:1, description:'1F 男子トイレ', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
-            { itemId:'ITEM-DEMO-005', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'エレベーター', maker:'三菱電機', model:'AXIEZ', category:'設備', assignedPartnerId:'P003', assignedPartnerName:'日本電気工事', unit:'基', price:5000000, stock:1, description:'本館', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() }
+            { itemId:'ITEM-DEMO-001', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'エアコン 1号機', maker:'ダイキン', model:'AN22XRS-W', category:'空調', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:150000, stock:1, description:'2F 会議室に設置', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            { itemId:'ITEM-DEMO-002', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'給湯器 A', maker:'リンナイ', model:'RUX-A1615W-E', category:'給湯', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:80000, stock:1, description:'1F 給湯室', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            { itemId:'ITEM-DEMO-003', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'照明器具 LED-01', maker:'パナソニック', model:'LGB51210', category:'電気', assignedPartnerId:'PN003', assignedPartnerName:'日本電気工事', unit:'個', price:12000, stock:10, description:'各フロア共通', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            { itemId:'ITEM-DEMO-004', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'トイレ 1F', maker:'TOTO', model:'CES9788F', category:'水道', assignedPartnerId:'PN002', assignedPartnerName:'関東水道サービス', unit:'台', price:180000, stock:1, description:'1F 男子トイレ', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            { itemId:'ITEM-DEMO-005', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'エレベーター', maker:'三菱電機', model:'AXIEZ', category:'設備', assignedPartnerId:'PN003', assignedPartnerName:'日本電気工事', unit:'基', price:5000000, stock:1, description:'本館', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() }
           ];
           storage.setItem(storageKey, JSON.stringify(items));
         }
         
-        
-        // 現在のユーザーの会社・事業所に紐付く商品のみフィルター
-        items = items.filter(item => {
+        items = items.filter(function(item) {
           return item.companyCode === currentUser.companyCode &&
                  (item.officeCode === currentUser.officeCode || !item.officeCode);
         });
         
+        _allEquipments = items;
         
-        // セレクトボックスに追加
-        const select = document.getElementById('formTitleInput');
+        // 旧selectにも入れる（send関数の互換性のため）
+        var select = document.getElementById('formTitleInput');
         select.innerHTML = '<option value="">選択してください</option>';
-        
-        items.forEach(item => {
-          const option = document.createElement('option');
+        items.forEach(function(item) {
+          var option = document.createElement('option');
           option.value = item.itemId;
           option.textContent = item.name + (item.maker ? ' (' + item.maker + ')' : '');
           option.dataset.itemId = item.itemId;
@@ -436,24 +432,130 @@
           select.appendChild(option);
         });
         
-        // 商品選択時のイベント
-        select.onchange = function() {
-          const selected = select.options[select.selectedIndex];
-          if (selected.value) {
-            // カテゴリーを自動設定
-            document.getElementById('formCat').value = selected.dataset.category;
-            
-            // 業者情報を隠しフィールドに保存
-            document.getElementById('selectedItemId').value = selected.dataset.itemId;
-            document.getElementById('selectedPartnerId').value = selected.dataset.partnerId;
-            document.getElementById('selectedPartnerName').value = selected.dataset.partnerName;
-            
+        // カテゴリタブ生成
+        buildCategoryTabs(items);
+        
+        // 検索イベント
+        var searchInput = document.getElementById('equipmentSearch');
+        searchInput.addEventListener('input', function() { showSuggestions(); });
+        searchInput.addEventListener('focus', function() { showSuggestions(); });
+        document.addEventListener('click', function(e) {
+          if (!e.target.closest('#equipmentSelector')) {
+            document.getElementById('suggestList').style.display = 'none';
           }
-        };
+        });
         
       } catch (e) {
         console.error('[loadItems] エラー:', e);
       }
+    }
+
+    function buildCategoryTabs(items) {
+      var cats = {};
+      items.forEach(function(i) { var c = i.category || 'その他'; cats[c] = (cats[c]||0) + 1; });
+      var tabsEl = document.getElementById('categoryTabs');
+      var h = '<button onclick="filterCategory(\'\')" class="cat-tab active" style="padding:6px 12px;border:1px solid #ddd;border-radius:16px;background:#333;color:white;font-size:12px;cursor:pointer;">全て (' + items.length + ')</button>';
+      Object.keys(cats).forEach(function(c) {
+        h += '<button onclick="filterCategory(\'' + c + '\')" class="cat-tab" style="padding:6px 12px;border:1px solid #ddd;border-radius:16px;background:white;color:#555;font-size:12px;cursor:pointer;">' + c + ' (' + cats[c] + ')</button>';
+      });
+      tabsEl.innerHTML = h;
+    }
+
+    function filterCategory(cat) {
+      _activeCategory = cat;
+      document.querySelectorAll('.cat-tab').forEach(function(btn) {
+        if ((cat === '' && btn.textContent.startsWith('全て')) || btn.textContent.startsWith(cat + ' ')) {
+          btn.style.background = '#333'; btn.style.color = 'white';
+        } else {
+          btn.style.background = 'white'; btn.style.color = '#555';
+        }
+      });
+      showSuggestions();
+    }
+
+    function normalizeStr(s) {
+      if (!s) return '';
+      return s.replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(c) {
+        return String.fromCharCode(c.charCodeAt(0) - 0xFEE0);
+      }).toLowerCase();
+    }
+
+    function showSuggestions() {
+      var query = normalizeStr(document.getElementById('equipmentSearch').value);
+      var list = document.getElementById('suggestList');
+      
+      var filtered = _allEquipments.filter(function(item) {
+        // カテゴリ絞り込み
+        if (_activeCategory && (item.category || 'その他') !== _activeCategory) return false;
+        // 検索
+        if (!query) return true;
+        return normalizeStr(item.name).includes(query) ||
+               normalizeStr(item.maker).includes(query) ||
+               normalizeStr(item.model).includes(query) ||
+               normalizeStr(item.description).includes(query);
+      });
+      
+      if (filtered.length === 0) {
+        list.innerHTML = '<div style="padding:14px;color:#999;font-size:13px;text-align:center;">該当する設備がありません</div>';
+        list.style.display = 'block';
+        return;
+      }
+      
+      // 最大50件表示
+      var shown = filtered.slice(0, 50);
+      var h = '';
+      shown.forEach(function(item) {
+        var desc = item.description ? ' - ' + item.description : '';
+        var maker = item.maker ? '<span style="color:#888;font-size:12px;"> ' + item.maker + '</span>' : '';
+        var cat = item.category ? '<span style="display:inline-block;padding:1px 6px;background:#f0f0f0;border-radius:4px;font-size:11px;color:#666;margin-left:6px;">' + item.category + '</span>' : '';
+        h += '<div class="suggest-item" onclick="selectEquipment(\'' + item.itemId + '\')" '
+          + 'style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f5f5f5;transition:background .1s;"'
+          + ' onmouseover="this.style.background=\'#f8f9fa\'" onmouseout="this.style.background=\'white\'">'
+          + '<div style="font-size:14px;font-weight:500;">' + item.name + maker + cat + '</div>';
+        if (desc) h += '<div style="font-size:12px;color:#999;margin-top:2px;">' + desc + '</div>';
+        h += '</div>';
+      });
+      if (filtered.length > 50) {
+        h += '<div style="padding:10px;color:#888;font-size:12px;text-align:center;">他 ' + (filtered.length - 50) + ' 件（検索で絞り込んでください）</div>';
+      }
+      list.innerHTML = h;
+      list.style.display = 'block';
+    }
+
+    function selectEquipment(itemId) {
+      var item = _allEquipments.find(function(i) { return i.itemId === itemId; });
+      if (!item) return;
+      
+      // 旧selectの値も設定（send関数の互換性）
+      document.getElementById('formTitleInput').value = itemId;
+      document.getElementById('formCat').value = item.category || 'その他';
+      document.getElementById('selectedItemId').value = item.itemId;
+      document.getElementById('selectedPartnerId').value = item.assignedPartnerId || '';
+      document.getElementById('selectedPartnerName').value = item.assignedPartnerName || '';
+      
+      // UI更新
+      document.getElementById('suggestList').style.display = 'none';
+      document.getElementById('equipmentSearch').style.display = 'none';
+      document.getElementById('categoryTabs').style.display = 'none';
+      var selEl = document.getElementById('selectedEquipment');
+      selEl.style.display = 'block';
+      document.getElementById('selectedEquipmentName').textContent = item.name;
+      var detail = [item.maker, item.model, item.category, item.description].filter(Boolean).join(' / ');
+      document.getElementById('selectedEquipmentDetail').textContent = detail;
+    }
+
+    function clearEquipmentSelection() {
+      document.getElementById('formTitleInput').value = '';
+      document.getElementById('formCat').value = 'その他';
+      document.getElementById('selectedItemId').value = '';
+      document.getElementById('selectedPartnerId').value = '';
+      document.getElementById('selectedPartnerName').value = '';
+      
+      document.getElementById('equipmentSearch').style.display = '';
+      document.getElementById('equipmentSearch').value = '';
+      document.getElementById('categoryTabs').style.display = '';
+      document.getElementById('selectedEquipment').style.display = 'none';
+      document.getElementById('suggestList').style.display = 'none';
     }
     function closeForm(){document.getElementById('formOverlay').classList.remove('open');}
     function closeEmg(){document.getElementById('emgOverlay').classList.remove('open');}
@@ -474,14 +576,18 @@
     function send(){
       var type=document.getElementById('formType').value;
       var titleSelect=document.getElementById('formTitleInput');
-      var selectedOption = titleSelect.options[titleSelect.selectedIndex];
-      var title=selectedOption.textContent || '';
+      var itemId = document.getElementById('selectedItemId').value;
+      // 選択された設備名を取得
+      var title = '';
+      var selectedItem = _allEquipments.find(function(i) { return i.itemId === itemId; });
+      if (selectedItem) title = selectedItem.name;
+      if (!title && titleSelect.selectedIndex > 0) title = titleSelect.options[titleSelect.selectedIndex].textContent;
       var cat=document.getElementById('formCat').value;
       var priority=document.getElementById('formPriority').value;
       var loc=document.getElementById('formLoc').value;
       var desc=document.getElementById('formDesc').value;
       
-      if(!titleSelect.value){toast('設備を選択してください');return;}
+      if(!itemId){toast('設備を選択してください');return;}
       if(!desc){toast('状況を入力してください');return;}
       
       // 商品・業者情報を取得
@@ -517,12 +623,30 @@
           message: urgLabel + '新しい通報：' + (title||cat) + '（' + (loc||'場所未記入') + '）'
         });
       }
+      // 事業所管理者向け通知を発生
+      if (typeof sendNotification === 'function') {
+        var urgLabel2 = priority === '高' ? '【緊急】' : '';
+        sendNotification({
+          toRole: 'office_admin',
+          type: 'new_report',
+          reportId: lastSavedReportId || '',
+          message: urgLabel2 + 'スタッフからの通報：' + (title||cat) + '（' + (loc||'場所未記入') + '）'
+        });
+        // 本社管理者にも通知
+        sendNotification({
+          toRole: 'company_admin',
+          type: 'new_report',
+          reportId: lastSavedReportId || '',
+          message: urgLabel2 + '新しい通報：' + (title||cat) + '（' + (loc||'場所未記入') + '）'
+        });
+      }
       try{ONE.sendLocalNotify('【通報】'+cat, '通報が送信されました\n場所：'+(loc||'未記入'), {tag:'report-'+Date.now(), url:'/report.html'});}catch(e){}
       renderHistory();
       // フォームリセット
       document.getElementById('formTitleInput').value='';
       document.getElementById('formDesc').value='';
       document.getElementById('formLoc').value='';
+      clearEquipmentSelection();
     }
 
     function sendEmg(){
@@ -535,6 +659,21 @@
       closeEmg();
       logEvent('emergency_report', { emergencyType: type, location: loc });
       showSentOK('緊急通報を送信しました', '種別：'+type+(loc ? '　場所：'+loc : ''), true);
+      // 事業所管理者・本社管理者向け通知
+      if (typeof sendNotification === 'function') {
+        sendNotification({
+          toRole: 'office_admin',
+          type: 'emergency',
+          reportId: lastSavedReportId || '',
+          message: '【緊急】緊急通報：' + type + '（' + (loc||'場所未記入') + '）'
+        });
+        sendNotification({
+          toRole: 'company_admin',
+          type: 'emergency',
+          reportId: lastSavedReportId || '',
+          message: '【緊急】緊急通報：' + type + '（' + (loc||'場所未記入') + '）'
+        });
+      }
       try{ONE.sendLocalNotify('【緊急通報】'+type, '場所：'+(loc||'未記入')+'\n'+desc, {tag:'emergency-'+Date.now(), url:'/report.html', emergency:true});}catch(e){}
       renderHistory();
       document.getElementById('emgDesc').value='';
