@@ -138,7 +138,7 @@ function showDemoModeBadge() {
         position: fixed;
         top: 10px;
         right: 10px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #1e3a5f;
         color: white;
         padding: 8px 16px;
         border-radius: 20px;

@@ -51,58 +51,31 @@
         }
 
         .table-container {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            overflow-x: auto;
+            display: none;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        thead {
-            background: #fafafa;
-        }
-
-        th {
-            padding: 8px 10px; font-size: 12px;
-            text-align: left;
-            font-weight: 600;
-            color: #555;
-            border-bottom: 2px solid #ddd;
-            white-space: nowrap;
-        }
-
-        td {
-            padding: 8px 10px; font-size: 13px;
-            border-bottom: 1px solid #f0f0f0;
-            white-space: nowrap;
-        }
-
-        tbody tr:hover {
-            background: #fafafa;
-            cursor: pointer;
-        }
-
+        /* ステータスバッジ */
         .status-badge {
             display: inline-block;
             padding: 4px 12px;
             border-radius: 12px;
             font-size: 12px;
             font-weight: 600;
+            white-space: nowrap;
         }
-
-        .status-pending { background: #fff3e0; color: #e65100; }
-        .status-processing { background: #e3f2fd; color: #1976d2; }
-        .status-completed { background: #c8e6c9; color: #2e7d32; }
-        .status-unavailable { background: #ffebee; color: #c62828; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-processing { background: #dbeafe; color: #1e40af; }
+        .status-completed { background: #dcfce7; color: #166534; }
+        .status-unavailable { background: #fee2e2; color: #991b1b; }
 
         .empty-state {
             text-align: center;
             padding: 60px 20px;
-            color: #999;
+            color: #94a3b8;
+        }
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
         }
 
         /* ステータスタブ */
@@ -113,7 +86,7 @@
         }
         .status-tab {
             background: white;
-            border: 2px solid #e0e0e0;
+            border: 2px solid #e2e8f0;
             border-radius: 10px;
             padding: 12px 8px;
             cursor: pointer;
@@ -121,16 +94,16 @@
             text-align: center;
         }
         .status-tab:hover {
-            border-color: #667eea;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+            border-color: #2563eb;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
         }
         .status-tab.active {
-            border-color: #667eea;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-color: #2563eb;
+            background: #1e3a5f;
         }
         .status-tab-label {
             font-size: 12px;
-            color: #666;
+            color: #64748b;
             margin-bottom: 4px;
         }
         .status-tab.active .status-tab-label {
@@ -140,7 +113,7 @@
         .status-tab-count {
             font-size: 24px;
             font-weight: 700;
-            color: #333;
+            color: #1e293b;
         }
         .status-tab.active .status-tab-count {
             color: white;
@@ -149,77 +122,79 @@
             .status-tabs { grid-template-columns: repeat(3, 1fr); }
         }
 
-        /* スマホ用カード */
-        .mobile-cards { display: none; }
+        /* カード表示（PC・スマホ共通） */
+        .report-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
         .report-card {
             background: white;
-            border: 1px solid #e5e7eb;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #2563eb;
             border-radius: 12px;
             padding: 16px;
-            margin-bottom: 12px;
             cursor: pointer;
             transition: all 0.2s;
         }
         .report-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .report-card.is-new { background: #f0fdf4; }
         .report-card-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
         .report-card-title {
             font-size: 14px;
             font-weight: 600;
-            color: #333;
+            color: #1e293b;
+            flex: 1;
+            margin-right: 8px;
         }
         .report-card-date {
             font-size: 12px;
-            color: #999;
+            color: #94a3b8;
             margin-bottom: 8px;
         }
         .report-card-info {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 6px;
             font-size: 12px;
-            color: #666;
+            color: #475569;
             margin-bottom: 6px;
         }
         .report-card-info span {
-            background: #f5f5f5;
+            background: #eff6ff;
+            color: #1e40af;
             padding: 2px 8px;
             border-radius: 4px;
         }
         .report-card-partner {
             font-size: 12px;
-            color: #1e40af;
+            color: #2563eb;
             font-weight: 600;
         }
+        .report-card-response {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
 
-        /* PC: テーブル表示 / スマホ: カード表示 */
         @media (max-width: 768px) {
-            .table-container { display: none; }
-            .mobile-cards { display: block; }
-            .filter-panel { padding: 16px; }
-            .filter-row {
+            .report-cards {
                 grid-template-columns: 1fr;
             }
-        }
-
-        .empty-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-        }
-
-        @media (max-width: 768px) {
-.filter-row {
+            .filter-panel { padding: 16px; }
+            .filter-row {
                 grid-template-columns: 1fr;
             }
         }
     </style>
     <script src="demo-mode.js"></script>
     <script src="unified-header.js"></script>
-    <meta name="theme-color" content="#1a1a1a">
+    <meta name="theme-color" content="#1e3a5f">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="icon-192.png">
 </head>
@@ -289,39 +264,19 @@
                     <input type="date" id="startDate" class="filter-input">
                     <span>〜</span>
                     <input type="date" id="endDate" class="filter-input">
-                    <button onclick="filterReports()" style="padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-left: 12px;">検索</button>
-                    <button onclick="exportCSV()" style="padding: 8px 20px; background: #43a047; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">CSVエクスポート</button>
+                    <button onclick="filterReports()" style="padding: 8px 20px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; margin-left: 12px;">検索</button>
+                    <button onclick="exportCSV()" style="padding: 8px 20px; background: #059669; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">CSVエクスポート</button>
                 </div>
             </div>
         </div>
 
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>通報日時</th>
-                        <th>通報者</th>
-                        <th>事業所</th>
-                        <th>カテゴリ</th>
-                        <th>内容</th>
-                        <th>ステータス</th>
-                        <th>対応時間</th>
-                        <th>対応者</th>
-                    </tr>
-                </thead>
-                <tbody id="reportList">
-                    <tr>
-                        <td colspan="6" class="empty-state">
-                            <div class="empty-icon"></div>
-                            <div>通報履歴がありません</div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        <!-- カード表示（PC・スマホ共通） -->
+        <div id="reportCards" class="report-cards">
+            <div style="grid-column: 1 / -1;" class="empty-state">
+                <div class="empty-icon"></div>
+                <div>通報履歴がありません</div>
+            </div>
         </div>
-
-        <!-- スマホ用カード表示 -->
-        <div id="reportCards" class="mobile-cards"></div>
     </div>
 
     <!-- 通報詳細モーダル -->
@@ -769,7 +724,7 @@
 
         // 通報履歴を表示
         function renderReports(reports) {
-            const reportList = document.getElementById('reportList');
+            const reportCards = document.getElementById('reportCards');
             
             // フィルタリング後の通報をグローバル変数に保存
             allReports = reports;
@@ -784,44 +739,21 @@
             if (!banner) {
                 banner = document.createElement('div');
                 banner.id = 'newReportBanner';
-                banner.style.cssText = 'background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px;padding:12px 20px;margin-bottom:16px;display:none;align-items:center;justify-content:space-between;';
-                var tableEl = document.getElementById('reportList');
-                if (tableEl && tableEl.closest('.table-wrap')) {
-                    tableEl.closest('.table-wrap').parentNode.insertBefore(banner, tableEl.closest('.table-wrap'));
-                }
+                banner.style.cssText = 'background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:12px 20px;margin-bottom:16px;display:none;align-items:center;justify-content:space-between;';
+                reportCards.parentNode.insertBefore(banner, reportCards);
             }
             if (newCount > 0 && banner) {
                 banner.style.display = 'flex';
-                banner.innerHTML = '<span style="font-weight:600;color:#2e7d32;">新着 ' + newCount + ' 件の通報があります</span>'
-                    + '<button onclick="markReportsViewed()" style="background:#333;color:#fff;border:none;border-radius:6px;padding:6px 16px;cursor:pointer;font-size:13px;">確認済みにする</button>';
+                banner.innerHTML = '<span style="font-weight:600;color:#166534;">新着 ' + newCount + ' 件の通報があります</span>'
+                    + '<button onclick="markReportsViewed()" style="background:#1e3a5f;color:#fff;border:none;border-radius:6px;padding:6px 16px;cursor:pointer;font-size:13px;">確認済みにする</button>';
             } else if (banner) {
                 banner.style.display = 'none';
             }
             
             if (reports.length === 0) {
-                reportList.innerHTML = `
-                    <tr>
-                        <td colspan="8" class="empty-state">
-                            <div class="empty-icon"></div>
-                            <div>通報履歴がありません</div>
-                        </td>
-                    </tr>
-                `;
+                reportCards.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#94a3b8;"><div style="font-size:48px;margin-bottom:16px;"></div><div>通報履歴がありません</div></div>';
                 return;
             }
-
-            const statusLabels = {
-                pending: '未対応',
-                processing: '対応中',
-                completed: '完了'
-            };
-            
-            const contractorStatusLabels = {
-                '未対応': '未対応',
-                '対応中': '対応中',
-                '完了': '完了',
-                '対応不可': '対応不可'
-            };
 
             const typeLabels = {
                 wholesale: '卸業者',
@@ -833,101 +765,58 @@
             // 業者マスタを読み込み
             const partners = JSON.parse(localStorage.getItem('partners') || '[]');
 
-            reportList.innerHTML = reports.map((report, index) => {
+            reportCards.innerHTML = reports.map((report, index) => {
                 const datetime = new Date(report.timestamp);
                 const dateStr = datetime.toLocaleDateString('ja-JP') + ' ' + 
                                datetime.toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'});
-                const status = report.status || 'pending';
                 const category = report.emergency ? '緊急通報' : (typeLabels[report.type] || report.category || '-');
                 const officeName = report.officeName || '-';
                 
                 // 割当業者名を取得
-                let assignedPartnerName = '-';
-                let assignedPartnerWarning = '';
+                let assignedPartnerName = '';
                 if (report.assignedPartnerId) {
                     const partner = partners.find(p => p.id === report.assignedPartnerId);
                     assignedPartnerName = partner ? partner.name : '不明';
-                } else {
-                    assignedPartnerWarning = ' style="color: #f59e0b; font-weight: 600;"';
                 }
                 
                 // ステータス
-                const contractorStatus = report.contractorStatus || '-';
+                const contractorStatus = report.contractorStatus || '未対応';
                 const contractorStatusClass = contractorStatus === '未対応' ? 'status-pending' : 
                                               contractorStatus === '対応中' ? 'status-processing' :
                                               contractorStatus === '完了' ? 'status-completed' :
                                               contractorStatus === '対応不可' ? 'status-unavailable' : '';
                 
                 // 対応時間を計算
-                let responseTime = '-';
+                let responseTime = '';
                 if (report.assignedAt && report.firstResponseAt) {
                     const assigned = new Date(report.assignedAt);
                     const responded = new Date(report.firstResponseAt);
                     const diffMs = responded - assigned;
                     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
                     const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-                    
-                    if (diffHours > 0) {
-                        responseTime = `${diffHours}時間${diffMinutes}分`;
-                    } else {
-                        responseTime = `${diffMinutes}分`;
-                    }
+                    responseTime = diffHours > 0 ? `${diffHours}時間${diffMinutes}分` : `${diffMinutes}分`;
                 }
                 
                 const isNew = report.timestamp > lastViewed;
-                const rowStyle = isNew ? 'cursor:pointer;background:#f0fdf4;' : 'cursor:pointer;';
+                const description = (report.description || report.category || '通報');
+                const descShort = description.length > 20 ? description.substring(0, 20) + '...' : description;
                 
                 return `
-                    <tr onclick="showDetail(${index})" style="${rowStyle}">
-                        <td>${isNew ? '<span style="display:inline-block;width:8px;height:8px;background:#22c55e;border-radius:50%;margin-right:6px;"></span>' : ''}${dateStr}</td>
-                        <td>${report.reporter || '-'}</td>
-                        <td>${officeName}</td>
-                        <td>${category}</td>
-                        <td>${(report.description || report.category || '-').length > 15 ? (report.description || report.category || '-').substring(0, 15) + '...' : (report.description || report.category || '-')}</td>
-                        <td>${contractorStatus !== '-' ? `<span class="status-badge ${contractorStatusClass}">${contractorStatus}</span>` : '-'}</td>
-                        <td>${responseTime}</td>
-                        <td>${report.handler || '-'}</td>
-                    </tr>
+                    <div class="report-card${isNew ? ' is-new' : ''}" onclick="showDetail(${index})">
+                        <div class="report-card-header">
+                            <div class="report-card-title">${isNew ? '<span style="display:inline-block;width:8px;height:8px;background:#22c55e;border-radius:50%;margin-right:6px;vertical-align:middle;"></span>' : ''}${descShort}</div>
+                            <span class="status-badge ${contractorStatusClass}">${contractorStatus}</span>
+                        </div>
+                        <div class="report-card-date">${dateStr}　${report.reporter || '-'}</div>
+                        <div class="report-card-info">
+                            <span>${officeName}</span>
+                            <span>${category}</span>
+                        </div>
+                        ${assignedPartnerName ? `<div class="report-card-partner">担当: ${assignedPartnerName}</div>` : ''}
+                        ${responseTime ? `<div class="report-card-response">対応時間: ${responseTime}</div>` : ''}
+                    </div>
                 `;
             }).join('');
-
-            // スマホ用カード表示
-            const reportCards = document.getElementById('reportCards');
-            if (reports.length === 0) {
-                reportCards.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">通報履歴がありません</div>';
-            } else {
-                reportCards.innerHTML = reports.map((report, index) => {
-                    const datetime = new Date(report.timestamp);
-                    const dateStr = datetime.toLocaleDateString('ja-JP') + ' ' + 
-                                   datetime.toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'});
-                    const category = report.emergency ? '緊急通報' : (typeLabels[report.type] || report.category || '-');
-                    const contractorStatus = report.contractorStatus || '未対応';
-                    const contractorStatusClass = contractorStatus === '未対応' ? 'status-pending' : 
-                                                  contractorStatus === '対応中' ? 'status-processing' :
-                                                  contractorStatus === '完了' ? 'status-completed' :
-                                                  contractorStatus === '対応不可' ? 'status-unavailable' : '';
-                    
-                    let assignedPartnerName = '';
-                    if (report.assignedPartnerId) {
-                        const partner = partners.find(p => p.id === report.assignedPartnerId);
-                        assignedPartnerName = partner ? partner.name : '不明';
-                    }
-
-                    return `
-                        <div class="report-card" onclick="showDetail(${index})">
-                            <div class="report-card-header">
-                                <div class="report-card-title">${(report.description || report.category || '通報').length > 15 ? (report.description || report.category || '通報').substring(0, 15) + '...' : (report.description || report.category || '通報')}</div>
-                                <span class="status-badge ${contractorStatusClass}">${contractorStatus}</span>
-                            </div>
-                            <div class="report-card-date">${dateStr}　${report.reporter || '-'}</div>
-                            <div class="report-card-info">
-                                <span>${report.officeName || '-'}</span>
-                                <span>${category}</span>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
         }
 
         // CSVエクスポート

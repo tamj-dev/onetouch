@@ -12,25 +12,25 @@
 
 const UnifiedHeader = {
 
-    // ========== カラーテーマ（CSS変数として全体に適用） ==========
+    // ========== カラーテーマ（Blue系デザイン 2026-02-14） ==========
     colors: {
-        primary: '#E53935',
-        primaryDark: '#D32F2F',
-        primaryLight: '#FFEBEE',
-        primaryShadow: 'rgba(229, 57, 53, 0.3)',
-        text: '#333333',
-        textLight: '#666666',
-        textMuted: '#999999',
-        bg: '#fafafa',
+        primary: '#2563eb',
+        primaryDark: '#1e3a5f',
+        primaryLight: '#eff6ff',
+        primaryShadow: 'rgba(37, 99, 235, 0.3)',
+        text: '#1e293b',
+        textLight: '#475569',
+        textMuted: '#94a3b8',
+        bg: '#f5f7fa',
         bgWhite: '#ffffff',
-        border: '#e0e0e0',
-        borderLight: '#f0f0f0',
-        hoverBg: '#f5f5f5',
+        border: '#e2e8f0',
+        borderLight: '#f1f5f9',
+        hoverBg: '#f8fafc',
         // ステータスカラー（機能的な色分け）
-        success: '#4caf50',
-        warning: '#ff9800',
-        danger: '#d32f2f',
-        info: '#1976d2',
+        success: '#059669',
+        warning: '#d97706',
+        danger: '#dc2626',
+        info: '#2563eb',
     },
 
     // ========== 初期化 ==========
@@ -93,13 +93,12 @@ const UnifiedHeader = {
         style.textContent = `
             /* ========== 統一ヘッダー ========== */
             .unified-header {
-                background: white;
+                background: #1e3a5f;
                 padding: 16px 24px;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                border-bottom: 1px solid #e0e0e0;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                box-shadow: 0 2px 8px rgba(30, 58, 95, 0.2);
                 position: sticky;
                 top: 0;
                 z-index: 100;
@@ -109,21 +108,21 @@ const UnifiedHeader = {
             .uh-right { display: flex; align-items: center; gap: 12px; }
 
             .uh-back-btn {
-                background: none; border: none; color: #666; font-size: 14px;
+                background: none; border: none; color: rgba(255,255,255,0.7); font-size: 14px;
                 cursor: pointer; padding: 8px 12px; border-radius: 6px;
                 transition: all 0.2s; font-weight: 500;
             }
-            .uh-back-btn:hover { background: #f5f5f5; color: var(--primary-dark, #D32F2F); }
+            .uh-back-btn:hover { background: rgba(255,255,255,0.1); color: white; }
 
             .uh-icon { font-size: 24px; line-height: 1; }
-            .uh-title { font-size: 20px; font-weight: 600; color: #333; margin: 0; }
+            .uh-title { font-size: 20px; font-weight: 600; color: white; margin: 0; }
 
             /* DEMOバッジ */
             .uh-demo-badge {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: rgba(255,255,255,0.2);
                 color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px;
                 font-weight: 600; white-space: nowrap;
-                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+                border: 1px solid rgba(255,255,255,0.3);
                 animation: uh-float 3s ease-in-out infinite;
             }
             @keyframes uh-float {
@@ -137,14 +136,14 @@ const UnifiedHeader = {
                 padding: 8px 12px; border-radius: 6px; transition: all 0.2s;
                 background: none; border: none; font-family: inherit;
             }
-            .uh-user-btn:hover { background: #f5f5f5; }
+            .uh-user-btn:hover { background: rgba(255,255,255,0.1); }
             .uh-avatar {
                 width: 32px; height: 32px; border-radius: 50%;
-                background: var(--primary, #E53935); color: white;
+                background: rgba(255,255,255,0.2); color: white;
                 display: flex; align-items: center; justify-content: center;
                 font-size: 14px; font-weight: 600; flex-shrink: 0;
             }
-            .uh-user-name { font-size: 14px; color: #333; font-weight: 500; }
+            .uh-user-name { font-size: 14px; color: rgba(255,255,255,0.9); font-weight: 500; }
 
             /* 通知ベルボタン */
             .uh-bell-btn {
@@ -152,8 +151,8 @@ const UnifiedHeader = {
                 padding: 8px; border-radius: 6px; transition: all 0.2s;
                 display: flex; align-items: center; justify-content: center;
             }
-            .uh-bell-btn:hover { background: #f5f5f5; }
-            .uh-bell-btn svg { width: 20px; height: 20px; }
+            .uh-bell-btn:hover { background: rgba(255,255,255,0.1); }
+            .uh-bell-btn svg { width: 20px; height: 20px; stroke: rgba(255,255,255,0.8); }
             .uh-bell-badge {
                 position: absolute; top: 2px; right: 2px;
                 background: #dc2626; color: #fff; font-size: 10px; font-weight: 700;
@@ -214,7 +213,7 @@ const UnifiedHeader = {
             .uh-menu-name { font-weight: 600; font-size: 14px; color: #333; }
             .uh-menu-sub { font-size: 12px; color: #666; margin-top: 2px; }
             .uh-divider { height: 1px; background: #e0e0e0; margin: 4px 0; }
-            .uh-menu-item.uh-logout { color: #d32f2f; }
+            .uh-menu-item.uh-logout { color: #dc2626; }
             .uh-menu-item.uh-logout:hover { background: #ffebee; }
             .uh-menu-item.uh-demo-active { background: #f0f7ff; font-weight: 700; color: #2563eb; }
 
@@ -236,7 +235,7 @@ const UnifiedHeader = {
                 width: 100%; padding: 10px; border: 1px solid #e0e0e0;
                 border-radius: 6px; font-size: 14px; box-sizing: border-box;
             }
-            .uh-pw-input:focus { outline: none; border-color: var(--primary, #E53935); box-shadow: 0 0 0 3px rgba(229,57,53,0.1); }
+            .uh-pw-input:focus { outline: none; border-color: var(--primary, #2563eb); box-shadow: 0 0 0 3px rgba(229,57,53,0.1); }
             .uh-pw-hint { font-size: 12px; color: #666; margin-top: 4px; }
             .uh-pw-actions { display: flex; gap: 12px; justify-content: flex-end; }
             .uh-pw-cancel {
@@ -245,17 +244,17 @@ const UnifiedHeader = {
             }
             .uh-pw-cancel:hover { background: #e0e0e0; }
             .uh-pw-submit {
-                padding: 10px 20px; background: var(--primary, #E53935); border: none;
+                padding: 10px 20px; background: var(--primary, #2563eb); border: none;
                 border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; color: white;
             }
-            .uh-pw-submit:hover { background: var(--primary-dark, #D32F2F); }
+            .uh-pw-submit:hover { background: var(--primary-dark, #1d4ed8); }
 
             /* 初回ログインバナー */
             .uh-first-login {
                 display: none; position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: #1e3a5f;
                 color: white; padding: 16px 24px; border-radius: 12px;
-                box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+                box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3);
                 z-index: 9999; max-width: 500px; width: 90%;
             }
             .uh-first-login.show { display: block; }
@@ -270,7 +269,7 @@ const UnifiedHeader = {
             }
             .uh-fl-actions { display: flex; gap: 8px; margin-top: 12px; }
             .uh-fl-btn-now {
-                flex: 1; padding: 8px 16px; background: white; color: #667eea;
+                flex: 1; padding: 8px 16px; background: white; color: #2563eb;
                 border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;
             }
             .uh-fl-btn-later {
