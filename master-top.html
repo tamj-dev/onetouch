@@ -124,15 +124,15 @@
                 <div class="card-title">ヘルプ・FAQ</div>
                 <div class="card-desc">使い方ガイド</div>
             </a>
-            <a href="report.html" class="menu-card" id="staffCard" style="display: none;">
+            <a href="#" onclick="switchToDemo('staff'); return false;" class="menu-card" id="staffCard" style="display: none;">
                 <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
                 <div class="card-title">通報画面（スタッフ）</div>
-                <div class="card-desc">スタッフ用通報画面を確認</div>
+                <div class="card-desc">DEMOスタッフとして動作確認</div>
             </a>
-            <a href="contractor-dashboard.html" class="menu-card" id="contractorCard" style="display: none;">
+            <a href="#" onclick="switchToDemo('contractor'); return false;" class="menu-card" id="contractorCard" style="display: none;">
                 <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg></div>
                 <div class="card-title">業者画面</div>
-                <div class="card-desc">業者ダッシュボードを確認</div>
+                <div class="card-desc">DEMO業者として動作確認</div>
             </a>
         </div>
     </div>
@@ -154,8 +154,8 @@
             // システム管理者（全機能アクセス可能）
             if (role === 'system_admin') {
                 show('companyCard');
-                show('settingsCard');
-                // 通報画面・業者画面にもアクセスできるリンクを追加
+                // settingsCardは非表示（システム管理ダッシュボード経由でアクセス）
+                // 通報画面・業者画面にDEMO切替でアクセス
                 show('staffCard');
                 show('contractorCard');
             }
@@ -178,6 +178,50 @@
         function hide(id) {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
+        }
+
+        // DEMO切り替え（system_admin → DEMOアカウント）
+        function switchToDemo(role) {
+            // 元のsystem_adminセッションを退避
+            sessionStorage.setItem('_savedAdminSession', sessionStorage.getItem('currentUser'));
+            
+            var demoUser;
+            if (role === 'staff') {
+                demoUser = (typeof DEMO_ACCOUNTS !== 'undefined' && DEMO_ACCOUNTS.staff) || {
+                    companyCode: 'TAMJ', id: 'demo-staff', password: 'demo',
+                    name: 'デモスタッフ', role: 'staff', scope: 'office',
+                    companyName: 'タムジ株式会社', officeCode: 'TAMJ-J0001', officeName: '東京事業所'
+                };
+            } else if (role === 'contractor') {
+                demoUser = (typeof DEMO_ACCOUNTS !== 'undefined' && DEMO_ACCOUNTS.contractor) || {
+                    companyCode: 'PN001', id: 'pn001-yamada', password: 'demo',
+                    name: '山田 太郎', role: 'contractor', companyName: '東京設備工業株式会社',
+                    partnerId: 'PN001', partnerCode: 'PN001'
+                };
+            }
+            if (!demoUser) return;
+
+            var userInfo = {
+                companyCode: demoUser.companyCode, companyName: demoUser.companyName,
+                id: demoUser.id, userId: demoUser.id, name: demoUser.name,
+                role: demoUser.role, scope: demoUser.scope || '',
+                officeCode: demoUser.officeCode || '', officeName: demoUser.officeName || '',
+                isFirstLogin: false, isDemoMode: true, _fromAdmin: true
+            };
+            sessionStorage.setItem('currentUser', JSON.stringify(userInfo));
+            
+            if (role === 'contractor') {
+                sessionStorage.setItem('currentContractor', JSON.stringify({
+                    id: demoUser.partnerId, partnerId: demoUser.partnerId,
+                    partnerCode: demoUser.partnerCode, companyName: demoUser.companyName,
+                    name: demoUser.name, contactName: demoUser.name,
+                    categories: demoUser.categories || [], assignedCompanies: demoUser.assignedCompanies || ['TAMJ'],
+                    role: 'contractor'
+                }));
+                window.location.href = 'contractor-dashboard.html';
+            } else {
+                window.location.href = 'report.html';
+            }
         }
 
         // 戻る（ロールに応じたホームに遷移）

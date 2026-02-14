@@ -348,30 +348,16 @@
         </div>
     </div>
 
-    <!-- スタッフ用QRログイン -->
+    <!-- 監査ログ -->
     <div class="section">
         <div class="section-header">
             <div class="section-title">
-                <span class="section-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span>
-                スタッフ用QRログイン
+                <span class="section-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
+                監査ログ
             </div>
         </div>
-        <div style="font-size: 13px; color: #475569; margin-bottom: 16px;">スタッフ専用のQRコードを生成します。QRを読むだけでログインでき、通報画面に直行します。</div>
-        <div style="margin-bottom: 12px;">
-            <label style="font-size: 12px; color: #475569; font-weight: 600; display: block; margin-bottom: 6px;">スタッフアカウントを選択</label>
-            <select id="qrStaffSelect" style="width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px;">
-                <option value="">-- スタッフを選択 --</option>
-            </select>
-        </div>
-        <button onclick="generateQR()" style="background: #2563eb; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; width: 100%; transition: all 0.2s;">
-            QRログインURL生成
-        </button>
-        <div id="qrResult" style="display: none; margin-top: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
-            <div style="font-size: 12px; color: #475569; margin-bottom: 8px;">QRログインURL（このURLをQRコードに変換してください）</div>
-            <div id="qrUrl" style="font-size: 13px; color: #1e293b; word-break: break-all; background: white; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 8px;"></div>
-            <button onclick="copyQRUrl()" id="qrCopyBtn" style="background: #1e3a5f; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">URLをコピー</button>
-            <div style="margin-top: 10px; font-size: 11px; color: #94a3b8;">印刷して各フロアに掲示してください。スマホのカメラで読み取るだけで通報画面に直行します。</div>
-        </div>
+        <div style="font-size: 13px; color: #475569; margin-bottom: 16px;">全ユーザーの操作履歴を確認・ダウンロードできます。</div>
+        <a href="audit-log.html" style="display:inline-block;background:#2563eb;color:white;border:none;padding:12px 24px;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;text-decoration:none;transition:all 0.2s;">監査ログを開く</a>
     </div>
 
     <!-- システム仕様書 -->
@@ -946,43 +932,6 @@
             }
         }
 
-        // ===== スタッフ用QRログイン =====
-        function loadStaffAccounts() {
-            var select = document.getElementById('qrStaffSelect');
-            if (!select) return;
-            var accounts = getMergedData('accounts');
-            var staffAccounts = accounts.filter(function(a) { return a.role === 'staff' && a.status !== 'disabled'; });
-            staffAccounts.forEach(function(a) {
-                var opt = document.createElement('option');
-                opt.value = a.companyCode + ':' + (a.userId || a.id);
-                opt.textContent = (a.officeName || '') + ' - ' + (a.name || a.userName || a.userId || a.id);
-                select.appendChild(opt);
-            });
-        }
-        
-        function generateQR() {
-            var select = document.getElementById('qrStaffSelect');
-            var val = select.value;
-            if (!val) { alert('スタッフを選択してください'); return; }
-            var parts = val.split(':');
-            var companyCode = parts[0];
-            var userId = parts[1];
-            var token = btoa(companyCode + ':' + userId).replace(/[^a-zA-Z0-9]/g, '').substring(0, 8);
-            var baseUrl = window.location.origin + window.location.pathname.replace('system-admin-dashboard.html', 'login.html');
-            var qrUrl = baseUrl + '?qr=' + companyCode + ':' + userId + ':' + token;
-            document.getElementById('qrUrl').textContent = qrUrl;
-            document.getElementById('qrResult').style.display = 'block';
-        }
-        
-        function copyQRUrl() {
-            var url = document.getElementById('qrUrl').textContent;
-            navigator.clipboard.writeText(url).then(function() {
-                var btn = document.getElementById('qrCopyBtn');
-                btn.textContent = 'コピーしました';
-                setTimeout(function() { btn.textContent = 'URLをコピー'; }, 2000);
-            });
-        }
-
         // 初期化実行
         function init() {
             loadGlobalStats();
@@ -991,7 +940,6 @@
             loadMaintenanceMode();
             updateLastBackupInfo();
             renderContractTable();
-            loadStaffAccounts();
         }
 
         init();

@@ -571,13 +571,15 @@
             <form id="accountForm">
                 <input type="hidden" id="editIndex" value="">
                 <div class="form-group">
-                    <label for="userId">ID</label>
-                    <input type="text" id="userId" name="userId" required>
+                    <label for="userName">表示名<span class="required">*</span></label>
+                    <input type="text" id="userName" name="userName" required placeholder="例：田中 太郎">
+                    <small style="color: #666; font-size: 12px; margin-top: 4px; display: block;">システム上に表示される名前</small>
                 </div>
 
                 <div class="form-group">
-                    <label for="userName">名前</label>
-                    <input type="text" id="userName" name="userName" required>
+                    <label for="loginName">ログイン名<span class="required">*</span></label>
+                    <input type="text" id="loginName" name="loginName" required placeholder="例：tanaka" pattern="[a-zA-Z0-9._-]+" title="半角英数字・ドット・ハイフン・アンダーバーが使えます" autocomplete="off">
+                    <small style="color: #666; font-size: 12px; margin-top: 4px; display: block;">半角英数字のみ。ログイン時に使用します → ID: <strong id="previewId">（会社コード）-（ログイン名）</strong></small>
                 </div>
 
                 <div class="form-group">
@@ -815,7 +817,9 @@
             document.getElementById('accountModal').classList.add('active');
             document.getElementById('accountForm').reset();
             document.getElementById('editIndex').value = '';
-            document.getElementById('userId').value = '';
+            document.getElementById('loginName').value = '';
+            document.getElementById('loginName').readOnly = false;
+            document.getElementById('previewId').textContent = (currentUser.companyCode || 'DEMO') + '-（ログイン名）';
             document.querySelectorAll('.requirement-item').forEach(item => {
                 item.classList.remove('valid');
             });
@@ -862,7 +866,15 @@
             updateOfficeSelect();
             
             // フォームにデータを設定
-            document.getElementById('userId').value = account.id;
+            // IDから会社コード部分を除いてログイン名を取得
+            var loginName = account.id || '';
+            var prefix = (account.companyCode || currentUser.companyCode || '') + '-';
+            if (loginName.startsWith(prefix)) {
+                loginName = loginName.substring(prefix.length);
+            }
+            document.getElementById('loginName').value = loginName;
+            document.getElementById('loginName').readOnly = true; // 編集時はログイン名変更不可
+            document.getElementById('previewId').textContent = account.id;
             document.getElementById('userName').value = account.name;
             document.getElementById('officeSelect').value = account.officeCode || '';
             
@@ -995,8 +1007,21 @@
             
             const editIndex = document.getElementById('editIndex').value;
             
+            // ID生成: 編集時は既存ID、新規時は会社コード-ログイン名
+            var accountId;
+            if (editIndex !== '') {
+                accountId = accounts[editIndex].id;
+            } else {
+                var loginName = document.getElementById('loginName').value.trim();
+                if (!loginName) { alert('ログイン名を入力してください'); return; }
+                if (!/^[a-zA-Z0-9._-]+$/.test(loginName)) { alert('ログイン名は半角英数字・ドット・ハイフン・アンダーバーのみです'); return; }
+                accountId = (currentUser.companyCode || 'DEMO') + '-' + loginName;
+            }
+
             const accountData = {
-                id: document.getElementById('userId').value,
+                id: accountId,
+                userId: accountId,
+                loginName: document.getElementById('loginName').value.trim(),
                 companyCode: currentUser.companyCode,  // 追加：ログイン中のユーザーの会社コード
                 companyName: currentUser.companyName,  // 追加：会社名も
                 name: document.getElementById('userName').value,
@@ -1021,19 +1046,20 @@
                 alert('アカウント情報を更新しました');
             } else {
                 // 新規登録モード
-                // ユーザーIDを自動生成
-                if (!accountData.id) {
-                    accountData.id = generateUserId();
-                }
                 // ID重複チェック
-                const duplicateAccount = accounts.find(a => a.id === accountData.id && a.companyCode === accountData.companyCode);
+                const duplicateAccount = accounts.find(a => a.id === accountData.id);
                 if (duplicateAccount) {
-                    alert('ユーザーID「' + accountData.id + '」は既に登録されています。別のIDを指定してください。');
+                    alert('ログイン名「' + accountData.loginName + '」は既に使用されています。別のログイン名を指定してください。');
                     return;
                 }
                 accounts.push(accountData);
                 logEvent('add_account', { userId: accountData.id, userName: accountData.name });
-                alert('アカウントを登録しました（ユーザーID: ' + accountData.id + '）');
+                // QRログインURL生成モーダルを表示（スタッフの場合）
+                if (accountData.role === 'staff') {
+                    showQRModal(accountData);
+                } else {
+                    alert('アカウントを登録しました（ID: ' + accountData.id + '）');
+                }
             }
 
             // LocalStorageに保存
@@ -1076,7 +1102,7 @@
                         <td><span class="role-badge role-${account.role}">${roleLabels[account.role]}</span></td>
                         <td><span class="status-badge status-${status}">${statusDisplay}</span></td>
                         <td>${account.createdAt}</td>
-                        <td><button class="btn-edit" onclick="openEditModal(${originalIndex})">編集</button></td>
+                        <td><button class="btn-edit" onclick="openEditModal(${originalIndex})">編集</button>${account.role === 'staff' ? ' <button class="btn-edit" style="background:#2563eb;color:#fff;border-color:#2563eb;" onclick="showQRForAccount(' + originalIndex + ')">QR</button>' : ''}</td>
                     </tr>
                 `;
                 }).join('');
@@ -1124,7 +1150,50 @@
         window.addEventListener('DOMContentLoaded', function() {
             // ロール制限を適用（ページ読み込み時）
             applyRoleRestrictions();
+            
+            // ログイン名入力時にIDプレビュー更新
+            document.getElementById('loginName').addEventListener('input', function() {
+                var val = this.value.trim();
+                var prefix = (currentUser.companyCode || 'DEMO') + '-';
+                document.getElementById('previewId').textContent = val ? prefix + val : prefix + '（ログイン名）';
+            });
         });
+
+        // ===== QRログイン登録完了モーダル =====
+        function showQRModal(account) {
+            var companyCode = account.companyCode || currentUser.companyCode || 'DEMO';
+            var loginName = account.loginName || account.id;
+            var token = btoa(companyCode + ':' + loginName).replace(/[^a-zA-Z0-9]/g, '').substring(0, 8);
+            var baseUrl = window.location.origin + window.location.pathname.replace('account-master.html', 'login.html');
+            var qrUrl = baseUrl + '?qr=' + companyCode + ':' + loginName + ':' + token;
+            
+            var ov = document.createElement('div');
+            ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;z-index:9999;';
+            ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:32px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.15);text-align:center;">'
+                + '<div style="font-size:32px;margin-bottom:12px;">✓</div>'
+                + '<div style="font-size:18px;font-weight:700;margin-bottom:4px;">アカウントを登録しました</div>'
+                + '<div style="font-size:14px;color:#64748b;margin-bottom:16px;">ID: ' + account.id + ' / ' + account.name + '</div>'
+                + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;text-align:left;margin-bottom:16px;">'
+                + '<div style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:8px;">📱 スタッフ用QRログインURL</div>'
+                + '<div style="font-size:12px;color:#64748b;margin-bottom:8px;">このURLをQRコードに変換して掲示すると、スマホで読むだけでログインできます。</div>'
+                + '<div id="qrUrlText" style="font-size:12px;color:#1e293b;word-break:break-all;background:white;padding:8px;border-radius:4px;border:1px solid #e2e8f0;">' + qrUrl + '</div>'
+                + '</div>'
+                + '<div style="display:flex;gap:8px;">'
+                + '<button onclick="navigator.clipboard.writeText(\'' + qrUrl + '\');this.textContent=\'コピーしました\'" style="flex:1;padding:12px;background:#2563eb;color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">URLをコピー</button>'
+                + '<button onclick="this.closest(\'div[style]\').parentElement.remove()" style="flex:1;padding:12px;background:#f1f5f9;color:#334155;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">閉じる</button>'
+                + '</div></div>';
+            document.body.appendChild(ov);
+        }
+
+        // 一覧からQR発行
+        function showQRForAccount(index) {
+            var account = accounts[index];
+            if (account.role !== 'staff') {
+                alert('QRログインはスタッフアカウントのみ利用できます。');
+                return;
+            }
+            showQRModal(account);
+        }
 
         // 初期表示は検索結果非表示
     </script>

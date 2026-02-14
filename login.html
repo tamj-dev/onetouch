@@ -306,8 +306,8 @@
             </div>
 
             <div class="form-group">
-                <label for="userId">ユーザーID</label>
-                <input type="text" id="userId" name="userId" required placeholder="ユーザーIDを入力">
+                <label for="userId">ログイン名</label>
+                <input type="text" id="userId" name="userId" required placeholder="ログイン名を入力">
             </div>
 
             <div class="form-group">
@@ -322,7 +322,7 @@
         </form>
 
         <div class="info">
-            アカウントマスタで登録されたユーザーIDと<br>パスワードを入力してください
+            アカウントマスタで登録されたログイン名と<br>パスワードを入力してください
         </div>
 
         <!-- DEMOワンタップボタン -->
@@ -602,10 +602,11 @@
             // 全アカウント（デモ + マスタ登録 + 業者）
             const allAccounts = [...demoAccounts, ...accounts, ...partners];
             
-            // 会社コード + ユーザーID + パスワードで認証
+            // 会社コード + ユーザーID（またはログイン名） + パスワードで認証
+            const fullId = companyCode + '-' + userId;
             const user = allAccounts.find(account => 
                 account.companyCode === companyCode &&
-                account.id === userId && 
+                (account.id === userId || account.id === fullId || account.loginName === userId) && 
                 account.password === password
             );
             
@@ -698,7 +699,7 @@
                 }
             } else {
                 // ログイン失敗
-                errorMessage.textContent = 'ユーザーIDまたはパスワードが正しくありません';
+                errorMessage.textContent = 'ログイン名またはパスワードが正しくありません';
                 errorMessage.classList.add('show');
                 
                 setTimeout(() => {

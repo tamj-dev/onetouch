@@ -127,6 +127,22 @@ const UnifiedHeader = {
                 border-bottom: 1px solid #fde68a;
             }
 
+            /* 管理画面に戻るバー */
+            .uh-admin-return-bar {
+                background: #2563eb;
+                color: white;
+                padding: 8px 16px;
+                font-size: 13px;
+                font-weight: 600;
+                text-align: center;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            }
+            .uh-admin-return-bar:hover { background: #1d4ed8; }
+
             /* ユーザーボタン */
             .uh-user-btn {
                 display: flex; align-items: center; gap: 8px; cursor: pointer;
@@ -302,7 +318,6 @@ const UnifiedHeader = {
             <div class="unified-header">
                 <div class="uh-left">
                     ${backHtml}
-                    <span class="uh-icon">${icon}</span>
                     <h1 class="uh-title">${title}</h1>
                 </div>
                 <div class="uh-right">
@@ -318,6 +333,9 @@ const UnifiedHeader = {
             </div>
             <div class="uh-demo-bar" id="uhDemoBadge" style="display: none;">
                 DEMOモード ー テスト用のダミーデータで動作しています。ブラウザを閉じるとデータは消えます。
+            </div>
+            <div class="uh-admin-return-bar" id="uhAdminReturn" style="display: none;" onclick="UnifiedHeader._returnToAdmin()">
+                ← 管理画面に戻る（動作確認中）
             </div>
         `;
 
@@ -542,6 +560,14 @@ const UnifiedHeader = {
             const badge = document.getElementById('uhDemoBadge');
             if (badge) badge.style.display = 'block';
         }
+        // 管理画面からの動作確認モード
+        try {
+            var u = this._getUser();
+            if (u && u._fromAdmin && sessionStorage.getItem('_savedAdminSession')) {
+                var returnBar = document.getElementById('uhAdminReturn');
+                if (returnBar) returnBar.style.display = 'flex';
+            }
+        } catch(e) {}
     },
 
     // ========== 初回ログインバナー初期化 ==========
@@ -850,6 +876,17 @@ const UnifiedHeader = {
             localStorage.removeItem('ONE_userName');
             // 確実にリダイレクト
             window.location.replace('login.html');
+        }
+    },
+
+    // ========== 管理画面に戻る ==========
+    _returnToAdmin() {
+        var saved = sessionStorage.getItem('_savedAdminSession');
+        if (saved) {
+            sessionStorage.setItem('currentUser', saved);
+            sessionStorage.removeItem('_savedAdminSession');
+            sessionStorage.removeItem('currentContractor');
+            window.location.href = 'master-top.html';
         }
     },
 
