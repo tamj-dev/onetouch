@@ -603,6 +603,15 @@
                     <textarea id="notes" placeholder="備考があれば入力してください"></textarea>
                 </div>
 
+                <!-- カテゴリ別担当業者設定 -->
+                <div class="form-group" style="margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 16px;">
+                    <label style="font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 12px; display: block;">カテゴリ別 担当業者</label>
+                    <div style="font-size: 12px; color: #64748b; margin-bottom: 12px;">カテゴリごとに担当業者を設定すると、通報時に自動で振り分けられます。</div>
+                    <div id="categoryPartnersArea" style="display: flex; flex-direction: column; gap: 8px;">
+                        <!-- JSで動的に生成 -->
+                    </div>
+                </div>
+
                 <div class="button-group">
                     <button type="button" class="btn-secondary" onclick="closeModal()">キャンセル</button>
                     <button type="submit" class="btn-primary">保存</button>
@@ -669,6 +678,55 @@
             localStorage.setItem('officeCounter', officeCounter.toString());
         }
 
+        // カテゴリ別担当業者UIを生成
+        function renderCategoryPartners(categoryPartners) {
+            var area = document.getElementById('categoryPartnersArea');
+            if (!area) return;
+            var categories = (typeof SYSTEM_CATEGORIES !== 'undefined') ? SYSTEM_CATEGORIES : ['家具/什器','家電','インターネット','厨房/食器','浴室','介護医療用品','水道','ガス','エレベーター/昇降機','その他'];
+            // 業者リストを取得
+            var partners = [];
+            try { partners = JSON.parse(sessionStorage.getItem('partners') || '[]'); } catch(e) {}
+            try {
+                var pLocal = JSON.parse(localStorage.getItem('partners') || '[]');
+                pLocal.forEach(function(p) { if (!partners.find(function(x) { return x.id === p.id; })) partners.push(p); });
+            } catch(e) {}
+            // DEMO業者を追加
+            if (typeof DEMO_PARTNERS !== 'undefined') {
+                DEMO_PARTNERS.forEach(function(dp) { if (!partners.find(function(x) { return x.id === dp.id; })) partners.push(dp); });
+            }
+            // 会社フィルタ
+            var companyCode = currentUser.companyCode;
+            var filtered = partners.filter(function(p) {
+                return p.status !== 'disabled' && (!p.assignedCompanies || p.assignedCompanies.length === 0 || p.assignedCompanies.includes(companyCode));
+            });
+            var cp = categoryPartners || {};
+            var html = '';
+            categories.forEach(function(cat) {
+                html += '<div style="display:flex;align-items:center;gap:8px;">';
+                html += '<div style="min-width:130px;font-size:13px;font-weight:500;color:#334155;">' + cat + '</div>';
+                html += '<select id="cp_' + cat.replace(/[\/]/g, '_') + '" style="flex:1;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;">';
+                html += '<option value="">未設定</option>';
+                filtered.forEach(function(p) {
+                    var sel = (cp[cat] === p.id || cp[cat] === p.partnerCode) ? ' selected' : '';
+                    html += '<option value="' + (p.id || p.partnerCode) + '"' + sel + '>' + p.name + '</option>';
+                });
+                html += '</select>';
+                html += '</div>';
+            });
+            area.innerHTML = html;
+        }
+
+        // カテゴリ別担当業者の値を取得
+        function getCategoryPartnersFromForm() {
+            var categories = (typeof SYSTEM_CATEGORIES !== 'undefined') ? SYSTEM_CATEGORIES : ['家具/什器','家電','インターネット','厨房/食器','浴室','介護医療用品','水道','ガス','エレベーター/昇降機','その他'];
+            var result = {};
+            categories.forEach(function(cat) {
+                var sel = document.getElementById('cp_' + cat.replace(/[\/]/g, '_'));
+                result[cat] = sel ? (sel.value || null) : null;
+            });
+            return result;
+        }
+
         // 事業所コードを自動生成
         function generateOfficeCode() {
             // 会社コード-J0001 形式（J = 事業所 Jigyosho）
@@ -691,7 +749,8 @@
             document.getElementById('officeForm').reset();
             document.getElementById('editIndex').value = '';
             document.getElementById('status').value = 'active';
-            document.getElementById('officeCode').value = ''; // 新規登録時はクリア
+            document.getElementById('officeCode').value = '';
+            renderCategoryPartners({});
         }
 
         function openEditModal(index) {
@@ -714,6 +773,7 @@
             document.getElementById('email').value = office.email || '';
             document.getElementById('status').value = office.status;
             document.getElementById('notes').value = office.notes || '';
+            renderCategoryPartners(office.categoryPartners || {});
         }
 
         function closeModal() {
@@ -751,6 +811,7 @@
                 email: document.getElementById('email').value,
                 status: document.getElementById('status').value,
                 notes: document.getElementById('notes').value,
+                categoryPartners: getCategoryPartnersFromForm(),
                 createdAt: new Date().toLocaleDateString('ja-JP')
             };
 

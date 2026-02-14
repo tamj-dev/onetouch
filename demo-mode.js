@@ -196,7 +196,7 @@ window.DEMO_ACCOUNTS = {
         companyCode: 'PN001', id: 'pn001-yamada', password: 'demo',
         name: '山田 太郎', role: 'contractor',
         companyName: '東京設備工業株式会社', partnerId: 'PN001',
-        partnerCode: 'PN001', categories: ['空調', '給湯', '電気'],
+        partnerCode: 'PN001', categories: ['家電', '浴室', 'インターネット'],
         assignedCompanies: ['TAMJ'], status: 'active', isDemoMode: true
     }
 };
@@ -204,20 +204,79 @@ window.DEMO_ACCOUNTS = {
 window.DEMO_PARTNERS = [
     {
         id: 'PN001', name: '東京設備工業株式会社', partnerCode: 'PN001',
-        categories: ['空調', '給湯', '電気'], assignedCompanies: ['TAMJ'],
+        categories: ['家電', '浴室', 'インターネット'], assignedCompanies: ['TAMJ'],
         status: 'active', contactName: '山田 太郎',
         loginId: 'pn001-yamada', password: 'demo'
     },
     {
         id: 'PN002', name: '関東水道サービス', partnerCode: 'PN002',
-        categories: ['水道', '給湯', '排水'], assignedCompanies: ['TAMJ'],
+        categories: ['水道', '浴室', 'ガス'], assignedCompanies: ['TAMJ'],
         status: 'active', contactName: '佐藤 花子',
         loginId: 'p002-sato', password: 'demo'
     },
     {
         id: 'PN003', name: '日本電気工事', partnerCode: 'PN003',
-        categories: ['電気', '照明', '設備'], assignedCompanies: ['TAMJ'],
+        categories: ['インターネット', 'エレベーター/昇降機', '家電'], assignedCompanies: ['TAMJ'],
         status: 'active', contactName: '鈴木 一郎',
         loginId: 'p003-suzuki', password: 'demo'
     }
 ];
+
+// DEMOモードのカテゴリ別担当業者設定
+window.DEMO_CATEGORY_PARTNERS = {
+    '家具/什器': 'PN001',
+    '家電': 'PN001',
+    'インターネット': 'PN003',
+    '厨房/食器': 'PN001',
+    '浴室': 'PN002',
+    '介護医療用品': 'PN001',
+    '水道': 'PN002',
+    'ガス': 'PN002',
+    'エレベーター/昇降機': 'PN003',
+    'その他': null
+};
+
+// カテゴリ一覧（全画面共通）
+window.SYSTEM_CATEGORIES = [
+    '家具/什器', '家電', 'インターネット', '厨房/食器',
+    '浴室', '介護医療用品', '水道', 'ガス', 'エレベーター/昇降機', 'その他'
+];
+
+/**
+ * 業者振り分けロジック（提案書3.3準拠）
+ * 優先1: 商品のassignedPartnerId
+ * 優先2: 事業所のcategoryPartners
+ * 優先3: null（未割当）
+ */
+function resolvePartner(item, officeCode) {
+    // 優先1: 商品に直接設定された業者
+    if (item.assignedPartnerId) {
+        return { partnerId: item.assignedPartnerId, partnerName: item.assignedPartnerName || '' };
+    }
+    // 優先2: 事業所×カテゴリ設定
+    if (item.category && officeCode) {
+        var offices = [];
+        try { offices = JSON.parse(sessionStorage.getItem('offices') || '[]'); } catch(e) {}
+        try {
+            var officesLocal = JSON.parse(localStorage.getItem('offices') || '[]');
+            officesLocal.forEach(function(o) { if (!offices.find(function(x) { return x.code === o.code; })) offices.push(o); });
+        } catch(e) {}
+        var office = offices.find(function(o) { return o.code === officeCode; });
+        if (office && office.categoryPartners) {
+            var partnerId = office.categoryPartners[item.category];
+            if (partnerId) {
+                // 業者名を取得
+                var partners = [];
+                try { partners = JSON.parse(sessionStorage.getItem('partners') || '[]'); } catch(e) {}
+                try {
+                    var partnersLocal = JSON.parse(localStorage.getItem('partners') || '[]');
+                    partnersLocal.forEach(function(p) { if (!partners.find(function(x) { return x.id === p.id; })) partners.push(p); });
+                } catch(e) {}
+                var partner = partners.find(function(p) { return p.id === partnerId || p.partnerCode === partnerId; });
+                return { partnerId: partnerId, partnerName: partner ? partner.name : '' };
+            }
+        }
+    }
+    // 優先3: 未割当
+    return { partnerId: null, partnerName: '' };
+}

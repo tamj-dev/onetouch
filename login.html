@@ -246,6 +246,28 @@
             localStorage.setItem('ONE_userId', user.id);
             localStorage.setItem('ONE_userName', user.name);
 
+            // DEMO事業所にcategoryPartnersを設定
+            if (typeof DEMO_CATEGORY_PARTNERS !== 'undefined') {
+                var offices = [];
+                try { offices = JSON.parse(localStorage.getItem('offices') || '[]'); } catch(e) {}
+                var demoOffice = offices.find(function(o) { return o.code === 'TAMJ-J0001'; });
+                if (demoOffice) {
+                    demoOffice.categoryPartners = DEMO_CATEGORY_PARTNERS;
+                } else {
+                    offices.push({
+                        companyCode: 'TAMJ', companyName: 'タムジ株式会社',
+                        code: 'TAMJ-J0001', name: '東京事業所',
+                        serviceType: '介護老人福祉施設', status: 'active',
+                        postalCode: '', prefecture: '東京都', address: '',
+                        phone: '', fax: '', email: '', building: '', notes: '',
+                        categoryPartners: DEMO_CATEGORY_PARTNERS,
+                        createdAt: new Date().toLocaleDateString('ja-JP')
+                    });
+                }
+                localStorage.setItem('offices', JSON.stringify(offices));
+                sessionStorage.setItem('offices', JSON.stringify(offices));
+            }
+
             // 業者の場合はcontractor情報も保存
             if (role === 'contractor') {
                 sessionStorage.setItem('currentContractor', JSON.stringify({

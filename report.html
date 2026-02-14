@@ -326,8 +326,8 @@
         backButton: currentUser && (currentUser.role === 'company_admin' || currentUser.role === 'office_admin' || currentUser.role === 'system_admin'),
     });
 
-    var labels={wholesale:'卸業者',building:'ビルメン業者',welfare:'福祉用具業者',emergency:'緊急',report:'設備トラブル'};
-    var typeLabels={wholesale:'卸業者',building:'ビルメン業者',welfare:'福祉用具業者',emergency:'緊急',report:'設備トラブル'};
+    var labels={wholesale:'家具/什器',building:'家電',welfare:'介護医療用品',emergency:'緊急',report:'設備トラブル'};
+    var typeLabels={wholesale:'家具/什器',building:'家電',welfare:'介護医療用品',emergency:'緊急',report:'設備トラブル'};
 
     // 文字数カウンター
     var formDesc = document.getElementById('formDesc');
@@ -602,6 +602,19 @@
       var itemId = document.getElementById('selectedItemId').value;
       var partnerId = document.getElementById('selectedPartnerId').value;
       var partnerName = document.getElementById('selectedPartnerName').value;
+
+      // 業者振り分けフォールバック（提案書3.3準拠）
+      if (!partnerId && typeof resolvePartner === 'function') {
+        var currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+        var resolved = resolvePartner(
+          { assignedPartnerId: partnerId, assignedPartnerName: partnerName, category: cat },
+          currentUser.officeCode || ''
+        );
+        if (resolved.partnerId) {
+          partnerId = resolved.partnerId;
+          partnerName = resolved.partnerName;
+        }
+      }
 
       saveReport({
         type:type,
