@@ -764,7 +764,8 @@
                         createdAt: allOffices[globalIndex].createdAt // 登録日は保持
                     };
                 }
-                logEvent('update_office', { officeCode: officeCode, officeName: officeData.name });
+                var beforeOffice = JSON.parse(JSON.stringify(allOffices[globalIndex]));
+                logEvent('update_office', { officeCode: officeCode, officeName: officeData.name, before: { name: beforeOffice.name, address: beforeOffice.address }, after: { name: officeData.name, address: officeData.address } });
                 alert('事業所情報を更新しました');
             } else {
                 // 新規登録モード

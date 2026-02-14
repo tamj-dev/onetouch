@@ -334,6 +334,17 @@
                 if (detail.companyName) parts.push(detail.companyName);
                 if (detail.officeName) parts.push(detail.officeName);
                 if (detail.partnerName) parts.push(detail.partnerName);
+                if (detail.userName) parts.push(detail.userName);
+                // before/after表示
+                if (detail.before && detail.after) {
+                    var changes = [];
+                    for (var key in detail.after) {
+                        if (detail.before[key] !== undefined && detail.before[key] !== detail.after[key]) {
+                            changes.push(key + ': ' + detail.before[key] + ' → ' + detail.after[key]);
+                        }
+                    }
+                    if (changes.length > 0) parts.push('変更: ' + changes.join(', '));
+                }
                 if (parts.length > 0) return parts.join(' / ');
             }
             if (details && typeof details === 'string' && details !== '{}') {
@@ -344,6 +355,16 @@
                         if (parsed.reportId) p2.push(parsed.reportId);
                         if (parsed.newStatus) p2.push(parsed.newStatus);
                         if (parsed.handler) p2.push(parsed.handler);
+                        // before/after表示（stringified detailsの場合）
+                        if (parsed.before && parsed.after) {
+                            var ch = [];
+                            for (var k in parsed.after) {
+                                if (parsed.before[k] !== undefined && parsed.before[k] !== parsed.after[k]) {
+                                    ch.push(k + ': ' + parsed.before[k] + ' → ' + parsed.after[k]);
+                                }
+                            }
+                            if (ch.length > 0) p2.push('変更: ' + ch.join(', '));
+                        }
                         if (p2.length > 0) return p2.join(' / ');
                     }
                 } catch(e) { return details; }

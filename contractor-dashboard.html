@@ -794,6 +794,7 @@
             
             if (!report) return;
             
+            const oldStatus = report.contractorStatus || '未対応';
             const now = new Date().toISOString();
             report.contractorStatus = newStatus;
             
@@ -821,7 +822,7 @@
             saveReports();
             updateStatusCounts();
             
-            logContractorEvent('status_change', { reportId: currentReportId, newStatus: newStatus, handler: report.handler });
+            logContractorEvent('status_change', { reportId: currentReportId, newStatus: newStatus, handler: report.handler, before: { contractorStatus: oldStatus }, after: { contractorStatus: newStatus } });
             showToast('ステータスを「' + newStatus + '」に変更しました');
 
             // スタッフ向け通知

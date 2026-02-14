@@ -1014,9 +1014,10 @@
             };
             
             if (editIndex !== '') {
-                // 編集モード
+                // 編集モード - before/after記録
+                var beforeData = JSON.parse(JSON.stringify(accounts[editIndex]));
                 accounts[editIndex] = accountData;
-                logEvent('update_account', { userId: accountData.id, userName: accountData.name });
+                logEvent('update_account', { userId: accountData.id, userName: accountData.name, before: { name: beforeData.name, role: beforeData.role, officeCode: beforeData.officeCode, status: beforeData.status }, after: { name: accountData.name, role: accountData.role, officeCode: accountData.officeCode, status: accountData.status } });
                 alert('アカウント情報を更新しました');
             } else {
                 // 新規登録モード

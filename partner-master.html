@@ -805,7 +805,8 @@
                         password: allPartners[allIndex].password || partnerData.password
                     };
                 }
-                logEvent('update_partner', { partnerId: partnerCode, partnerName: partnerData.name });
+                var beforePartner = JSON.parse(JSON.stringify(allPartners[allIndex]));
+                logEvent('update_partner', { partnerId: partnerCode, partnerName: partnerData.name, before: { name: beforePartner.name, category: beforePartner.category }, after: { name: partnerData.name, category: partnerData.category } });
                 alert('取引先情報を更新しました');
             } else {
                 allPartners.push(partnerData);
