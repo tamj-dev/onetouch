@@ -417,10 +417,6 @@
 
     <!-- コンテンツ -->
     <div class="container">
-        <!-- DEMOバナー -->
-        <div id="demoBanner" style="display:none; background:#fafafa; border:1px solid #ddd; border-radius:10px; padding:12px 16px; margin-bottom:16px; font-size:12px; color:#888;">
-            <strong>DEMOモード</strong> — テスト用のダミーデータで動作しています。ブラウザを閉じるとデータは消えます。
-        </div>
         <div class="section-title">状態</div>
         
         <!-- ステータスタブ -->
@@ -537,10 +533,6 @@
         function init() {
             const contractorName = currentContractor.companyName || '業者';
             
-            // DEMOバナー表示（業者がTAMJに紐付いている場合）
-            if (currentContractor.assignedCompanies && currentContractor.assignedCompanies.includes('TAMJ')) {
-                document.getElementById('demoBanner').style.display = 'block';
-            }
             // 旧ヘッダー要素はオプショナルに参照（統一ヘッダーが担当）
             const userInfoEl = document.getElementById('userInfo');
             if (userInfoEl) userInfoEl.textContent = contractorName;
