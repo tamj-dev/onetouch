@@ -165,10 +165,10 @@
   <div id="unified-header-mount"></div>
 
   <div class="main">
-    <button class="report-btn" onclick="openForm('report')" style="max-width: 320px;">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      <h2>通報する</h2>
-      <p>設備のトラブルや問題を報告</p>
+    <button class="report-btn" onclick="openForm('report')" style="max-width: 360px; padding: 32px 24px;">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <h2 style="font-size:20px;">困ったときはここに送ってください</h2>
+      <p style="font-size:14px;">自動で担当に届きます</p>
     </button>
     <a href="report-help.html" style="font-size: 13px; color: var(--text-muted); text-decoration: none; margin-top: 4px;">通報の仕方がわからない方はこちら</a>
     
@@ -188,7 +188,7 @@
         <div class="status-tab-count" id="countAll">0</div>
       </div>
       <div class="status-tab" onclick="filterByStatus('未対応', this)">
-        <div class="status-tab-label">未対応</div>
+        <div class="status-tab-label">受付済</div>
         <div class="status-tab-count" id="countPending">0</div>
       </div>
       <div class="status-tab" onclick="filterByStatus('対応中', this)">
@@ -196,11 +196,11 @@
         <div class="status-tab-count" id="countProgress">0</div>
       </div>
       <div class="status-tab" onclick="filterByStatus('完了', this)">
-        <div class="status-tab-label">完了</div>
+        <div class="status-tab-label">解決済</div>
         <div class="status-tab-count" id="countComplete">0</div>
       </div>
       <div class="status-tab" onclick="filterByStatus('対応不可', this)">
-        <div class="status-tab-label">対応不可</div>
+        <div class="status-tab-label">確認中</div>
         <div class="status-tab-count" id="countUnavailable">0</div>
       </div>
     </div>
@@ -245,24 +245,18 @@
       
       <input type="hidden" id="formCat" value="その他">
       
-      <div class="field">
-        <label>緊急度</label>
-        <select id="formPriority">
-          <option value="低">低 - 急ぎではない</option>
-          <option value="中" selected>中 - できるだけ早く</option>
-          <option value="高">高 - すぐに対応が必要</option>
-        </select>
-      </div>
+      <input type="hidden" id="formPriority" value="中">
       
       <div class="field">
         <label>状況</label>
-        <textarea id="formDesc" placeholder="何が起きたか書いてください" maxlength="200"></textarea>
+        <textarea id="formDesc" placeholder="例：3階廊下のエアコンが動きません" maxlength="200"></textarea>
         <div style="font-size:11px;color:#aaa;margin-top:4px;text-align:right;" id="formDescCount">0/200</div>
       </div>
 
       <!-- 写真添付 -->
       <div class="photo-section">
         <div class="photo-label">写真（最大3枚）</div>
+        <div style="font-size:12px;color:#2563eb;margin-bottom:6px;">写真があると業者に伝わりやすくなります</div>
         <input type="file" id="photoInput" accept="image/*" capture="environment" multiple style="display:none;" onchange="handlePhotos(this)">
         <div class="photo-add-btn" onclick="document.getElementById('photoInput').click()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
@@ -625,7 +619,7 @@
       closeForm();
       clearPhotos();
       logEvent('report_submit', { reportType: type, title: title, category: cat, priority: priority, location: loc, partnerId: partnerId });
-      showSentOK('通報を送信しました', '設備：'+(title||'未記入')+'　種別：'+cat+(loc ? '　場所：'+loc : ''));
+      showSentOK(lastSavedReportId || '');
       // 業者向け通知を発生
       if (typeof sendNotification === 'function' && partnerId) {
         var urgLabel = priority === '高' ? '【緊急】' : '';
@@ -880,12 +874,12 @@
           }
         }
         
-        // ステータスバッジ
+        // ステータスバッジ（スタッフ向け表示文言）
         var statusClass='status-pending';
-        var statusText='未対応';
-        if(r.contractorStatus==='対応中'){statusClass='status-progress';statusText='対応中';}
-        else if(r.contractorStatus==='完了'){statusClass='status-complete';statusText='完了';}
-        else if(r.contractorStatus==='対応不可'){statusClass='status-unavailable';statusText='対応不可';}
+        var statusText='受付しました';
+        if(r.contractorStatus==='対応中'){statusClass='status-progress';statusText='対応しています';}
+        else if(r.contractorStatus==='完了'){statusClass='status-complete';statusText='解決しました';}
+        else if(r.contractorStatus==='対応不可'){statusClass='status-unavailable';statusText='確認中です';}
         
         // 緊急度
         var priorityClass='priority-low';
@@ -1013,14 +1007,15 @@
       }
       content += '</div>';
       
-      // 業者ステータス
+      // ステータス（スタッフ向け表示文言）
+      var staffStatusLabels = {'未対応':'受付しました','対応中':'対応しています','完了':'解決しました','対応不可':'確認中です'};
       if (r.contractorStatus) {
         content += '<div class="detail-row">';
-        content += '<div class="detail-label">業者ステータス</div>';
+        content += '<div class="detail-label">状況</div>';
         var statusClass = r.contractorStatus === '未対応' ? 'status-pending' :
                          r.contractorStatus === '対応中' ? 'status-progress' :
                          r.contractorStatus === '完了' ? 'status-complete' : 'status-unavailable';
-        content += '<div class="detail-value"><span class="status-badge ' + statusClass + '">' + r.contractorStatus + '</span></div>';
+        content += '<div class="detail-value"><span class="status-badge ' + statusClass + '">' + (staffStatusLabels[r.contractorStatus] || r.contractorStatus) + '</span></div>';
         content += '</div>';
       }
       
@@ -1056,7 +1051,7 @@
           content += '<div class="timeline-left"><div class="timeline-date">' + dateStr + '<br>' + timeStr + '</div></div>';
           content += '<div class="timeline-dot-line"><div class="' + dotClass + '"></div><div class="timeline-line"></div></div>';
           content += '<div class="timeline-content">';
-          if (!isComment) content += '<div class="timeline-status">' + esc(entry.status || '') + '</div>';
+          if (!isComment) content += '<div class="timeline-status">' + esc(staffStatusLabels[entry.status] || entry.status || '') + '</div>';
           if (entry.comment) content += '<div class="timeline-comment">' + esc(entry.comment) + '</div>';
           content += '</div></div>';
         });
@@ -1154,17 +1149,17 @@
       setTimeout(function(){t.classList.remove('show');},2500);
     }
 
-    function showSentOK(title, sub, isEmg){
+    function showSentOK(reportId){
       var ov=document.createElement('div');
       ov.className='sent-ok';
       ov.innerHTML='<div class="sent-ok-card">'
-        +'<div class="sent-ok-icon">'+(isEmg?'!':'✓')+'</div>'
-        +'<div class="sent-ok-title">'+esc(title)+'</div>'
-        +'<div class="sent-ok-sub">'+esc(sub)+'<br><br>業者の受付ボックスに届きます。</div>'
+        +'<div class="sent-ok-icon">✓</div>'
+        +'<div class="sent-ok-title">送信ありがとうございました</div>'
+        +(reportId ? '<div style="font-size:12px;color:#94a3b8;margin-bottom:8px;">受付番号：'+esc(reportId)+'</div>' : '')
+        +'<div class="sent-ok-sub">内容は自動で担当者に届いています。<br>施設管理者への個別連絡は不要です。</div>'
+        +'<button onclick="this.closest(\'.sent-ok\').remove()" style="margin-top:20px;padding:10px 32px;background:#1e3a5f;color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">閉じる</button>'
         +'</div>';
-      ov.onclick=function(){ov.remove();};
       document.body.appendChild(ov);
-      setTimeout(function(){ov.remove();},2500);
     }
 
   </script>
