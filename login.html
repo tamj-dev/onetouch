@@ -360,6 +360,64 @@
     </div>
 
     <script>
+        // ===== QRログイン処理 =====
+        // URLパラメータ: ?qr=companyCode:userId:token
+        (function() {
+            var params = new URLSearchParams(window.location.search);
+            var qr = params.get('qr');
+            if (!qr) return;
+            
+            var parts = qr.split(':');
+            if (parts.length < 3) return;
+            
+            var companyCode = parts[0];
+            var userId = parts[1];
+            var token = parts[2];
+            
+            // 簡易トークン検証（companyCode + userId のハッシュ的チェック）
+            var expected = btoa(companyCode + ':' + userId).replace(/[^a-zA-Z0-9]/g, '').substring(0, 8);
+            if (token !== expected) {
+                alert('QRコードが無効です。管理者にお問い合わせください。');
+                return;
+            }
+            
+            // アカウントを検索
+            var accounts = [];
+            try { accounts = JSON.parse(sessionStorage.getItem('accounts') || '[]'); } catch(e) {}
+            try {
+                var localAccounts = JSON.parse(localStorage.getItem('accounts') || '[]');
+                localAccounts.forEach(function(a) {
+                    if (!accounts.find(function(x) { return x.id === a.id; })) accounts.push(a);
+                });
+            } catch(e) {}
+            
+            var user = accounts.find(function(a) {
+                return a.companyCode === companyCode && (a.userId === userId || a.id === userId) && a.role === 'staff';
+            });
+            
+            if (!user) {
+                alert('このQRコードに対応するアカウントが見つかりません。');
+                return;
+            }
+            
+            // 自動ログイン
+            var sessionUser = {
+                id: user.id,
+                userId: user.userId || user.id,
+                name: user.name || user.userName || 'スタッフ',
+                userName: user.name || user.userName || 'スタッフ',
+                role: 'staff',
+                companyCode: user.companyCode,
+                companyName: user.companyName || '',
+                officeCode: user.officeCode || '',
+                officeName: user.officeName || ''
+            };
+            sessionStorage.setItem('currentUser', JSON.stringify(sessionUser));
+            
+            // 通報画面に直行
+            window.location.replace('report.html');
+        })();
+        
         // 監査ログ記録関数
         function logEvent(type, detail = {}) {
             try {
