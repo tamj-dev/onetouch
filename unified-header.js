@@ -104,7 +104,6 @@ const UnifiedHeader = {
                 z-index: 100;
             }
             .uh-left { display: flex; align-items: center; gap: 12px; }
-            .uh-center { position: absolute; left: 50%; transform: translateX(-50%); }
             .uh-right { display: flex; align-items: center; gap: 12px; }
 
             .uh-back-btn {
@@ -117,17 +116,15 @@ const UnifiedHeader = {
             .uh-icon { font-size: 24px; line-height: 1; }
             .uh-title { font-size: 20px; font-weight: 600; color: white; margin: 0; }
 
-            /* DEMOバッジ */
-            .uh-demo-badge {
-                background: rgba(255,255,255,0.2);
-                color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px;
-                font-weight: 600; white-space: nowrap;
-                border: 1px solid rgba(255,255,255,0.3);
-                animation: uh-float 3s ease-in-out infinite;
-            }
-            @keyframes uh-float {
-                0%, 100% { transform: translateY(0px); }
-                50% { transform: translateY(-5px); }
+            /* DEMOバー（ヘッダー下に表示） */
+            .uh-demo-bar {
+                background: #fef3c7;
+                color: #92400e;
+                padding: 6px 16px;
+                font-size: 12px;
+                font-weight: 500;
+                text-align: center;
+                border-bottom: 1px solid #fde68a;
             }
 
             /* ユーザーボタン */
@@ -177,7 +174,7 @@ const UnifiedHeader = {
                 position: sticky; top: 0; background: #fff; z-index: 1;
                 border-radius: 12px 12px 0 0;
             }
-            .uh-notif-header-title { font-size: 14px; font-weight: 700; color: #1a1a1a; }
+            .uh-notif-header-title { font-size: 14px; font-weight: 700; color: #1e293b; }
             .uh-notif-clear { font-size: 12px; color: #888; cursor: pointer; background: none; border: none; }
             .uh-notif-clear:hover { color: #333; }
             .uh-notif-item {
@@ -187,7 +184,7 @@ const UnifiedHeader = {
             .uh-notif-item:hover { background: #fafafa; }
             .uh-notif-item.unread { background: #f8f9ff; }
             .uh-notif-item:last-child { border-bottom: none; }
-            .uh-notif-msg { font-size: 13px; color: #1a1a1a; line-height: 1.5; margin-bottom: 4px; }
+            .uh-notif-msg { font-size: 13px; color: #1e293b; line-height: 1.5; margin-bottom: 4px; }
             .uh-notif-time { font-size: 11px; color: #aaa; }
             .uh-notif-empty { text-align: center; padding: 32px 16px; color: #aaa; font-size: 13px; }
 
@@ -308,9 +305,6 @@ const UnifiedHeader = {
                     <span class="uh-icon">${icon}</span>
                     <h1 class="uh-title">${title}</h1>
                 </div>
-                <div class="uh-center" id="uhDemoBadge" style="display: none;">
-                    <span class="uh-demo-badge">DEMOモード</span>
-                </div>
                 <div class="uh-right">
                     <button class="uh-bell-btn" id="uhBellBtn" title="通知">
                         <svg viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
@@ -321,6 +315,9 @@ const UnifiedHeader = {
                         <span class="uh-user-name" id="uhUserName">ユーザー</span>
                     </button>
                 </div>
+            </div>
+            <div class="uh-demo-bar" id="uhDemoBadge" style="display: none;">
+                DEMOモード ー テスト用のダミーデータで動作しています。ブラウザを閉じるとデータは消えます。
             </div>
         `;
 
@@ -671,7 +668,7 @@ const UnifiedHeader = {
         if (existing) existing.remove();
         var toast = document.createElement('div');
         toast.id = 'uhNotifToast';
-        toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a1a1a;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.2);opacity:0;transition:all .4s;z-index:9999;pointer-events:none;max-width:90%;text-align:center;';
+        toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1e3a5f;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.2);opacity:0;transition:all .4s;z-index:9999;pointer-events:none;max-width:90%;text-align:center;';
         toast.textContent = msg;
         document.body.appendChild(toast);
         setTimeout(function() { toast.style.transform='translateX(-50%) translateY(0)'; toast.style.opacity='1'; }, 50);

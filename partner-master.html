@@ -27,7 +27,7 @@
         /* 旧ヘッダーCSS削除済み */
 
         .btn-add {
-            background: #1a1a1a;
+            background: #1e3a5f;
             color: white;
             border: none;
             padding: 10px 20px;
@@ -42,7 +42,7 @@
         }
 
         .btn-add:hover {
-            background: #333;
+            background: #2d4a7a;
         }
 
         .btn-add::before {
@@ -95,7 +95,7 @@
         }
 
         .btn-search {
-            background: #1a1a1a;
+            background: #1e3a5f;
             color: white;
             border: none;
             padding: 10px 32px;
@@ -299,7 +299,7 @@
         .form-group select:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #1a1a1a;
+            border-color: #1e3a5f;
             box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
         }
 
@@ -317,7 +317,7 @@
         }
 
         .btn-primary {
-            background: #1a1a1a;
+            background: #1e3a5f;
             color: white;
             border: none;
             padding: 12px 32px;
@@ -546,7 +546,7 @@
 
                 <!-- system_admin用：紐づけ会社管理 -->
                 <div class="form-section" id="assignedCompaniesSection" style="display: none;">
-                    <h3 style="color: #1a1a1a; font-size: 15px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid #e0e0e0;">
+                    <h3 style="color: #1e293b; font-size: 15px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid #e0e0e0;">
                         紐づけ会社（契約先）
                     </h3>
                     <div id="companyCheckboxes" style="display: flex; flex-direction: column; gap: 10px;">
@@ -945,11 +945,11 @@
                 <div style="display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;background:#e8f5e9;border-radius:50%;margin-bottom:12px;">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
                 </div>
-                <h3 style="font-size:18px;color:#1a1a1a;margin:0;">取引先を登録しました</h3>
+                <h3 style="font-size:18px;color:#1e293b;margin:0;">取引先を登録しました</h3>
             </div>
             <div id="loginInfoContent" style="background:#f8f9fa;border-radius:8px;padding:20px;font-family:monospace;font-size:13px;line-height:2;white-space:pre-wrap;color:#333;border:1px solid #e5e7eb;"></div>
             <div style="display:flex;gap:8px;margin-top:20px;">
-                <button onclick="copyLoginInfo()" style="flex:1;padding:12px;background:#333;color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;" id="btnCopyLogin">コピー</button>
+                <button onclick="copyLoginInfo()" style="flex:1;padding:12px;background:#2563eb;color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;" id="btnCopyLogin">コピー</button>
                 <button onclick="downloadLoginInfo()" style="flex:1;padding:12px;background:white;color:#333;border:1px solid #ddd;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">TXTダウンロード</button>
             </div>
             <button onclick="closeLoginInfoModal()" style="width:100%;padding:12px;background:none;color:#888;border:none;font-size:14px;cursor:pointer;margin-top:8px;">閉じる</button>
@@ -988,7 +988,7 @@
             var btn = document.getElementById('btnCopyLogin');
             btn.textContent = '✓ コピーしました';
             btn.style.background = '#22c55e';
-            setTimeout(function() { btn.textContent = 'コピー'; btn.style.background = '#333'; }, 2000);
+            setTimeout(function() { btn.textContent = 'コピー'; btn.style.background = '#1e3a5f'; }, 2000);
         }).catch(function() {
             // fallback
             var ta = document.createElement('textarea');
@@ -1000,7 +1000,7 @@
             var btn = document.getElementById('btnCopyLogin');
             btn.textContent = '✓ コピーしました';
             btn.style.background = '#22c55e';
-            setTimeout(function() { btn.textContent = 'コピー'; btn.style.background = '#333'; }, 2000);
+            setTimeout(function() { btn.textContent = 'コピー'; btn.style.background = '#1e3a5f'; }, 2000);
         });
     }
     function downloadLoginInfo() {
