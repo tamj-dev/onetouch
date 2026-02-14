@@ -804,7 +804,7 @@
         </div>
 
         <div class="filters">
-            <span class="filter-label">担当業者:</span>
+            <span class="filter-label" id="partnerFilterLabel">担当業者:</span>
             <select class="filter-select" id="partnerFilter" onchange="applyFilters()">
                 <option value="">全て</option>
             </select>
@@ -1178,6 +1178,22 @@
                 }
                 
                 allItems.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+                // 業者ログインの場合: 自分の担当商品だけに絞る
+                if (currentUser.role === 'contractor') {
+                    const currentContractor = JSON.parse(sessionStorage.getItem('currentContractor') || '{}');
+                    if (currentContractor && currentContractor.id) {
+                        allItems = allItems.filter(function(item) {
+                            return item.assignedPartnerId === currentContractor.id || 
+                                   item.assignedPartnerId === currentContractor.partnerCode;
+                        });
+                    }
+                    // 担当業者フィルタを非表示（自分の担当分しかないので不要）
+                    var pfl = document.getElementById('partnerFilterLabel');
+                    var pf = document.getElementById('partnerFilter');
+                    if (pfl) pfl.style.display = 'none';
+                    if (pf) pf.style.display = 'none';
+                }
                 
                 updateFilters();
                 if (showResults) {

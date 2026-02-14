@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ドキュメント | ワンタッチ管理</title>
+    <script src="demo-mode.js"></script>
     <script src="unified-header.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -222,7 +223,7 @@
     </style>
 </head>
 <body>
-    <div id="header"></div>
+    <div id="unified-header-mount"></div>
     <div class="container">
         <input type="text" class="doc-search" id="docSearch" placeholder="ドキュメント内を検索..." oninput="searchDocs(this.value)">
 
@@ -664,15 +665,10 @@
     </div>
 
     <script>
-        initUnifiedHeader({
+        UnifiedHeader.init({
             title: 'ドキュメント',
             backButton: true,
-            backUrl: (function() {
-                try {
-                    var u = JSON.parse(sessionStorage.getItem('currentUser'));
-                    return u && u.role === 'system_admin' ? 'system-admin.html' : 'master-top.html';
-                } catch(e) { return 'system-admin.html'; }
-            })()
+            backUrl: 'system-admin.html'
         });
 
         function switchTab(tabId) {

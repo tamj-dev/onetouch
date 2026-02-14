@@ -54,23 +54,6 @@
 <body>
     <div id="unified-header-mount"></div>
 
-    <!-- ページ切替ナビ -->
-    <div style="max-width:800px;margin:0 auto;padding:16px 24px 0;">
-        <select id="pageNav" onchange="navigatePage(this.value)" style="
-            padding:8px 32px 8px 12px;
-            font-size:14px;font-weight:600;color:#333;
-            border:1px solid #ddd;border-radius:8px;background:#fff;
-            cursor:pointer;appearance:none;
-            background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23666%22 stroke-width=%222%22><polyline points=%226,9 12,15 18,9%22/></svg>');
-            background-repeat:no-repeat;background-position:right 10px center;
-        ">
-            <option value="contractor-dashboard.html">対応依頼一覧</option>
-            <option value="contractor-performance.html" selected>対応実績</option>
-            <option value="items.html">商品マスタ</option>
-            <option value="import.html">商品インポート</option>
-        </select>
-    </div>
-
     <div class="container">
         <!-- サマリー -->
         <div class="section-title">実績サマリー</div>
@@ -127,12 +110,6 @@
     </div>
 
     <script>
-    function navigatePage(url) {
-        if (url && url !== window.location.pathname.split('/').pop()) {
-            window.location.href = url;
-        }
-    }
-
     UnifiedHeader.init({
         title: '対応実績',
         backButton: false

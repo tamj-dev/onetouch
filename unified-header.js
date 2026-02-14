@@ -362,6 +362,14 @@ const UnifiedHeader = {
         if (isContractor) {
             contractorMenu = `
             <div class="uh-divider"></div>
+            <a href="contractor-dashboard.html" class="uh-menu-item">
+                <div class="uh-menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+                <span class="uh-menu-text">対応依頼一覧</span>
+            </a>
+            <a href="contractor-performance.html" class="uh-menu-item">
+                <div class="uh-menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+                <span class="uh-menu-text">対応実績</span>
+            </a>
             <a href="items.html" class="uh-menu-item">
                 <div class="uh-menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div>
                 <span class="uh-menu-text">商品マスタ</span>
