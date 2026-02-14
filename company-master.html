@@ -667,6 +667,7 @@
                 // 編集
                 const index = companies.findIndex(c => c.code === editingCompanyCode);
                 if (index !== -1) {
+                    var beforeCompany = { name: companies[index].name, representative: companies[index].representative, phone: companies[index].phone, address: companies[index].address, status: companies[index].status };
                     companies[index] = {
                         ...companies[index],
                         name,
@@ -676,7 +677,7 @@
                         status,
                         updatedAt: new Date().toISOString()
                     };
-                    logEvent('update_company', { companyCode: code, companyName: name });
+                    logEvent('update_company', { companyCode: code, companyName: name, before: beforeCompany, after: { name: name, representative: representative, phone: phone, address: address, status: status } });
                 }
             } else {
                 // 新規登録

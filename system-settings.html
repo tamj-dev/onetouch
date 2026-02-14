@@ -421,6 +421,38 @@
             </div>
         </div>
 
+        <!-- 滞留アラート設定（company_admin以上） -->
+        <div class="section" id="stagnationSettings" style="display:none;">
+            <div class="section-title">滞留アラート設定</div>
+            
+            <div style="margin-bottom: 16px; padding: 12px; background: #fafafa; border-radius: 6px; font-size: 14px; color: #666;">
+                通報が一定日数以上「受付しました」のまま滞留している場合、通報履歴画面にアラートを表示します。
+            </div>
+
+            <div class="info-row">
+                <div class="info-label">滞留アラート日数</div>
+                <div class="info-value">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <select id="stagnationDays" style="padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; width: 100px;">
+                            <option value="1">1日</option>
+                            <option value="2">2日</option>
+                            <option value="3" selected>3日</option>
+                            <option value="5">5日</option>
+                            <option value="7">7日</option>
+                            <option value="10">10日</option>
+                            <option value="14">14日</option>
+                        </select>
+                        <span style="font-size: 14px; color: #666;">以上未対応で警告</span>
+                    </div>
+                    <div style="font-size: 13px; color: #999; margin-top: 8px;">※ この設定は全事業所に適用されます</div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="saveStagnationSetting()" style="margin-top: 12px;">
+                保存
+            </button>
+        </div>
+
         <!-- データエクスポート（管理者のみ） -->
         <div class="section" id="dataExportSection" style="display:none;">
             <div class="section-title">データエクスポート</div>
@@ -769,14 +801,18 @@
                 // システム管理者
                 document.getElementById('dataExportSection').style.display = 'block';
                 document.getElementById('dataDeleteSection').style.display = 'block';
+                document.getElementById('stagnationSettings').style.display = 'block';
+                loadStagnationSetting();
             } else if (currentUser.role === 'company_admin') {
                 // 本社管理者
                 document.getElementById('companySettings').style.display = 'block';
                 document.getElementById('categorySettings').style.display = 'block';
+                document.getElementById('stagnationSettings').style.display = 'block';
                 document.getElementById('auditLogSection').style.display = 'block';
                 document.getElementById('dataExportSection').style.display = 'block';
                 loadCompanySettings();
                 loadCustomCategories();
+                loadStagnationSetting();
                 // 事業所管理者には見せないオプションを非表示
                 document.getElementById('exportPartnersLabel').style.display = 'none';
             } else if (currentUser.role === 'office_admin') {
@@ -923,6 +959,36 @@
             } catch (e) {
                 console.error('事業所情報の読み込みエラー:', e);
             }
+        }
+
+        // 滞留アラート設定を読み込み
+        function loadStagnationSetting() {
+            var storageKey = 'onetouch.stagnationDays';
+            var saved = localStorage.getItem(storageKey) || sessionStorage.getItem(storageKey);
+            if (saved) {
+                document.getElementById('stagnationDays').value = saved;
+            }
+        }
+
+        // 滞留アラート設定を保存
+        function saveStagnationSetting() {
+            var days = document.getElementById('stagnationDays').value;
+            var storageKey = 'onetouch.stagnationDays';
+            var oldDays = localStorage.getItem(storageKey) || sessionStorage.getItem(storageKey) || '3';
+            localStorage.setItem(storageKey, days);
+            if (typeof isDemoMode === 'function' && isDemoMode()) {
+                sessionStorage.setItem(storageKey, days);
+            }
+            // 監査ログ
+            if (typeof logEvent === 'function') {
+                logEvent('update_setting', { setting: '滞留アラート日数', before: { stagnationDays: oldDays + '日' }, after: { stagnationDays: days + '日' } });
+            }
+            // トースト表示
+            var toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e3a5f;color:white;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.2);z-index:9999;';
+            toast.textContent = '滞留アラート設定を保存しました（' + days + '日）';
+            document.body.appendChild(toast);
+            setTimeout(function() { toast.remove(); }, 2500);
         }
 
         // 会社設定を読み込み
@@ -1084,6 +1150,28 @@
                 loadCustomCategories();
                 alert('カテゴリーを削除しました。');
             }
+        }
+
+        // 監査ログ記録
+        function logEvent(type, detail) {
+            try {
+                var logs = JSON.parse(localStorage.getItem('audit.logs') || '[]');
+                var logsS = [];
+                try { logsS = JSON.parse(sessionStorage.getItem('audit.logs') || '[]'); } catch(e) {}
+                var merged = [...logsS];
+                logs.forEach(function(r) { if (!merged.find(function(m) { return m.timestamp === r.timestamp && m.userId === r.userId; })) merged.push(r); });
+                merged.push({
+                    timestamp: new Date().toISOString(),
+                    type: type,
+                    screen: 'system-settings',
+                    user: currentUser.name || currentUser.id,
+                    userId: currentUser.id,
+                    companyCode: currentUser.companyCode,
+                    detail: detail
+                });
+                sessionStorage.setItem('audit.logs', JSON.stringify(merged));
+                localStorage.setItem('audit.logs', JSON.stringify(merged));
+            } catch(e) { console.error('監査ログ記録エラー:', e); }
         }
 
         // 初期化

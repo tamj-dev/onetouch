@@ -67,6 +67,109 @@
             .card-icon { width: 40px; height: 40px; }
             .card-title { font-size: 16px; }
         }
+
+        /* セットアップステップバー */
+        .setup-guide {
+            background: #fff;
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid #e8e8e8;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+        .setup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .setup-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        .setup-progress-text {
+            font-size: 14px;
+            color: #666;
+        }
+        .setup-steps {
+            display: flex;
+            gap: 0;
+            position: relative;
+        }
+        .setup-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+        .setup-step-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            color: #999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 8px;
+            font-size: 14px;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s;
+        }
+        .setup-step.done .setup-step-dot {
+            background: #16a34a;
+            color: #fff;
+        }
+        .setup-step.current .setup-step-dot {
+            background: #2563eb;
+            color: #fff;
+            box-shadow: 0 0 0 4px rgba(37,99,235,0.2);
+        }
+        .setup-step-label {
+            font-size: 12px;
+            color: #888;
+            line-height: 1.3;
+        }
+        .setup-step.done .setup-step-label { color: #16a34a; font-weight: 600; }
+        .setup-step.current .setup-step-label { color: #2563eb; font-weight: 600; }
+        .setup-step-line {
+            position: absolute;
+            top: 16px;
+            left: calc(50% + 16px);
+            right: calc(-50% + 16px);
+            height: 2px;
+            background: #e5e7eb;
+            z-index: 0;
+        }
+        .setup-step.done .setup-step-line { background: #16a34a; }
+        .setup-step:last-child .setup-step-line { display: none; }
+        .setup-complete-banner {
+            text-align: center;
+            padding: 12px;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 10px;
+            color: #166534;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .setup-dismiss {
+            display: block;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #999;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        @media (max-width: 480px) {
+            .setup-step-label { font-size: 11px; }
+            .setup-step-dot { width: 28px; height: 28px; font-size: 12px; }
+        }
     </style>
     <script src="demo-mode.js"></script>
     <script src="unified-header.js"></script>
@@ -77,6 +180,42 @@
 <body>
     <div id="unified-header-mount"></div>
     <div class="container">
+        <!-- セットアップガイド -->
+        <div class="setup-guide" id="setupGuide" style="display:none;">
+            <div class="setup-header">
+                <div class="setup-title">初期セットアップ</div>
+                <div class="setup-progress-text" id="setupProgressText">0 / 5 完了</div>
+            </div>
+            <div class="setup-steps" id="setupSteps">
+                <a class="setup-step" id="step1" href="company-master.html">
+                    <div class="setup-step-line"></div>
+                    <div class="setup-step-dot">1</div>
+                    <div class="setup-step-label">会社登録</div>
+                </a>
+                <a class="setup-step" id="step2" href="office-master.html">
+                    <div class="setup-step-line"></div>
+                    <div class="setup-step-dot">2</div>
+                    <div class="setup-step-label">事業所登録</div>
+                </a>
+                <a class="setup-step" id="step3" href="account-master.html">
+                    <div class="setup-step-line"></div>
+                    <div class="setup-step-dot">3</div>
+                    <div class="setup-step-label">アカウント<br>登録</div>
+                </a>
+                <a class="setup-step" id="step4" href="partner-master.html">
+                    <div class="setup-step-line"></div>
+                    <div class="setup-step-dot">4</div>
+                    <div class="setup-step-label">業者登録</div>
+                </a>
+                <a class="setup-step" id="step5" href="items.html">
+                    <div class="setup-step-line"></div>
+                    <div class="setup-step-dot">5</div>
+                    <div class="setup-step-label">商品登録</div>
+                </a>
+            </div>
+            <div id="setupBanner" style="margin-top: 16px; display: none;"></div>
+        </div>
+
         <div class="cards-grid">
             <a href="system-admin-dashboard.html" class="card">
                 <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
@@ -118,6 +257,78 @@
         } else if (currentUser.role !== 'system_admin') {
             alert('この画面はシステム管理者のみアクセスできます。');
             window.location.href = 'login.html';
+        }
+
+        // セットアップガイド
+        (function() {
+            // ガイドを非表示にした場合
+            if (localStorage.getItem('onetouch.setupDismissed') === 'true') return;
+            
+            var guide = document.getElementById('setupGuide');
+            guide.style.display = 'block';
+            
+            // データ有無で完了判定
+            function getData(key) {
+                var d = [];
+                try { d = JSON.parse(sessionStorage.getItem(key) || '[]'); } catch(e) {}
+                if (d.length === 0) {
+                    try { d = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) {}
+                }
+                return d;
+            }
+            
+            var companies = getData('companies');
+            var offices = getData('offices');
+            var accounts = getData('accounts');
+            var partners = getData('partners');
+            var items = getData('onetouch.items');
+            if (items.length === 0) { try { items = getData('items'); } catch(e) {} }
+            
+            // スタッフ or 事業所管理者アカウントがあるか（本社管理者の自動作成分は除く）
+            var hasStaffAccounts = accounts.filter(function(a) {
+                return a.role === 'staff' || a.role === 'office_admin';
+            }).length > 0;
+            
+            var steps = [
+                { id: 'step1', done: companies.length > 0 },
+                { id: 'step2', done: offices.length > 0 },
+                { id: 'step3', done: hasStaffAccounts },
+                { id: 'step4', done: partners.length > 0 },
+                { id: 'step5', done: items.length > 0 }
+            ];
+            
+            var doneCount = 0;
+            var currentFound = false;
+            
+            steps.forEach(function(s) {
+                var el = document.getElementById(s.id);
+                if (s.done) {
+                    el.classList.add('done');
+                    el.querySelector('.setup-step-dot').textContent = '✓';
+                    doneCount++;
+                } else if (!currentFound) {
+                    el.classList.add('current');
+                    currentFound = true;
+                }
+            });
+            
+            document.getElementById('setupProgressText').textContent = doneCount + ' / 5 完了';
+            
+            var banner = document.getElementById('setupBanner');
+            if (doneCount === 5) {
+                banner.style.display = 'block';
+                banner.innerHTML = '<div class="setup-complete-banner">✓ セットアップ完了！システムは利用可能な状態です。<span class="setup-dismiss" onclick="dismissSetup()">このガイドを非表示にする</span></div>';
+            } else if (doneCount > 0) {
+                var nextStep = steps.find(function(s) { return !s.done; });
+                var stepNames = { step1: '会社登録', step2: '事業所登録', step3: 'アカウント登録', step4: '業者登録', step5: '商品登録' };
+                banner.style.display = 'block';
+                banner.innerHTML = '<div style="text-align:center;font-size:14px;color:#2563eb;">次のステップ：<strong>' + stepNames[nextStep.id] + '</strong></div>';
+            }
+        })();
+        
+        function dismissSetup() {
+            localStorage.setItem('onetouch.setupDismissed', 'true');
+            document.getElementById('setupGuide').style.display = 'none';
         }
     </script>
     <script>

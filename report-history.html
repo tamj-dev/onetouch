@@ -231,6 +231,29 @@
                 </div>
             </div>
 
+            <!-- KPIカード + 滞留アラート（管理者のみ） -->
+            <div id="stagnationAlert" style="grid-column: 1 / -1; display: none;">
+                <!-- KPIカード -->
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+                    <div style="flex: 1; min-width: 140px; padding: 14px 16px; background: #fff; border: 1px solid #e0e0e0; border-radius: 10px;">
+                        <div style="font-size: 13px; color: #666; margin-bottom: 4px;">今日の未対応</div>
+                        <div style="font-size: 24px; font-weight: 700; color: #1e3a5f;" id="kpiTodayPending">0</div>
+                    </div>
+                    <div style="flex: 1; min-width: 140px; padding: 14px 16px; background: #fff; border: 1px solid #e0e0e0; border-radius: 10px;">
+                        <div style="font-size: 13px; color: #666; margin-bottom: 4px;">最長滞留</div>
+                        <div style="font-size: 24px; font-weight: 700; color: #1e3a5f;" id="kpiMaxStagnation">-</div>
+                    </div>
+                    <div id="alertUnassigned" style="display:none; flex: 1; min-width: 140px; padding: 14px 16px; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 10px; cursor: pointer;" onclick="filterByContractorStatus('', document.querySelector('.status-tab'));showUnassignedOnly();">
+                        <div style="font-size: 13px; font-weight: 600; color: #92400e;">⚠ 担当未割当</div>
+                        <div style="font-size: 24px; font-weight: 700; color: #92400e;" id="alertUnassignedCount">0</div>
+                    </div>
+                    <div id="alertStagnation" style="display:none; flex: 1; min-width: 140px; padding: 14px 16px; background: #fee2e2; border: 1px solid #ef4444; border-radius: 10px; cursor: pointer;" onclick="filterByContractorStatus('未対応', document.querySelectorAll('.status-tab')[1]);">
+                        <div style="font-size: 13px; font-weight: 600; color: #991b1b;">⚠ <span id="alertStagnationDays">3</span>日以上滞留</div>
+                        <div style="font-size: 24px; font-weight: 700; color: #991b1b;" id="alertStagnationCount">0</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- 全ロール共通: ステータスタブ -->
             <div style="grid-column: 1 / -1;">
                 <div class="filter-label" style="margin-bottom: 8px;">ステータス</div>
@@ -240,19 +263,19 @@
                         <div class="status-tab-count" id="countAll">0</div>
                     </div>
                     <div class="status-tab" onclick="filterByContractorStatus('未対応', this)">
-                        <div class="status-tab-label">未対応</div>
+                        <div class="status-tab-label">受付しました</div>
                         <div class="status-tab-count" id="countPending">0</div>
                     </div>
                     <div class="status-tab" onclick="filterByContractorStatus('対応中', this)">
-                        <div class="status-tab-label">対応中</div>
+                        <div class="status-tab-label">対応しています</div>
                         <div class="status-tab-count" id="countProgress">0</div>
                     </div>
                     <div class="status-tab" onclick="filterByContractorStatus('完了', this)">
-                        <div class="status-tab-label">完了</div>
+                        <div class="status-tab-label">解決しました</div>
                         <div class="status-tab-count" id="countComplete">0</div>
                     </div>
                     <div class="status-tab" onclick="filterByContractorStatus('対応不可', this)">
-                        <div class="status-tab-label">対応不可</div>
+                        <div class="status-tab-label">確認中です</div>
                         <div class="status-tab-count" id="countUnavailable">0</div>
                     </div>
                 </div>
@@ -323,9 +346,9 @@
             };
 
             const statusLabels = {
-                pending: '未対応',
-                processing: '対応中',
-                completed: '完了'
+                pending: '受付しました',
+                processing: '対応しています',
+                completed: '解決しました'
             };
 
             const label = report.emergency ? '緊急通報' : '通報';
@@ -411,6 +434,10 @@
                     var authorText = entry.author || entry.changedBy || '不明';
                     var isComment = entry.type === 'comment';
                     
+                    // スタッフ向け表示文言マッピング
+                    var staffLabels = {'未対応':'受付しました','対応中':'対応しています','完了':'解決しました','対応不可':'確認中です'};
+                    var displayStatus = staffLabels[statusText] || statusText;
+                    
                     var dotColor = '#999';
                     if (statusText === '未対応') dotColor = '#f59e0b';
                     else if (statusText === '対応中') dotColor = '#3b82f6';
@@ -424,15 +451,17 @@
                     
                     if (entry.from && entry.to) {
                         // from → to 形式
+                        var displayFrom = staffLabels[entry.from] || entry.from;
+                        var displayTo = staffLabels[entry.to] || entry.to;
                         content += '<div style="display: flex; align-items: center; gap: 8px;">';
-                        content += '<span class="status-badge status-pending" style="font-size: 12px;">' + entry.from + '</span>';
+                        content += '<span class="status-badge status-pending" style="font-size: 12px;">' + displayFrom + '</span>';
                         content += '<span style="color: #666;">→</span>';
-                        content += '<span class="status-badge status-processing" style="font-size: 12px;">' + entry.to + '</span>';
+                        content += '<span class="status-badge status-processing" style="font-size: 12px;">' + displayTo + '</span>';
                         content += '</div>';
                     } else if (statusText) {
                         // status 形式
                         content += '<div style="display: flex; align-items: center; gap: 8px;">';
-                        content += '<span class="status-badge" style="font-size: 12px; background: ' + dotColor + '15; color: ' + dotColor + ';">' + statusText + '</span>';
+                        content += '<span class="status-badge" style="font-size: 12px; background: ' + dotColor + '15; color: ' + dotColor + ';">' + displayStatus + '</span>';
                         content += '</div>';
                     }
                     
@@ -452,12 +481,13 @@
             // ステータス（追加）
             if (report.contractorStatus) {
                 content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
-                content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">ステータス</div>';
+                content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">状況</div>';
+                var staffStatusLabels = {'未対応':'受付しました','対応中':'対応しています','完了':'解決しました','対応不可':'確認中です'};
                 const contractorStatusClass = report.contractorStatus === '未対応' ? 'status-pending' :
                                               report.contractorStatus === '対応中' ? 'status-processing' :
                                               report.contractorStatus === '完了' ? 'status-completed' :
                                               'status-unavailable';
-                content += '<div><span class="status-badge ' + contractorStatusClass + '">' + report.contractorStatus + '</span></div>';
+                content += '<div><span class="status-badge ' + contractorStatusClass + '">' + (staffStatusLabels[report.contractorStatus] || report.contractorStatus) + '</span></div>';
                 content += '</div>';
             }
             
@@ -676,6 +706,12 @@
                 reports = reports.filter(r => (r.contractorStatus || '未対応') === currentContractorStatusFilter);
             }
             
+            // 担当未割当フィルター
+            if (showUnassignedFlag) {
+                reports = reports.filter(r => !r.assignedPartnerId);
+                showUnassignedFlag = false;
+            }
+            
             // 日付でフィルタリング
             const startDate = document.getElementById('startDate').value;
             const endDate = document.getElementById('endDate').value;
@@ -720,6 +756,113 @@
             document.getElementById('countProgress').textContent = counts['対応中'];
             document.getElementById('countComplete').textContent = counts['完了'];
             document.getElementById('countUnavailable').textContent = counts['対応不可'];
+            
+            // 滞留アラート（管理者のみ）
+            updateStagnationAlert(reports);
+        }
+
+        function updateStagnationAlert(reports) {
+            // 管理者ロール判定
+            if (!currentUser || (currentUser.role !== 'company_admin' && currentUser.role !== 'office_admin' && currentUser.role !== 'system_admin')) {
+                return;
+            }
+            
+            var stagnationDays = parseInt(localStorage.getItem('onetouch.stagnationDays') || sessionStorage.getItem('onetouch.stagnationDays') || '3');
+            var now = new Date();
+            var todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            var unassignedCount = 0;
+            var stagnationCount = 0;
+            var todayPendingCount = 0;
+            var maxStagnationDays = 0;
+            
+            reports.forEach(function(r) {
+                // 完了・対応不可は除外
+                if (r.contractorStatus === '完了' || r.contractorStatus === '対応不可') return;
+                
+                // 担当未割当
+                if (!r.assignedPartnerId) {
+                    unassignedCount++;
+                }
+                
+                var status = r.contractorStatus || '未対応';
+                
+                // 今日の未対応（今日受付でまだ未対応）
+                if (status === '未対応' && r.timestamp) {
+                    var created = new Date(r.timestamp);
+                    if (created >= todayStart) {
+                        todayPendingCount++;
+                    }
+                }
+                
+                // 滞留判定（未対応のまま X日以上経過）+ 最長滞留
+                if (status === '未対応' && r.timestamp) {
+                    var created = new Date(r.timestamp);
+                    var diffDays = (now - created) / (1000 * 60 * 60 * 24);
+                    if (diffDays > maxStagnationDays) {
+                        maxStagnationDays = diffDays;
+                    }
+                    if (diffDays >= stagnationDays) {
+                        stagnationCount++;
+                    }
+                }
+                
+                // 対応中の滞留も最長に含める
+                if (status === '対応中' && r.timestamp) {
+                    var created = new Date(r.timestamp);
+                    var diffDays = (now - created) / (1000 * 60 * 60 * 24);
+                    if (diffDays > maxStagnationDays) {
+                        maxStagnationDays = diffDays;
+                    }
+                }
+            });
+            
+            // KPIカード更新
+            document.getElementById('kpiTodayPending').textContent = todayPendingCount;
+            if (maxStagnationDays > 0) {
+                var d = Math.floor(maxStagnationDays);
+                document.getElementById('kpiMaxStagnation').textContent = d + '日';
+                // 滞留日数が設定値以上なら赤く
+                var maxEl = document.getElementById('kpiMaxStagnation');
+                if (d >= stagnationDays) {
+                    maxEl.style.color = '#dc2626';
+                } else {
+                    maxEl.style.color = '#1e3a5f';
+                }
+            } else {
+                document.getElementById('kpiMaxStagnation').textContent = '-';
+            }
+            
+            var alertSection = document.getElementById('stagnationAlert');
+            var alertUnassigned = document.getElementById('alertUnassigned');
+            var alertStagnation = document.getElementById('alertStagnation');
+            
+            // KPIカードは常に表示
+            alertSection.style.display = 'block';
+            
+            if (unassignedCount > 0) {
+                alertUnassigned.style.display = 'block';
+                document.getElementById('alertUnassignedCount').textContent = unassignedCount;
+            } else {
+                alertUnassigned.style.display = 'none';
+            }
+            
+            if (stagnationCount > 0) {
+                alertStagnation.style.display = 'block';
+                document.getElementById('alertStagnationDays').textContent = stagnationDays;
+                document.getElementById('alertStagnationCount').textContent = stagnationCount;
+            } else {
+                alertStagnation.style.display = 'none';
+            }
+        }
+        
+        // 担当未割当フィルター
+        var showUnassignedFlag = false;
+        function showUnassignedOnly() {
+            showUnassignedFlag = true;
+            currentContractorStatusFilter = '';
+            document.querySelectorAll('.status-tab').forEach(function(t) { t.classList.remove('active'); });
+            document.querySelector('.status-tab').classList.add('active');
+            filterReports();
         }
 
         // 通報履歴を表示
@@ -779,12 +922,13 @@
                     assignedPartnerName = partner ? partner.name : '不明';
                 }
                 
-                // ステータス
+                // ステータス（スタッフ向け表示文言）
                 const contractorStatus = report.contractorStatus || '未対応';
                 const contractorStatusClass = contractorStatus === '未対応' ? 'status-pending' : 
                                               contractorStatus === '対応中' ? 'status-processing' :
                                               contractorStatus === '完了' ? 'status-completed' :
                                               contractorStatus === '対応不可' ? 'status-unavailable' : '';
+                const staffLabel = {'未対応':'受付しました','対応中':'対応しています','完了':'解決しました','対応不可':'確認中です'};
                 
                 // 対応時間を計算
                 let responseTime = '';
@@ -805,7 +949,7 @@
                     <div class="report-card${isNew ? ' is-new' : ''}" onclick="showDetail(${index})">
                         <div class="report-card-header">
                             <div class="report-card-title">${isNew ? '<span style="display:inline-block;width:8px;height:8px;background:#22c55e;border-radius:50%;margin-right:6px;vertical-align:middle;"></span>' : ''}${descShort}</div>
-                            <span class="status-badge ${contractorStatusClass}">${contractorStatus}</span>
+                            <span class="status-badge ${contractorStatusClass}">${staffLabel[contractorStatus] || contractorStatus}</span>
                         </div>
                         <div class="report-card-date">${dateStr}　${report.reporter || '-'}</div>
                         <div class="report-card-info">
