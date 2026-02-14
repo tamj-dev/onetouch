@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ドキュメント | ワンタッチ管理</title>
+    <script src="unified-header.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans CJK JP", sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            padding-bottom: 40px;
+        }
+        .container { max-width: 900px; margin: 16px auto; padding: 0 16px; }
+
+        /* タブナビゲーション */
+        .doc-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 4px;
+            border: 1px solid #e2e8f0;
+            overflow-x: auto;
+        }
+        .doc-tab {
+            flex: 1;
+            min-width: 0;
+            padding: 12px 8px;
+            text-align: center;
+            border: none;
+            background: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: #64748b;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .doc-tab:hover { background: #f1f5f9; }
+        .doc-tab.active { background: #1e3a5f; color: white; }
+        .doc-tab-icon { font-size: 18px; display: block; margin-bottom: 2px; }
+
+        /* コンテンツ */
+        .doc-content { display: none; }
+        .doc-content.active { display: block; }
+
+        .doc-card {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+        .doc-card h2 {
+            font-size: 18px;
+            color: #1e293b;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #2563eb;
+        }
+        .doc-card h3 {
+            font-size: 15px;
+            color: #334155;
+            margin: 16px 0 8px;
+        }
+        .doc-card p, .doc-card li {
+            font-size: 14px;
+            color: #475569;
+            line-height: 1.8;
+        }
+        .doc-card ul, .doc-card ol {
+            padding-left: 20px;
+            margin: 8px 0;
+        }
+        .doc-card li { margin-bottom: 4px; }
+
+        /* ステップガイド */
+        .step-guide {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 16px;
+            margin: 12px 0;
+            border-left: 4px solid #2563eb;
+        }
+        .step-guide .step-num {
+            display: inline-block;
+            width: 24px; height: 24px;
+            background: #2563eb;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-right: 8px;
+        }
+        .step-guide .step-title {
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 14px;
+        }
+        .step-guide .step-desc {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 4px;
+            margin-left: 32px;
+        }
+
+        /* FAQ */
+        .faq-item {
+            border-bottom: 1px solid #f1f5f9;
+            padding: 14px 0;
+        }
+        .faq-item:last-child { border-bottom: none; }
+        .faq-q {
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .faq-q::after { content: '▼'; font-size: 10px; color: #94a3b8; transition: transform 0.2s; }
+        .faq-q.open::after { transform: rotate(180deg); }
+        .faq-a {
+            font-size: 14px;
+            color: #475569;
+            margin-top: 8px;
+            display: none;
+            line-height: 1.7;
+        }
+        .faq-a.open { display: block; }
+
+        /* 権限表 */
+        .perm-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin: 12px 0;
+        }
+        .perm-table th, .perm-table td {
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        .perm-table th {
+            background: #1e3a5f;
+            color: white;
+            font-weight: 600;
+        }
+        .perm-table td:first-child { text-align: left; font-weight: 600; }
+        .perm-ok { color: #16a34a; font-weight: 700; }
+        .perm-no { color: #dc2626; }
+        .perm-partial { color: #d97706; font-size: 11px; }
+
+        /* フロー図 */
+        .flow-box {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 12px 0;
+        }
+        .flow-item {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e40af;
+        }
+        .flow-arrow { color: #94a3b8; font-size: 18px; }
+
+        /* 注意書き */
+        .doc-note {
+            background: #fefce8;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: #854d0e;
+            margin: 12px 0;
+        }
+        .doc-note::before { content: '💡 '; }
+
+        .doc-warning {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: #991b1b;
+            margin: 12px 0;
+        }
+        .doc-warning::before { content: '⚠️ '; }
+
+        @media (max-width: 480px) {
+            .doc-tab { padding: 10px 6px; font-size: 12px; }
+            .doc-tab-icon { font-size: 16px; }
+            .doc-card { padding: 16px; }
+        }
+
+        /* 検索 */
+        .doc-search {
+            width: 100%;
+            padding: 12px 16px 12px 40px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+            background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") 14px center no-repeat;
+            margin-bottom: 16px;
+        }
+        .doc-search:focus { outline: none; border-color: #2563eb; }
+        .highlight { background: #fef08a; padding: 1px 2px; border-radius: 2px; }
+    </style>
+</head>
+<body>
+    <div id="header"></div>
+    <div class="container">
+        <input type="text" class="doc-search" id="docSearch" placeholder="ドキュメント内を検索..." oninput="searchDocs(this.value)">
+
+        <div class="doc-tabs">
+            <button class="doc-tab active" onclick="switchTab('guide')">
+                <span class="doc-tab-icon">📖</span>運用ガイド
+            </button>
+            <button class="doc-tab" onclick="switchTab('howto')">
+                <span class="doc-tab-icon">🔧</span>操作手順
+            </button>
+            <button class="doc-tab" onclick="switchTab('roles')">
+                <span class="doc-tab-icon">👤</span>権限
+            </button>
+            <button class="doc-tab" onclick="switchTab('faq')">
+                <span class="doc-tab-icon">❓</span>FAQ
+            </button>
+            <button class="doc-tab" onclick="switchTab('spec')">
+                <span class="doc-tab-icon">⚙️</span>仕様書
+            </button>
+        </div>
+
+        <!-- ========== 運用ガイド ========== -->
+        <div class="doc-content active" id="tab-guide">
+            <div class="doc-card">
+                <h2>このシステムについて</h2>
+                <p>ワンタッチ管理システムは、介護施設の設備トラブルを「ワンタッチ」で通報し、担当業者に自動で連絡が行く仕組みです。</p>
+                <h3>登場人物</h3>
+                <ul>
+                    <li><strong>システム管理者（あなた）</strong> — システム全体を管理。業者登録、会社セットアップ、契約管理を行います</li>
+                    <li><strong>施設スタッフ</strong> — 設備の故障を発見したら通報します。それだけ。簡単です</li>
+                    <li><strong>事業所管理者</strong> — 自分の事業所の通報状況を確認し、対応を管理します</li>
+                    <li><strong>本社管理者</strong> — 全事業所の通報を横断的に見れます</li>
+                    <li><strong>業者</strong> — 通報を受け取り、修理・対応を行います</li>
+                </ul>
+            </div>
+
+            <div class="doc-card">
+                <h2>基本の流れ</h2>
+                <div class="flow-box">
+                    <div class="flow-item">業者が申し込み</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-item">業者を登録</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-item">施設をセットアップ</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-item">契約設定</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-item">運用開始</div>
+                </div>
+                <p>セットアップウィザードに沿って進めるだけで、すべての初期設定が完了します。</p>
+            </div>
+
+            <div class="doc-card">
+                <h2>通報→対応の流れ</h2>
+                <div class="flow-box">
+                    <div class="flow-item">スタッフが通報</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-item">カテゴリから業者を自動特定</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-item">業者に通知</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-item">業者が対応</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-item">完了</div>
+                </div>
+                <div class="doc-note">商品のカテゴリ（家電、水道など）と契約設定に基づいて、担当業者が自動で決まります。スタッフが業者を選ぶ必要はありません。</div>
+            </div>
+
+            <div class="doc-card">
+                <h2>契約テーブルとは</h2>
+                <p>「どの業者が、どの会社の、どのカテゴリを担当するか」を管理する仕組みです。</p>
+                <h3>例</h3>
+                <ul>
+                    <li>東京設備工業 × タムジ株式会社 × 家電・家具/什器・厨房/食器 → エアコンが壊れたら東京設備に通知</li>
+                    <li>関東水道サービス × タムジ株式会社 × 水道・浴室・ガス → トイレの水漏れなら関東水道に通知</li>
+                </ul>
+                <div class="doc-note">契約は事業所単位でも設定できます。「全事業所」にすれば、その会社の全施設に適用されます。</div>
+            </div>
+        </div>
+
+        <!-- ========== 操作手順 ========== -->
+        <div class="doc-content" id="tab-howto">
+            <div class="doc-card">
+                <h2>新しい業者を登録する</h2>
+                <div class="step-guide">
+                    <span class="step-num">1</span><span class="step-title">マスタ管理 → 取引先マスタを開く</span>
+                    <div class="step-desc">システム管理画面のカード一覧から進みます</div>
+                </div>
+                <div class="step-guide">
+                    <span class="step-num">2</span><span class="step-title">「新規登録」ボタンをクリック</span>
+                    <div class="step-desc">会社名、担当者名、ローマ字（ログインID用）を入力</div>
+                </div>
+                <div class="step-guide">
+                    <span class="step-num">3</span><span class="step-title">追加担当者がいれば「＋担当者を追加」</span>
+                    <div class="step-desc">1つの業者に複数の担当者を登録できます。それぞれ別のログインIDが発行されます</div>
+                </div>
+                <div class="step-guide">
+                    <span class="step-num">4</span><span class="step-title">保存</span>
+                    <div class="step-desc">業者コード（PN001など）が自動発行されます</div>
+                </div>
+            </div>
+
+            <div class="doc-card">
+                <h2>新しい施設をセットアップする</h2>
+                <div class="step-guide">
+                    <span class="step-num">1</span><span class="step-title">業者選択</span>
+                    <div class="step-desc">登録済みの業者から選ぶか、新しく登録します</div>
+                </div>
+                <div class="step-guide">
+                    <span class="step-num">2</span><span class="step-title">会社登録</span>
+                    <div class="step-desc">会社名、会社コード（4文字）、代表者名などを入力</div>
+                </div>
+                <div class="step-guide">
+                    <span class="step-num">3</span><span class="step-title">事業所登録</span>
+                    <div class="step-desc">施設の名前、種別、住所を登録。複数追加できます</div>
+                </div>
+                <div class="step-guide">
+                    <span class="step-num">4</span><span class="step-title">契約設定</span>
+                    <div class="step-desc">業者が担当するカテゴリを選択。事業所ごとに設定も可能です</div>
+                </div>
+                <div class="step-guide">
+                    <span class="step-num">5</span><span class="step-title">アカウント登録</span>
+                    <div class="step-desc">施設のスタッフや管理者のログインアカウントを作成</div>
+                </div>
+                <div class="step-guide">
+                    <span class="step-num">6</span><span class="step-title">商品登録</span>
+                    <div class="step-desc">管理対象の設備・機器を登録。0件でもOK（後からインポートで一括登録可）</div>
+                </div>
+            </div>
+
+            <div class="doc-card">
+                <h2>担当業者を変更する</h2>
+                <h3>カテゴリ全体の業者を変更する場合</h3>
+                <div class="step-guide">
+                    <span class="step-num">1</span><span class="step-title">現在の契約を停止（suspended）にする</span>
+                    <div class="step-desc">契約管理画面で該当の契約のステータスを変更</div>
+                </div>
+                <div class="step-guide">
+                    <span class="step-num">2</span><span class="step-title">新しい業者の契約を作成する</span>
+                    <div class="step-desc">同じカテゴリで新しい業者との契約を追加</div>
+                </div>
+                <div class="doc-note">商品マスタの変更は不要です。カテゴリに基づいて自動的に新しい業者に通知が行くようになります。</div>
+            </div>
+
+            <div class="doc-card">
+                <h2>商品を一括登録する</h2>
+                <div class="step-guide">
+                    <span class="step-num">1</span><span class="step-title">商品マスタ画面の「インポート」ボタンをクリック</span>
+                    <div class="step-desc">CSV/Excelファイルに対応しています</div>
+                </div>
+                <div class="step-guide">
+                    <span class="step-num">2</span><span class="step-title">ファイルを選択してアップロード</span>
+                    <div class="step-desc">列の自動マッピングが行われます。正しくない場合は手動で修正</div>
+                </div>
+                <div class="step-guide">
+                    <span class="step-num">3</span><span class="step-title">プレビューを確認して「登録」</span>
+                    <div class="step-desc">エラーがある行は赤色で表示されます</div>
+                </div>
+            </div>
+
+            <div class="doc-card">
+                <h2>滞留アラートの設定</h2>
+                <p>通報が一定日数以上対応されていない場合、通報履歴画面にアラートが表示されます。</p>
+                <div class="step-guide">
+                    <span class="step-num">1</span><span class="step-title">システム設定を開く</span>
+                    <div class="step-desc">ダッシュボード → システム設定</div>
+                </div>
+                <div class="step-guide">
+                    <span class="step-num">2</span><span class="step-title">滞留アラート日数を変更</span>
+                    <div class="step-desc">1〜14日から選択。デフォルトは3日です</div>
+                </div>
+                <div class="doc-note">この設定は会社全体に適用されます。本社管理者のみ変更できます。</div>
+            </div>
+        </div>
+
+        <!-- ========== 権限 ========== -->
+        <div class="doc-content" id="tab-roles">
+            <div class="doc-card">
+                <h2>権限一覧</h2>
+                <p>各役割がアクセスできる画面と操作の一覧です。</p>
+                <table class="perm-table">
+                    <tr>
+                        <th>画面</th>
+                        <th>システム管理者</th>
+                        <th>本社管理者</th>
+                        <th>事業所管理者</th>
+                        <th>スタッフ</th>
+                        <th>業者</th>
+                    </tr>
+                    <tr>
+                        <td>業者マスタ</td>
+                        <td class="perm-ok">○</td>
+                        <td class="perm-no">✕</td>
+                        <td class="perm-no">✕</td>
+                        <td class="perm-no">✕</td>
+                        <td class="perm-no">✕</td>
+                    </tr>
+                    <tr>
+                        <td>会社マスタ</td>
+                        <td class="perm-ok">○</td>
+                        <td class="perm-no">✕</td>
+                        <td class="perm-no">✕</td>
+                        <td class="perm-no">✕</td>
+                        <td class="perm-no">✕</td>
+                    </tr>
+                    <tr>
+                        <td>契約管理</td>
+                        <td class="perm-ok">○</td>
+                        <td class="perm-partial">閲覧</td>
+                        <td class="perm-no">✕</td>
+                        <td class="perm-no">✕</td>
+                        <td class="perm-no">✕</td>
+                    </tr>
+                    <tr>
+                        <td>セットアップウィザード</td>
+                        <td class="perm-ok">○</td>
+                        <td class="perm-no">✕</td>
+                        <td class="perm-no">✕</td>
+                        <td class="perm-no">✕</td>
+                        <td class="perm-no">✕</td>
+                    </tr>
+                    <tr>
+                        <td>事業所マスタ</td>
+                        <td class="perm-ok">○</td>
+                        <td class="perm-ok">○（自社）</td>
+                        <td class="perm-no">✕</td>
+                        <td class="perm-no">✕</td>
+                        <td class="perm-no">✕</td>
+                    </tr>
+                    <tr>
+                        <td>アカウントマスタ</td>
+                        <td class="perm-ok">○</td>
+                        <td class="perm-ok">○（自社）</td>
+                        <td class="perm-ok">○（自事業所）</td>
+                        <td class="perm-no">✕</td>
+                        <td class="perm-no">✕</td>
+                    </tr>
+                    <tr>
+                        <td>商品マスタ</td>
+                        <td class="perm-ok">○</td>
+                        <td class="perm-ok">○</td>
+                        <td class="perm-ok">○</td>
+                        <td class="perm-no">✕</td>
+                        <td class="perm-ok">○</td>
+                    </tr>
+                    <tr>
+                        <td>通報</td>
+                        <td class="perm-ok">○</td>
+                        <td class="perm-ok">○</td>
+                        <td class="perm-ok">○</td>
+                        <td class="perm-ok">○</td>
+                        <td class="perm-partial">自分担当分</td>
+                    </tr>
+                    <tr>
+                        <td>通報履歴</td>
+                        <td class="perm-ok">○（全社）</td>
+                        <td class="perm-ok">○（自社）</td>
+                        <td class="perm-ok">○（自事業所）</td>
+                        <td class="perm-ok">○（自事業所）</td>
+                        <td class="perm-partial">自分担当分</td>
+                    </tr>
+                    <tr>
+                        <td>システム設定</td>
+                        <td class="perm-ok">○</td>
+                        <td class="perm-partial">一部</td>
+                        <td class="perm-partial">閲覧</td>
+                        <td class="perm-no">✕</td>
+                        <td class="perm-no">✕</td>
+                    </tr>
+                    <tr>
+                        <td>監査ログ</td>
+                        <td class="perm-ok">○</td>
+                        <td class="perm-ok">○</td>
+                        <td class="perm-no">✕</td>
+                        <td class="perm-no">✕</td>
+                        <td class="perm-no">✕</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="doc-card">
+                <h2>ログインの仕組み</h2>
+                <p>全ユーザーは3つの情報でログインします。</p>
+                <ul>
+                    <li><strong>会社コード</strong> — 施設スタッフなら会社コード（例: TAMJ）、業者なら業者コード（例: PN001）</li>
+                    <li><strong>ログインID</strong> — 会社コード + ログイン名が自動生成（例: TAMJ-yamada）</li>
+                    <li><strong>パスワード</strong> — 初回は管理者が設定したパスワード。変更可能</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ========== FAQ ========== -->
+        <div class="doc-content" id="tab-faq">
+            <div class="doc-card">
+                <h2>よくある質問</h2>
+
+                <div class="faq-item">
+                    <div class="faq-q" onclick="toggleFaq(this)">業者が変わったらどうする？</div>
+                    <div class="faq-a">契約管理画面で旧業者の契約を「停止」にして、新しい業者の契約を作成します。商品マスタの変更は不要です。カテゴリに基づいて自動的に新しい業者に通知が行きます。</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q" onclick="toggleFaq(this)">新しい事業所を追加したい</div>
+                    <div class="faq-a">マスタ管理 → 事業所マスタから追加できます。追加後、契約設定でその事業所のカテゴリ別担当業者を設定してください。「全事業所」の契約がある場合は自動的に適用されます。</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q" onclick="toggleFaq(this)">スタッフのアカウントを増やしたい</div>
+                    <div class="faq-a">マスタ管理 → アカウントマスタから追加できます。本社管理者は自社のアカウント、事業所管理者は自事業所のアカウントを追加できます。</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q" onclick="toggleFaq(this)">業者に複数の担当者がいる場合は？</div>
+                    <div class="faq-a">取引先マスタの編集画面で「＋担当者を追加」から追加できます。各担当者に個別のログインIDが発行され、それぞれ業者ダッシュボードにログインできます。</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q" onclick="toggleFaq(this)">通報が滞留している場合の通知は？</div>
+                    <div class="faq-a">通報履歴画面の上部にアラートバナーが表示されます。「担当未割当の通報があります」（赤）と「X日以上滞留している通報があります」（オレンジ）の2種類があります。滞留日数はシステム設定で変更できます。</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q" onclick="toggleFaq(this)">パスワードを忘れた場合は？</div>
+                    <div class="faq-a">システム管理者がアカウントマスタからパスワードをリセットできます。施設の管理者もアカウントマスタのパスワード変更機能で再設定できます。</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q" onclick="toggleFaq(this)">商品が多すぎて1件ずつ登録するのが大変</div>
+                    <div class="faq-a">商品マスタのインポート機能を使ってください。ExcelやCSVファイルから一括で登録できます。列の自動マッピング機能もあります。</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q" onclick="toggleFaq(this)">「その他」カテゴリの通報はどうなる？</div>
+                    <div class="faq-a">「その他」カテゴリには通常、業者が割り当てられていません。事業所管理者に通知が行き、施設側で対応を判断します。購入品（洗濯機など）の故障報告などに使います。</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q" onclick="toggleFaq(this)">DEMOモードとは？</div>
+                    <div class="faq-a">ログイン画面下部の「体験」ボタンからアクセスできます。サンプルデータで各役割（スタッフ、業者、管理者）の画面を体験できます。DEMOのデータは本番データに影響しません。</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q" onclick="toggleFaq(this)">データを全て消したい</div>
+                    <div class="faq-a">システム設定画面の「全データ削除」ボタンから実行できます。この操作は元に戻せません。システム管理者のみ実行できます。</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 仕様書 ========== -->
+        <div class="doc-content" id="tab-spec">
+            <div class="doc-card">
+                <h2>システム仕様書</h2>
+                <p>技術的な仕様やデータ構造の詳細は以下のリンクからご覧ください。</p>
+                <a href="※_SPEC.html" style="display:block;margin-top:16px;padding:16px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;text-decoration:none;color:#1e40af;font-weight:600;font-size:15px;text-align:center;">
+                    📄 システム仕様書を開く
+                </a>
+            </div>
+
+            <div class="doc-card">
+                <h2>データ構造（概要）</h2>
+                <h3>主なデータテーブル</h3>
+                <table class="perm-table">
+                    <tr>
+                        <th>テーブル</th>
+                        <th>保存先キー</th>
+                        <th>概要</th>
+                    </tr>
+                    <tr>
+                        <td>会社</td>
+                        <td>companies</td>
+                        <td>会社名、会社コード、ロゴ等</td>
+                    </tr>
+                    <tr>
+                        <td>事業所</td>
+                        <td>offices</td>
+                        <td>事業所名、種別、住所等</td>
+                    </tr>
+                    <tr>
+                        <td>アカウント</td>
+                        <td>accounts</td>
+                        <td>ログインID、ロール、所属等</td>
+                    </tr>
+                    <tr>
+                        <td>業者</td>
+                        <td>partners</td>
+                        <td>業者名、担当者、ログイン情報</td>
+                    </tr>
+                    <tr>
+                        <td>契約</td>
+                        <td>onetouch.contracts</td>
+                        <td>業者×会社×カテゴリの紐づけ</td>
+                    </tr>
+                    <tr>
+                        <td>商品</td>
+                        <td>onetouch.items</td>
+                        <td>設備名、カテゴリ、設置場所等</td>
+                    </tr>
+                    <tr>
+                        <td>通報</td>
+                        <td>reports</td>
+                        <td>通報内容、ステータス、担当業者</td>
+                    </tr>
+                    <tr>
+                        <td>監査ログ</td>
+                        <td>auditLog</td>
+                        <td>操作ログ、変更前/変更後</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="doc-card">
+                <h2>業者割当の優先順位</h2>
+                <p>通報時に担当業者を自動で決定するロジックです。</p>
+                <ol>
+                    <li><strong>商品の直接指定</strong> — 商品マスタにassignedPartnerIdがある場合（レガシー、基本使わない）</li>
+                    <li><strong>契約テーブル</strong> — 会社コード + 事業所 + カテゴリで契約を検索</li>
+                    <li><strong>事業所のcategoryPartners</strong> — 後方互換用</li>
+                    <li><strong>未割当</strong> — 該当する契約がない場合</li>
+                </ol>
+            </div>
+
+            <div class="doc-card">
+                <h2>カテゴリ体系</h2>
+                <p>現在のシステムで使用している固定カテゴリ（10種類）です。</p>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">
+                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">家具/什器</span>
+                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">家電</span>
+                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">インターネット</span>
+                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">厨房/食器</span>
+                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">浴室</span>
+                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">介護医療用品</span>
+                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">水道</span>
+                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">ガス</span>
+                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">エレベーター/昇降機</span>
+                    <span style="background:#f1f5f9;color:#64748b;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">その他</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        initUnifiedHeader({
+            title: 'ドキュメント',
+            backButton: true,
+            backUrl: (function() {
+                try {
+                    var u = JSON.parse(sessionStorage.getItem('currentUser'));
+                    return u && u.role === 'system_admin' ? 'system-admin.html' : 'master-top.html';
+                } catch(e) { return 'system-admin.html'; }
+            })()
+        });
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.doc-tab').forEach(function(t) { t.classList.remove('active'); });
+            document.querySelectorAll('.doc-content').forEach(function(c) { c.classList.remove('active'); });
+            event.target.closest('.doc-tab').classList.add('active');
+            document.getElementById('tab-' + tabId).classList.add('active');
+        }
+
+        function toggleFaq(el) {
+            el.classList.toggle('open');
+            el.nextElementSibling.classList.toggle('open');
+        }
+
+        function searchDocs(query) {
+            // 以前のハイライトを削除
+            document.querySelectorAll('.highlight').forEach(function(el) {
+                el.outerHTML = el.textContent;
+            });
+            if (!query || query.length < 2) return;
+
+            var regex = new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+            var allCards = document.querySelectorAll('.doc-card');
+            var foundTab = null;
+
+            allCards.forEach(function(card) {
+                var walker = document.createTreeWalker(card, NodeFilter.SHOW_TEXT, null, false);
+                var textNodes = [];
+                while (walker.nextNode()) textNodes.push(walker.currentNode);
+
+                textNodes.forEach(function(node) {
+                    if (regex.test(node.textContent)) {
+                        var span = document.createElement('span');
+                        span.innerHTML = node.textContent.replace(regex, '<span class="highlight">$1</span>');
+                        node.parentNode.replaceChild(span, node);
+                        if (!foundTab) {
+                            var content = card.closest('.doc-content');
+                            if (content) {
+                                foundTab = content.id.replace('tab-', '');
+                                switchTabById(foundTab);
+                            }
+                        }
+                    }
+                });
+            });
+        }
+
+        function switchTabById(tabId) {
+            document.querySelectorAll('.doc-tab').forEach(function(t) { t.classList.remove('active'); });
+            document.querySelectorAll('.doc-content').forEach(function(c) { c.classList.remove('active'); });
+            document.getElementById('tab-' + tabId).classList.add('active');
+            // タブボタンもアクティブに
+            document.querySelectorAll('.doc-tab').forEach(function(t) {
+                if (t.textContent.trim().indexOf(tabId === 'guide' ? '運用' : tabId === 'howto' ? '操作' : tabId === 'roles' ? '権限' : tabId === 'faq' ? 'FAQ' : '仕様') !== -1) {
+                    t.classList.add('active');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -446,10 +446,24 @@
                     </div>
                 </div>
 
+                <!-- 追加担当者セクション -->
+                <div class="form-section" id="additionalContactsSection">
+                    <h3 style="color: #1e293b; font-size: 15px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #e0e0e0;">
+                        追加担当者（任意）
+                    </h3>
+                    <div id="additionalContactsList" style="margin-bottom: 12px;"></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+                        <input type="text" id="addContactName" placeholder="担当者名" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;">
+                        <input type="text" id="addContactRomaji" placeholder="ローマ字" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;">
+                    </div>
+                    <button type="button" onclick="addAdditionalContact()" style="width:100%;padding:8px;background:#eff6ff;color:#2563eb;border:1px solid #2563eb;border-radius:8px;cursor:pointer;font-size:13px;">＋ 担当者を追加</button>
+                </div>
+
                 <input type="hidden" id="partnerCode">
                 <input type="hidden" id="loginId">
                 <input type="hidden" id="password">
                 <input type="hidden" id="assignedCompanies">
+                <input type="hidden" id="contactsData" value="[]">
 
                 <div class="form-row">
                     <div class="form-group">
@@ -573,9 +587,9 @@
         const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
         if (!currentUser) {
             window.location.href = 'login.html';
-        } else if (currentUser.role !== 'system_admin' && currentUser.role !== 'company_admin' && currentUser.role !== 'office_admin') {
-            alert('この画面は管理者のみアクセスできます。');
-            window.location.href = 'login.html';
+        } else if (currentUser.role !== 'system_admin') {
+            alert('この画面はシステム管理者のみアクセスできます。');
+            window.location.href = currentUser.role === 'company_admin' || currentUser.role === 'office_admin' ? 'master-top.html' : 'login.html';
         }
 
         // 取引先データ（LocalStorageから読み込み + フィルタリング）
@@ -674,6 +688,44 @@
         }
 
         // ローマ字入力→ログインIDプレビュー
+        // 追加担当者管理
+        var additionalContacts = [];
+
+        function addAdditionalContact() {
+            var name = document.getElementById('addContactName').value.trim();
+            var romaji = document.getElementById('addContactRomaji').value.trim().toLowerCase();
+            if (!name || !romaji) { alert('担当者名とローマ字を入力してください'); return; }
+            if (!/^[a-zA-Z]+$/.test(romaji)) { alert('ローマ字は半角英字のみです'); return; }
+            var partnerCode = document.getElementById('partnerCode').value;
+            additionalContacts.push({
+                name: name,
+                loginId: partnerCode ? partnerCode.toLowerCase() + '-' + romaji : romaji,
+                password: 'partner123',
+                phone: '',
+                isMain: false
+            });
+            document.getElementById('addContactName').value = '';
+            document.getElementById('addContactRomaji').value = '';
+            renderAdditionalContacts();
+        }
+
+        function removeAdditionalContact(index) {
+            additionalContacts.splice(index, 1);
+            renderAdditionalContacts();
+        }
+
+        function renderAdditionalContacts() {
+            var list = document.getElementById('additionalContactsList');
+            if (additionalContacts.length === 0) { list.innerHTML = ''; return; }
+            list.innerHTML = additionalContacts.map(function(c, i) {
+                return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f8f9fa;border-radius:8px;margin-bottom:6px;">'
+                    + '<div><span style="font-weight:600;">' + c.name + '</span> <span style="color:#888;font-size:12px;">(' + c.loginId + ')</span></div>'
+                    + '<button type="button" onclick="removeAdditionalContact(' + i + ')" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:13px;">削除</button>'
+                    + '</div>';
+            }).join('');
+            document.getElementById('contactsData').value = JSON.stringify(additionalContacts);
+        }
+
         function updateLoginIdPreview() {
             var romaji = (document.getElementById('loginRomaji').value || '').trim().toLowerCase().replace(/[^a-z]/g, '');
             var code = document.getElementById('partnerCode').value || '';
@@ -700,6 +752,9 @@
             document.getElementById('partnerId').value = '';
             // 業者コードを自動発行
             document.getElementById('partnerCode').value = generatePartnerCode();
+            // 追加担当者をリセット
+            additionalContacts = [];
+            renderAdditionalContacts();
             // 新規時は自社を初期チェック
             renderCompanyCheckboxes([currentUser.companyCode]);
         }
@@ -732,6 +787,15 @@
             document.getElementById('loginRomaji').value = partner.loginRomaji || '';
             updateLoginIdPreview();
             renderCompanyCheckboxes(partner.assignedCompanies || []);
+
+            // 追加担当者を読み込み
+            additionalContacts = [];
+            if (partner.contacts && partner.contacts.length > 0) {
+                partner.contacts.forEach(function(c) {
+                    if (!c.isMain) additionalContacts.push(Object.assign({}, c));
+                });
+            }
+            renderAdditionalContacts();
         }
 
         function closeModal() {
@@ -770,6 +834,16 @@
                 assignedCompanies = [currentUser.companyCode || 'DEMO'];
             }
             
+            // contacts配列を構築（メイン担当者 + 追加担当者）
+            var mainContact = {
+                name: document.getElementById('contactName').value,
+                loginId: loginId,
+                password: password,
+                phone: document.getElementById('contactPhone').value,
+                isMain: true
+            };
+            var allContacts = [mainContact].concat(additionalContacts);
+
             const partnerData = {
                 id: partnerCode,
                 companyCode: currentUser.companyCode || 'DEMO',
@@ -789,6 +863,7 @@
                 loginId: loginId,
                 loginRomaji: romaji,
                 password: password,
+                contacts: allContacts,
                 categories: [],
                 assignedCompanies: assignedCompanies,
                 status: 'active',

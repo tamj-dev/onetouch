@@ -268,13 +268,27 @@
                 sessionStorage.setItem('offices', JSON.stringify(offices));
             }
 
+            // DEMO契約データを保存
+            if (typeof DEMO_CONTRACTS !== 'undefined') {
+                sessionStorage.setItem('onetouch.contracts', JSON.stringify(DEMO_CONTRACTS));
+                localStorage.setItem('onetouch.contracts', JSON.stringify(DEMO_CONTRACTS));
+            }
+
             // 業者の場合はcontractor情報も保存
             if (role === 'contractor') {
+                // 契約テーブルから担当会社を取得
+                var partnerCompanies = [];
+                if (typeof getPartnerCompanies === 'function') {
+                    partnerCompanies = getPartnerCompanies(user.partnerId || user.partnerCode);
+                }
+                if (partnerCompanies.length === 0) {
+                    partnerCompanies = user.assignedCompanies || ['TAMJ'];
+                }
                 sessionStorage.setItem('currentContractor', JSON.stringify({
                     id: user.partnerId, partnerId: user.partnerId,
                     partnerCode: user.partnerCode, companyName: user.companyName,
                     name: user.name, loginId: user.id, contactName: user.name,
-                    categories: user.categories, assignedCompanies: user.assignedCompanies,
+                    categories: user.categories, assignedCompanies: partnerCompanies,
                     role: 'contractor'
                 }));
                 window.location.href = 'contractor-dashboard.html';
@@ -583,18 +597,41 @@
                 });
                 partners = mergedPartners;
                 
-                // 業者データを認証用フォーマットに変換
-                partners = partners.map(p => ({
-                    companyCode: p.partnerCode || p.companyCode, // 業者コードを会社コードとして使用
-                    id: p.loginId,
-                    password: p.password,
-                    name: p.contactName || p.name,
-                    role: 'contractor',
-                    companyName: p.name,
-                    partnerId: p.id,
-                    categories: p.categories || [],
-                    status: p.status || 'active'
-                }));
+                // 業者データを認証用フォーマットに変換（複数担当者対応）
+                var partnerAccounts = [];
+                partners.forEach(function(p) {
+                    var contacts = p.contacts || [];
+                    if (contacts.length > 0) {
+                        // contacts配列がある場合は各担当者をアカウントとして展開
+                        contacts.forEach(function(c) {
+                            partnerAccounts.push({
+                                companyCode: p.partnerCode || p.companyCode,
+                                id: c.loginId,
+                                password: c.password,
+                                name: c.name,
+                                role: 'contractor',
+                                companyName: p.name,
+                                partnerId: p.id,
+                                categories: p.categories || [],
+                                status: p.status || 'active'
+                            });
+                        });
+                    } else {
+                        // 後方互換: contacts配列がない場合は従来通り
+                        partnerAccounts.push({
+                            companyCode: p.partnerCode || p.companyCode,
+                            id: p.loginId,
+                            password: p.password,
+                            name: p.contactName || p.name,
+                            role: 'contractor',
+                            companyName: p.name,
+                            partnerId: p.id,
+                            categories: p.categories || [],
+                            status: p.status || 'active'
+                        });
+                    }
+                });
+                partners = partnerAccounts;
             } catch (e) {
                 partners = [];
             }
@@ -667,10 +704,17 @@
                     
                     // 身分によって振り分け
                     if (user.role === 'contractor') {
-                        // 業者の場合は専用ダッシュボードへ（新規追加）
-                        // partner-masterから紐づけ会社を取得
-                        var partnerAssignedCompanies = user.assignedCompanies || [];
-                        if ((!partnerAssignedCompanies || partnerAssignedCompanies.length === 0) && user.companyCode) {
+                        // 業者の場合は専用ダッシュボードへ
+                        // 契約テーブルから担当会社を取得（assignedCompaniesの代替）
+                        var partnerAssignedCompanies = [];
+                        if (typeof getPartnerCompanies === 'function') {
+                            partnerAssignedCompanies = getPartnerCompanies(user.partnerId || user.companyCode);
+                        }
+                        // 後方互換: 契約テーブルに未移行の場合はassignedCompaniesを参照
+                        if (partnerAssignedCompanies.length === 0) {
+                            partnerAssignedCompanies = user.assignedCompanies || [];
+                        }
+                        if (partnerAssignedCompanies.length === 0 && user.companyCode) {
                             partnerAssignedCompanies = [user.companyCode];
                         }
                         sessionStorage.setItem('currentContractor', JSON.stringify({

@@ -876,12 +876,11 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label required">担当業者</label>
-                    <select class="form-input" id="itemAssignedPartner" required>
-                        <option value="">選択してください</option>
-                    </select>
+                    <label class="form-label">担当業者</label>
+                    <input type="text" class="form-input" id="itemAssignedPartnerDisplay" readonly style="background:#f5f5f5;color:#666;" placeholder="カテゴリ選択後に自動設定されます">
+                    <input type="hidden" id="itemAssignedPartner" value="">
                     <div style="font-size: 12px; color: #888; margin-top: 4px;">
-                        ※ トラブル時、この業者に自動で通知されます
+                        ※ 契約テーブルのカテゴリ設定により自動で決まります
                     </div>
                 </div>
 
@@ -914,7 +913,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">カテゴリー（推奨）</label>
-                        <select class="form-input" id="itemCategory">
+                        <select class="form-input" id="itemCategory" onchange="resolvePartnerFromCategory()">
                             <option value="">未設定</option>
                             <option value="家具/什器">家具/什器</option>
                             <option value="家電">家電</option>
@@ -1018,6 +1017,34 @@
         });
 
         // 業者一覧を読み込む
+        // カテゴリ選択時に契約テーブルから担当業者を自動解決
+        function resolvePartnerFromCategory() {
+            var category = document.getElementById('itemCategory').value;
+            var display = document.getElementById('itemAssignedPartnerDisplay');
+            var hidden = document.getElementById('itemAssignedPartner');
+            if (!category) {
+                display.value = '';
+                hidden.value = '';
+                return;
+            }
+            // resolvePartner（demo-mode.js）を使って解決
+            var companyCode = currentUser.companyCode || '';
+            var officeCode = currentUser.officeCode || '';
+            if (typeof resolvePartner === 'function') {
+                var result = resolvePartner({ category: category, companyCode: companyCode }, officeCode);
+                if (result.partnerId) {
+                    hidden.value = result.partnerId;
+                    display.value = result.partnerName || result.partnerId;
+                } else {
+                    hidden.value = '';
+                    display.value = '（未割当 — 契約設定をご確認ください）';
+                }
+            } else {
+                hidden.value = '';
+                display.value = '';
+            }
+        }
+
         function loadPartners() {
             
             try {
@@ -1075,13 +1102,24 @@
                 }
                 
                 
-                // 現在の会社に紐付いている業者のみフィルター
+                // 現在の会社に紐付いている業者のみフィルター（契約テーブルベース）
+                var contracts = [];
+                try { contracts = JSON.parse(sessionStorage.getItem('onetouch.contracts') || '[]'); } catch(e) {}
+                try { var cl = JSON.parse(localStorage.getItem('onetouch.contracts') || '[]'); cl.forEach(function(c) { if (!contracts.find(function(x) { return x.id === c.id; })) contracts.push(c); }); } catch(e) {}
+                
+                const contractedPartnerIds = contracts
+                    .filter(c => c.status === 'active' && c.companyCode === currentUser.companyCode)
+                    .map(c => c.partnerId);
+                
                 const filteredPartners = partners.filter(p => {
+                    const pid = p.id || p.partnerCode;
+                    const isContracted = contractedPartnerIds.indexOf(pid) !== -1;
+                    // 後方互換: 契約テーブルにない場合はassignedCompaniesも参照
                     const companies = p.assignedCompanies || [];
                     const isAssigned = Array.isArray(companies) && companies.includes(currentUser.companyCode);
                     const sameCompany = p.companyCode === currentUser.companyCode;
                     const isActive = p.status !== 'inactive';
-                    return (isAssigned || sameCompany) && isActive;
+                    return (isContracted || isAssigned || sameCompany) && isActive;
                 });
                 
                 
@@ -1356,7 +1394,9 @@
             document.getElementById('itemForm').reset();
             document.getElementById('itemId').value = '';
             document.getElementById('itemNumberGroup').style.display = 'none';
-            loadPartners(); // 業者一覧を読み込む
+            // 担当業者をリセット
+            document.getElementById('itemAssignedPartner').value = '';
+            document.getElementById('itemAssignedPartnerDisplay').value = '';
             
             // 業者ログインの場合、納品先会社を自動セット
             if (currentUser.role === 'contractor') {
@@ -1403,8 +1443,6 @@
         function editItem(itemId) {
             const item = allItems.find(i => i.itemId === itemId);
             if (!item) return;
-
-            loadPartners(); // 業者一覧を読み込む
             
             currentEditId = itemId;
             document.getElementById('modalTitle').textContent = '商品編集';
@@ -1415,7 +1453,13 @@
             document.getElementById('itemMaker').value = item.maker || '';
             document.getElementById('itemModel').value = item.model || '';
             document.getElementById('itemCategory').value = item.category || '';
-            document.getElementById('itemAssignedPartner').value = item.assignedPartnerId || '';
+            // 担当業者は契約ベースで自動表示（既存のassignedPartnerIdがあればそれを表示）
+            if (item.assignedPartnerId && item.assignedPartnerName) {
+                document.getElementById('itemAssignedPartner').value = item.assignedPartnerId;
+                document.getElementById('itemAssignedPartnerDisplay').value = item.assignedPartnerName;
+            } else {
+                resolvePartnerFromCategory();
+            }
             document.getElementById('itemUnit').value = item.unit || '個';
             document.getElementById('itemPrice').value = item.price || 0;
             document.getElementById('itemStock').value = item.stock || 0;
@@ -1461,8 +1505,8 @@
                 return;
             }
 
-            const partnerSelect = document.getElementById('itemAssignedPartner');
-            const selectedOption = partnerSelect.options[partnerSelect.selectedIndex];
+            const partnerHidden = document.getElementById('itemAssignedPartner');
+            const partnerDisplay = document.getElementById('itemAssignedPartnerDisplay');
             
             // 業者ログイン時は納品先会社を使用
             let companyCode = currentUser.companyCode;
@@ -1487,8 +1531,8 @@
                 maker: document.getElementById('itemMaker').value,
                 model: document.getElementById('itemModel').value,
                 category: document.getElementById('itemCategory').value,
-                assignedPartnerId: partnerSelect.value,
-                assignedPartnerName: selectedOption.dataset.partnerName || selectedOption.textContent || '',
+                assignedPartnerId: partnerHidden.value || null,
+                assignedPartnerName: partnerDisplay.value || '',
                 unit: document.getElementById('itemUnit').value,
                 price: parseFloat(document.getElementById('itemPrice').value) || 0,
                 stock: parseFloat(document.getElementById('itemStock').value) || 0,

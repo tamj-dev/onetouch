@@ -163,6 +163,12 @@
             // 事業所管理者
             if (role === 'office_admin') {
                 hide('officeCard');  // 自分の事業所しかないので不要
+                hide('partnerCard'); // 業者マスタはsystem_adminのみ
+            }
+
+            // 会社管理者
+            if (role === 'company_admin') {
+                hide('partnerCard'); // 業者マスタはsystem_adminのみ
             }
 
             // 会社管理者・事業所管理者
