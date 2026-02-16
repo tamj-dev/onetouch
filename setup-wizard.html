@@ -1236,77 +1236,7 @@
             showToast('契約を' + setupData.contracts.length + '件登録しました');
         }
 
-        // ========== 旧ステップ4（業者登録）— 未使用 ==========
-            var content = document.getElementById('wizardContent');
-            var html = doneSummary();
-
-            // 登録済み業者一覧
-            if (setupData.partners.length > 0) {
-                html += '<div class="wizard-card" style="padding:16px;">';
-                html += '<div style="font-size:14px;font-weight:600;color:#555;margin-bottom:10px;">登録済み業者（' + setupData.partners.length + '件）</div>';
-                setupData.partners.forEach(function(p, i) {
-                    html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#f8f9fa;border-radius:8px;margin-bottom:6px;">'
-                        + '<div>'
-                        + '<div style="font-size:15px;font-weight:600;color:#1e293b;">' + esc(p.name) + '</div>'
-                        + '<div style="font-size:13px;color:#888;">' + esc(p.code) + '　担当者：' + esc(p.contactName || '-') + '</div>'
-                        + '<div style="font-size:12px;color:#2563eb;margin-top:2px;">' + (p.categories || []).join(', ') + '</div>'
-                        + '</div>'
-                        + '<button onclick="removePartner(' + i + ')" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:13px;padding:4px 8px;">削除</button>'
-                        + '</div>';
-                });
-                html += '</div>';
-            }
-
-            html += '<div class="wizard-card">'
-                + '<div class="wizard-card-title">ステップ 4：業者登録</div>'
-                + '<div class="wizard-card-sub">' + esc(setupData.companyName) + ' と取引する業者を登録してください</div>'
-                + '<div class="form-group">'
-                + '  <label class="form-label">業者名（会社名）<span class="required">*</span></label>'
-                + '  <input type="text" class="form-input" id="partnerName" placeholder="例：東京設備工業株式会社">'
-                + '  <div class="form-error" id="partnerNameError">業者名を入力してください</div>'
-                + '</div>'
-                + '<div class="form-group">'
-                + '  <label class="form-label">担当者名<span class="required">*</span></label>'
-                + '  <input type="text" class="form-input" id="partnerContact" placeholder="例：山田太郎">'
-                + '  <div class="form-error" id="partnerContactError">担当者名を入力してください</div>'
-                + '</div>'
-                + '<div class="form-group">'
-                + '  <label class="form-label">担当者ローマ字<span class="required">*</span></label>'
-                + '  <input type="text" class="form-input" id="partnerRomaji" placeholder="例：yamada" oninput="previewPartnerId()">'
-                + '  <div class="form-hint">半角英字。ログインIDが自動生成されます</div>'
-                + '  <div id="partnerIdPreview" style="display:none;margin-top:4px;font-size:14px;color:#2563eb;"></div>'
-                + '  <div class="form-error" id="partnerRomajiError"></div>'
-                + '</div>'
-                + '<div class="form-group">'
-                + '  <label class="form-label">電話番号</label>'
-                + '  <input type="tel" class="form-input" id="partnerPhone" placeholder="例：03-1234-5678">'
-                + '</div>'
-                + '<div class="form-group">'
-                + '  <label class="form-label">担当カテゴリ<span class="required">*</span></label>'
-                + '  <div id="categoryChecks" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;"></div>'
-                + '  <div class="form-error" id="partnerCategoryError">担当カテゴリを1つ以上選択してください</div>'
-                + '</div>'
-                + '<button class="btn btn-save" onclick="addPartner()" style="width:100%;margin-top:8px;">＋ この業者を追加</button>'
-                + '</div>';
-
-            html += '<div class="btn-row">'
-                + '<button class="btn btn-secondary" onclick="goToStep(3)">前へ</button>'
-                + '<button class="btn btn-save" onclick="saveStep4()">保存</button>'
-                + '<button class="btn btn-primary" onclick="completeStep4()"' + (setupData.partners.length === 0 ? ' disabled title="業者を1件以上追加してください"' : '') + '>次へ</button>'
-                + '</div>';
-
-            content.innerHTML = html;
-
-            // カテゴリチェックボックスを生成
-            var catDiv = document.getElementById('categoryChecks');
-            if (catDiv) {
-                var cats = ['家具/什器','家電','インターネット','厨房/食器','浴室','介護医療用品','水道','ガス','エレベーター/昇降機','その他'];
-                catDiv.innerHTML = cats.map(function(c) {
-                    return '<label style="display:flex;align-items:center;gap:4px;padding:6px 10px;background:#f5f5f5;border-radius:8px;font-size:14px;cursor:pointer;white-space:nowrap;">'
-                        + '<input type="checkbox" value="' + c + '" class="cat-check"> ' + c + '</label>';
-                }).join('');
-            }
-        }
+        // ========== 業者追加関連 ==========
 
         function previewPartnerId() {
             var romaji = document.getElementById('partnerRomaji').value.trim().toLowerCase();
