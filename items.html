@@ -879,6 +879,14 @@
                 </div>
 
                 <div class="form-group">
+                    <label class="form-label required">カテゴリー</label>
+                    <select class="form-input" id="itemCategory" onchange="resolvePartnerFromCategory()">
+                        <option value="">選択してください</option>
+                        <!-- 契約テーブルから動的に生成 -->
+                    </select>
+                </div>
+
+                <div class="form-group">
                     <label class="form-label">担当業者</label>
                     <select class="form-input" id="itemAssignedPartnerSelect" onchange="document.getElementById('itemAssignedPartner').value=this.value">
                         <option value="">カテゴリ選択後に自動設定</option>
@@ -887,6 +895,14 @@
                     <div style="font-size: 12px; color: #888; margin-top: 4px;">
                         ※ カテゴリに紐づく業者が自動表示されます（複数の場合は選択可）
                     </div>
+                </div>
+
+                <!-- 本社管理者・システム管理者のみ: 事業所選択 -->
+                <div class="form-group" id="itemOfficeGroup" style="display: none;">
+                    <label class="form-label required">設置事業所</label>
+                    <select class="form-input" id="itemOfficeSelect">
+                        <option value="">選択してください</option>
+                    </select>
                 </div>
 
                 <div class="form-row">
@@ -917,11 +933,6 @@
                         <input type="text" class="form-input" id="itemUnit" value="個">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">カテゴリー（推奨）</label>
-                        <select class="form-input" id="itemCategory" onchange="resolvePartnerFromCategory()">
-                            <option value="">未設定</option>
-                            <!-- 契約テーブルから動的に生成 -->
-                        </select>
                     </div>
                 </div>
 
@@ -979,6 +990,7 @@
             await ItemStorage.initDemoItems();
             await loadItems();
             buildCategoryOptions();
+            initOfficeSelect();
         }
 
         // ユーザー情報表示
@@ -1014,6 +1026,34 @@
         });
 
         // 業者一覧を読み込む
+        // ロール別事業所選択の初期化
+        function initOfficeSelect() {
+            var group = document.getElementById('itemOfficeGroup');
+            var select = document.getElementById('itemOfficeSelect');
+            if (!group || !select) return;
+
+            // スタッフ・事業所管理者・業者は不要（自分の事業所が自動適用）
+            if (currentUser.role === 'staff' || currentUser.role === 'office_admin' || currentUser.role === 'contractor') {
+                group.style.display = 'none';
+                return;
+            }
+
+            // 本社管理者・システム管理者は事業所選択を表示
+            group.style.display = 'block';
+            var offices = [];
+            try { offices = JSON.parse(sessionStorage.getItem('offices') || '[]'); } catch(e) {}
+            try { var ol = JSON.parse(localStorage.getItem('offices') || '[]'); ol.forEach(function(o) { if (!offices.find(function(x) { return x.code === o.code; })) offices.push(o); }); } catch(e) {}
+
+            // 本社管理者は自社の事業所のみ
+            if (currentUser.role === 'company_admin') {
+                offices = offices.filter(function(o) { return o.companyCode === currentUser.companyCode; });
+            }
+
+            select.innerHTML = '<option value="">選択してください</option>' + offices.map(function(o) {
+                return '<option value="' + o.code + '">' + o.name + '</option>';
+            }).join('');
+        }
+
         // カテゴリプルダウンを契約テーブルから動的生成
         function buildCategoryOptions() {
             var catSelect = document.getElementById('itemCategory');
@@ -1514,6 +1554,8 @@
             document.body.style.top = (-window.scrollY) + 'px';
             document.body.classList.add('modal-open');
             document.getElementById('itemModal').classList.add('show');
+            buildCategoryOptions();
+            initOfficeSelect();
         }
 
         // モーダル開く（編集）
@@ -1555,6 +1597,14 @@
             document.body.style.top = (-window.scrollY) + 'px';
             document.body.classList.add('modal-open');
             document.getElementById('itemModal').classList.add('show');
+            buildCategoryOptions();
+            document.getElementById('itemCategory').value = item.category || '';
+            initOfficeSelect();
+            // 編集時: 事業所を選択状態に
+            var officeSelect = document.getElementById('itemOfficeSelect');
+            if (officeSelect && item.officeCode) {
+                officeSelect.value = item.officeCode;
+            }
         }
 
         // モーダル閉じる
@@ -1609,8 +1659,23 @@
                     return;
                 }
                 companyCode = deliveryCompany;
-                // 業者が登録する場合、事業所は未設定
                 officeCode = '';
+            }
+
+            // 本社管理者・システム管理者は事業所選択から取得
+            if (currentUser.role === 'company_admin' || currentUser.role === 'system_admin') {
+                var officeSelect = document.getElementById('itemOfficeSelect');
+                if (officeSelect && officeSelect.value) {
+                    officeCode = officeSelect.value;
+                }
+            }
+
+            // カテゴリ必須チェック
+            var categoryVal = document.getElementById('itemCategory').value;
+            if (!categoryVal) {
+                alert('カテゴリーを選択してください');
+                document.getElementById('itemCategory').focus();
+                return;
             }
             
             const item = {
@@ -1634,7 +1699,6 @@
 
             // 推奨項目の未入力チェック
             var warnings = [];
-            if (!item.category || item.category === 'その他') warnings.push('カテゴリー');
             if (!item.floor) warnings.push('設置場所（フロア）');
             if (warnings.length > 0) {
                 if (!confirm(warnings.join('・') + ' が未入力です。\nあとから検索・絞り込みしやすくなるため、入力を推奨します。\n\nこのまま保存しますか？')) {
