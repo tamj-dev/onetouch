@@ -662,7 +662,7 @@
                 // システム管理者：全事業所
                 return officeList;
             } else if (currentUser.scope === 'company') {
-                // 会社管理者：自社の事業所のみ
+                // 本社管理者：自社の事業所のみ
                 return officeList.filter(o => o.companyCode === currentUser.companyCode);
             } else if (currentUser.scope === 'office') {
                 // 事業所管理者：自事業所のみ

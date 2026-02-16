@@ -639,7 +639,7 @@
                         </div>
                         <div class="role-option hidden" id="role-option-company_admin">
                             <input type="radio" id="role-company_admin" name="role" value="company_admin">
-                            <label for="role-company_admin">会社管理者</label>
+                            <label for="role-company_admin">本社管理者</label>
                         </div>
                     </div>
                 </div>
@@ -759,7 +759,7 @@
         const roleLabels = {
             staff: 'スタッフ',
             office_admin: '事業所管理者',
-            company_admin: '会社管理者',
+            company_admin: '本社管理者',
             system_admin: 'システム管理者'
         };
 
@@ -850,10 +850,10 @@
             const companyAdminOption = document.getElementById('role-option-company_admin');
             
             if (currentUser.role === 'company_admin' || currentUser.role === 'system_admin') {
-                // 本社管理者・システム管理者は「会社管理者」を作成可能
+                // 本社管理者・システム管理者は「本社管理者」を作成可能
                 companyAdminOption.classList.remove('hidden');
             } else {
-                // 事業所管理者は「会社管理者」を作成できない
+                // 事業所管理者は「本社管理者」を作成できない
                 companyAdminOption.classList.add('hidden');
             }
         }
