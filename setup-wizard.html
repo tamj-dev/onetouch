@@ -1693,10 +1693,13 @@
         }
 
         // ========== 初期化 ==========
-        document.addEventListener('DOMContentLoaded', function() {
+        try {
             loadOrCreateSetup();
             renderCurrentStep();
-        });
+        } catch(e) {
+            var wc = document.getElementById('wizardContent');
+            if (wc) wc.innerHTML = '<div style="background:#fee;border:1px solid #fcc;padding:20px;border-radius:8px;color:#c00;margin:20px;">初期化エラー: ' + e.message + '<br><pre>' + e.stack + '</pre></div>';
+        }
     </script>
 
     <script>
