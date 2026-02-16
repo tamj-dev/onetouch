@@ -436,6 +436,7 @@
                     </thead>
                     <tbody id="officeList"></tbody>
                 </table>
+                <div id="omPagination"></div>
             </div>
         </div>
     </div>
@@ -620,6 +621,19 @@
     </div>
 
     <script>
+        function renderPagination(containerId, currentPage, totalPages, totalItems, onPageChange) {
+            var container = document.getElementById(containerId);
+            if (!container) return;
+            if (totalPages <= 1) { container.innerHTML = totalItems > 0 ? '<div style="text-align:center;padding:12px;font-size:13px;color:#999;">全 ' + totalItems + ' 件</div>' : ''; return; }
+            var html = '<div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:16px;flex-wrap:wrap;">';
+            html += '<span style="font-size:13px;color:#999;margin-right:8px;">全 ' + totalItems + ' 件</span>';
+            html += '<button onclick="window._pgCb' + containerId + '(' + (currentPage-1) + ')" ' + (currentPage<=1?'disabled':'') + ' style="padding:6px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;font-size:13px;' + (currentPage<=1?'opacity:0.4;cursor:default;':'') + '">前へ</button>';
+            var s=Math.max(1,currentPage-2),e=Math.min(totalPages,s+4); if(e-s<4) s=Math.max(1,e-4);
+            for(var p=s;p<=e;p++) html += '<button onclick="window._pgCb' + containerId + '(' + p + ')" style="padding:6px 12px;border:1px solid ' + (p===currentPage?'#2563eb':'#d1d5db') + ';border-radius:6px;background:' + (p===currentPage?'#2563eb':'#fff') + ';color:' + (p===currentPage?'#fff':'#333') + ';cursor:pointer;font-size:13px;font-weight:' + (p===currentPage?'700':'400') + ';">' + p + '</button>';
+            html += '<button onclick="window._pgCb' + containerId + '(' + (currentPage+1) + ')" ' + (currentPage>=totalPages?'disabled':'') + ' style="padding:6px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;font-size:13px;' + (currentPage>=totalPages?'opacity:0.4;cursor:default;':'') + '">次へ</button></div>';
+            container.innerHTML = html; window['_pgCb' + containerId] = onPageChange;
+        }
+
         // 監査ログ記録関数
         function logEvent(type, detail = {}) {
             try {
@@ -857,9 +871,14 @@
         });
 
         // 事業所一覧を表示
+        var om_currentPage = 1;
+        var om_pageSize = 30;
+        var om_lastFiltered = null;
+
         function renderOffices(filteredOffices = null) {
             const officeList = document.getElementById('officeList');
             const displayOffices = filteredOffices || offices;
+            om_lastFiltered = filteredOffices;
             
             if (displayOffices.length === 0) {
                 officeList.innerHTML = `
@@ -869,9 +888,14 @@
                         </td>
                     </tr>
                 `;
+                if (document.getElementById('omPagination')) document.getElementById('omPagination').innerHTML = '';
             } else {
-                officeList.innerHTML = displayOffices.map((office, index) => {
-                    // フィルタリングされている場合、元の配列のインデックスを取得
+                var totalPages = Math.ceil(displayOffices.length / om_pageSize);
+                if (om_currentPage > totalPages) om_currentPage = totalPages;
+                var start = (om_currentPage - 1) * om_pageSize;
+                var pageOffices = displayOffices.slice(start, start + om_pageSize);
+
+                officeList.innerHTML = pageOffices.map((office, index) => {
                     const originalIndex = offices.indexOf(office);
                     return `
                     <tr>
@@ -884,6 +908,11 @@
                     </tr>
                 `;
                 }).join('');
+
+                renderPagination('omPagination', om_currentPage, totalPages, displayOffices.length, function(page) {
+                    om_currentPage = page;
+                    renderOffices(om_lastFiltered);
+                });
             }
             
             document.getElementById('totalCount').textContent = offices.length;
@@ -892,6 +921,7 @@
 
         // 検索
         function searchOffices() {
+            om_currentPage = 1;
             const searchCode = document.getElementById('searchCode').value.toLowerCase();
             const searchName = document.getElementById('searchName').value.toLowerCase();
             const searchStatus = document.getElementById('searchStatus').value;

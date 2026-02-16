@@ -60,9 +60,30 @@
     <div id="unified-header-mount"></div>
     <div class="container">
 
+        <!-- 関連リンク -->
+        <div class="section">
+            <div class="links-row">
+                <a href="docs.html#guide" class="link-btn" style="background:#f0f7ff; border:1px solid #bfdbfe; color:#1e3a5f;">
+                    📖 契約テーブルとは（概要）
+                </a>
+                <a href="docs.html#howto" class="link-btn" style="background:#f0fdf4; border:1px solid #bbf7d0; color:#166534;">
+                    🔧 業者の変更手順
+                </a>
+                <a href="docs.html#faq" class="link-btn" style="background:#fefce8; border:1px solid #fde68a; color:#854d0e;">
+                    ❓ よくある質問
+                </a>
+                <a href="partner-master.html" class="link-btn" style="background:#faf5ff; border:1px solid #e9d5ff; color:#7c3aed;">
+                    👤 取引先マスタを開く
+                </a>
+            </div>
+        </div>
+
         <!-- 契約一覧テーブル -->
         <div class="section">
-            <div class="section-title">契約一覧（業者 × 会社 × カテゴリ）</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+                <div class="section-title" style="margin-bottom:0;">契約一覧（業者 × 会社 × カテゴリ）</div>
+                <input type="text" id="contractFilter" placeholder="業者名で検索..." oninput="cm_currentPage=1;renderTable()" style="padding:8px 14px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; width:220px;">
+            </div>
             <div style="overflow-x:auto;">
                 <table style="width:100%; min-width:700px; border-collapse:collapse; font-size:14px;">
                     <thead>
@@ -80,25 +101,7 @@
                     </tbody>
                 </table>
             </div>
-        </div>
-
-        <!-- 関連リンク -->
-        <div class="section">
-            <div class="section-title">関連ドキュメント・操作</div>
-            <div class="links-row">
-                <a href="docs.html#guide" class="link-btn" style="background:#f0f7ff; border:1px solid #bfdbfe; color:#1e3a5f;">
-                    📖 契約テーブルとは（概要）
-                </a>
-                <a href="docs.html#howto" class="link-btn" style="background:#f0fdf4; border:1px solid #bbf7d0; color:#166534;">
-                    🔧 業者の変更手順
-                </a>
-                <a href="docs.html#faq" class="link-btn" style="background:#fefce8; border:1px solid #fde68a; color:#854d0e;">
-                    ❓ よくある質問
-                </a>
-                <a href="partner-master.html" class="link-btn" style="background:#faf5ff; border:1px solid #e9d5ff; color:#7c3aed;">
-                    👤 取引先マスタを開く
-                </a>
-            </div>
+            <div id="cmPagination"></div>
         </div>
 
     </div>
@@ -133,6 +136,19 @@
     </div>
 
     <script>
+    function renderPagination(containerId, currentPage, totalPages, totalItems, onPageChange) {
+        var container = document.getElementById(containerId);
+        if (!container) return;
+        if (totalPages <= 1) { container.innerHTML = totalItems > 0 ? '<div style="text-align:center;padding:12px;font-size:13px;color:#999;">全 ' + totalItems + ' 件</div>' : ''; return; }
+        var html = '<div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:16px;flex-wrap:wrap;">';
+        html += '<span style="font-size:13px;color:#999;margin-right:8px;">全 ' + totalItems + ' 件</span>';
+        html += '<button onclick="window._pgCb' + containerId + '(' + (currentPage-1) + ')" ' + (currentPage<=1?'disabled':'') + ' style="padding:6px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;font-size:13px;' + (currentPage<=1?'opacity:0.4;cursor:default;':'') + '">前へ</button>';
+        var s=Math.max(1,currentPage-2),e=Math.min(totalPages,s+4); if(e-s<4) s=Math.max(1,e-4);
+        for(var p=s;p<=e;p++) html += '<button onclick="window._pgCb' + containerId + '(' + p + ')" style="padding:6px 12px;border:1px solid ' + (p===currentPage?'#2563eb':'#d1d5db') + ';border-radius:6px;background:' + (p===currentPage?'#2563eb':'#fff') + ';color:' + (p===currentPage?'#fff':'#333') + ';cursor:pointer;font-size:13px;font-weight:' + (p===currentPage?'700':'400') + ';">' + p + '</button>';
+        html += '<button onclick="window._pgCb' + containerId + '(' + (currentPage+1) + ')" ' + (currentPage>=totalPages?'disabled':'') + ' style="padding:6px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;font-size:13px;' + (currentPage>=totalPages?'opacity:0.4;cursor:default;':'') + '">次へ</button></div>';
+        container.innerHTML = html; window['_pgCb' + containerId] = onPageChange;
+    }
+
     // 権限チェック
     var currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
     if (!currentUser) {
@@ -176,14 +192,34 @@
         return c ? (c.companyName||c.name) : code;
     }
 
+    var cm_currentPage = 1;
+    var cm_pageSize = 30;
+
     function renderTable() {
         _loadData();
         var tbody = document.getElementById('contractBody');
-        if (_contracts.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#aaa;">契約データがありません</td></tr>';
+        var filterText = (document.getElementById('contractFilter').value || '').trim().toLowerCase();
+        
+        var filtered = _contracts.filter(function(c) {
+            if (!filterText) return true;
+            var pName = getPartnerName(c.partnerId).toLowerCase();
+            var pCode = (c.partnerId || '').toLowerCase();
+            return pName.indexOf(filterText) >= 0 || pCode.indexOf(filterText) >= 0;
+        });
+        
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#aaa;">' + (filterText ? '該当する契約がありません' : '契約データがありません') + '</td></tr>';
+            document.getElementById('contractCount').textContent = '';
+            if (document.getElementById('cmPagination')) document.getElementById('cmPagination').innerHTML = '';
             return;
         }
-        tbody.innerHTML = _contracts.map(function(c) {
+
+        var totalPages = Math.ceil(filtered.length / cm_pageSize);
+        if (cm_currentPage > totalPages) cm_currentPage = totalPages;
+        var start = (cm_currentPage - 1) * cm_pageSize;
+        var pageItems = filtered.slice(start, start + cm_pageSize);
+
+        tbody.innerHTML = pageItems.map(function(c) {
             var cats = (c.categories || []).map(function(cat) {
                 return '<span style="display:inline-block;padding:2px 8px;background:#f0f0f0;border-radius:4px;margin:2px;font-size:12px;">' + cat + '</span>';
             }).join('');
@@ -198,6 +234,11 @@
                 + '<td style="padding:10px 12px; text-align:center; white-space:nowrap;"><button onclick="openContractEdit(\'' + c.id + '\')" style="padding:6px 14px;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">編集</button></td>'
                 + '</tr>';
         }).join('');
+        document.getElementById('contractCount').textContent = '';
+        renderPagination('cmPagination', cm_currentPage, totalPages, filtered.length, function(page) {
+            cm_currentPage = page;
+            renderTable();
+        });
     }
     renderTable();
 

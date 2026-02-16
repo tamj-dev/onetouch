@@ -560,6 +560,7 @@
                 </tr>
             </tbody>
         </table>
+        <div id="amPagination"></div>
     </div>
     </div>
     <!-- End of results section -->
@@ -673,6 +674,20 @@
     </div>
 
     <script>
+        // 共通ページネーション描画
+        function renderPagination(containerId, currentPage, totalPages, totalItems, onPageChange) {
+            var container = document.getElementById(containerId);
+            if (!container) return;
+            if (totalPages <= 1) { container.innerHTML = totalItems > 0 ? '<div style="text-align:center;padding:12px;font-size:13px;color:#999;">全 ' + totalItems + ' 件</div>' : ''; return; }
+            var html = '<div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:16px;flex-wrap:wrap;">';
+            html += '<span style="font-size:13px;color:#999;margin-right:8px;">全 ' + totalItems + ' 件</span>';
+            html += '<button onclick="window._pgCb' + containerId + '(' + (currentPage-1) + ')" ' + (currentPage<=1?'disabled':'') + ' style="padding:6px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;font-size:13px;' + (currentPage<=1?'opacity:0.4;cursor:default;':'') + '">前へ</button>';
+            var s=Math.max(1,currentPage-2),e=Math.min(totalPages,s+4); if(e-s<4) s=Math.max(1,e-4);
+            for(var p=s;p<=e;p++) html += '<button onclick="window._pgCb' + containerId + '(' + p + ')" style="padding:6px 12px;border:1px solid ' + (p===currentPage?'#2563eb':'#d1d5db') + ';border-radius:6px;background:' + (p===currentPage?'#2563eb':'#fff') + ';color:' + (p===currentPage?'#fff':'#333') + ';cursor:pointer;font-size:13px;font-weight:' + (p===currentPage?'700':'400') + ';">' + p + '</button>';
+            html += '<button onclick="window._pgCb' + containerId + '(' + (currentPage+1) + ')" ' + (currentPage>=totalPages?'disabled':'') + ' style="padding:6px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;font-size:13px;' + (currentPage>=totalPages?'opacity:0.4;cursor:default;':'') + '">次へ</button></div>';
+            container.innerHTML = html; window['_pgCb' + containerId] = onPageChange;
+        }
+
         // ログインチェックと権限確認
         const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
         if (!currentUser) {
@@ -1079,9 +1094,14 @@
         });
 
         // アカウント一覧を表示
+        var am_currentPage = 1;
+        var am_pageSize = 30;
+        var am_lastFiltered = null;
+
         function renderAccounts(filteredAccounts = null) {
             const accountList = document.getElementById('accountList');
             const displayAccounts = filteredAccounts || accounts;
+            am_lastFiltered = filteredAccounts;
             
             if (displayAccounts.length === 0) {
                 accountList.innerHTML = `
@@ -1091,8 +1111,14 @@
                         </td>
                     </tr>
                 `;
+                if (document.getElementById('amPagination')) document.getElementById('amPagination').innerHTML = '';
             } else {
-                accountList.innerHTML = displayAccounts.map((account, index) => {
+                var totalPages = Math.ceil(displayAccounts.length / am_pageSize);
+                if (am_currentPage > totalPages) am_currentPage = totalPages;
+                var start = (am_currentPage - 1) * am_pageSize;
+                var pageAccounts = displayAccounts.slice(start, start + am_pageSize);
+
+                accountList.innerHTML = pageAccounts.map((account, index) => {
                     // フィルタリングされている場合、元の配列のインデックスを取得
                     const originalIndex = accounts.indexOf(account);
                     const status = account.status || 'active';
@@ -1113,6 +1139,11 @@
                     </tr>
                 `;
                 }).join('');
+
+                renderPagination('amPagination', am_currentPage, totalPages, displayAccounts.length, function(page) {
+                    am_currentPage = page;
+                    renderAccounts(am_lastFiltered);
+                });
             }
             
             document.getElementById('totalCount').textContent = accounts.length;
@@ -1121,6 +1152,7 @@
 
         // 検索
         function searchAccounts() {
+            am_currentPage = 1;
             const searchId = document.getElementById('searchId').value.toLowerCase();
             const searchName = document.getElementById('searchName').value.toLowerCase();
             const searchOffice = document.getElementById('searchOffice').value;

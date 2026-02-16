@@ -304,9 +304,8 @@
                 <div>通報履歴がありません</div>
             </div>
         </div>
+        <div id="reportPagination"></div>
     </div>
-
-    <!-- 通報詳細モーダル -->
     <div class="overlay" id="detailOverlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000;">
         <div class="modal" style="background: white; border-radius: 12px; padding: 32px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
@@ -320,6 +319,29 @@
     </div>
 
     <script>
+        // 共通ページネーション描画
+        function renderPagination(containerId, currentPage, totalPages, totalItems, onPageChange) {
+            var container = document.getElementById(containerId);
+            if (!container) return;
+            if (totalPages <= 1) {
+                container.innerHTML = totalItems > 0 ? '<div style="text-align:center;padding:12px;font-size:13px;color:#999;">全 ' + totalItems + ' 件</div>' : '';
+                return;
+            }
+            var html = '<div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:16px;flex-wrap:wrap;">';
+            html += '<span style="font-size:13px;color:#999;margin-right:8px;">全 ' + totalItems + ' 件</span>';
+            html += '<button onclick="window._pgCb' + containerId + '(' + (currentPage - 1) + ')" ' + (currentPage <= 1 ? 'disabled' : '') + ' style="padding:6px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;font-size:13px;' + (currentPage <= 1 ? 'opacity:0.4;cursor:default;' : '') + '">前へ</button>';
+            var startP = Math.max(1, currentPage - 2);
+            var endP = Math.min(totalPages, startP + 4);
+            if (endP - startP < 4) startP = Math.max(1, endP - 4);
+            for (var p = startP; p <= endP; p++) {
+                html += '<button onclick="window._pgCb' + containerId + '(' + p + ')" style="padding:6px 12px;border:1px solid ' + (p === currentPage ? '#2563eb' : '#d1d5db') + ';border-radius:6px;background:' + (p === currentPage ? '#2563eb' : '#fff') + ';color:' + (p === currentPage ? '#fff' : '#333') + ';cursor:pointer;font-size:13px;font-weight:' + (p === currentPage ? '700' : '400') + ';">' + p + '</button>';
+            }
+            html += '<button onclick="window._pgCb' + containerId + '(' + (currentPage + 1) + ')" ' + (currentPage >= totalPages ? 'disabled' : '') + ' style="padding:6px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;font-size:13px;' + (currentPage >= totalPages ? 'opacity:0.4;cursor:default;' : '') + '">次へ</button>';
+            html += '</div>';
+            container.innerHTML = html;
+            window['_pgCb' + containerId] = onPageChange;
+        }
+
         // ログインチェック
         const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
         if (!currentUser) {
@@ -668,6 +690,7 @@
 
         // 通報履歴をフィルタリングして表示
         function filterReports() {
+            rh_currentPage = 1;
             // システム管理者の場合は選択された事業所を取得
             if (currentUser.role === 'system_admin') {
                 const officeSelect = document.getElementById('officeSelect');
@@ -873,6 +896,9 @@
         }
 
         // 通報履歴を表示
+        var rh_currentPage = 1;
+        var rh_pageSize = 30;
+
         function renderReports(reports) {
             const reportCards = document.getElementById('reportCards');
             
@@ -902,8 +928,15 @@
             
             if (reports.length === 0) {
                 reportCards.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#94a3b8;"><div style="font-size:48px;margin-bottom:16px;"></div><div>通報履歴がありません</div></div>';
+                renderPagination('reportPagination', 0, 0, 0, function(){});
                 return;
             }
+
+            // ページネーション計算
+            var totalPages = Math.ceil(reports.length / rh_pageSize);
+            if (rh_currentPage > totalPages) rh_currentPage = totalPages;
+            var start = (rh_currentPage - 1) * rh_pageSize;
+            var pageReports = reports.slice(start, start + rh_pageSize);
 
             const typeLabels = {
                 wholesale: '家具/什器',
@@ -915,7 +948,8 @@
             // 業者マスタを読み込み
             const partners = JSON.parse(localStorage.getItem('partners') || '[]');
 
-            reportCards.innerHTML = reports.map((report, index) => {
+            reportCards.innerHTML = pageReports.map((report, i) => {
+                const globalIndex = start + i;
                 const datetime = new Date(report.timestamp);
                 const dateStr = datetime.toLocaleDateString('ja-JP') + ' ' + 
                                datetime.toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'});
@@ -951,7 +985,7 @@
                 const descShort = description.length > 20 ? description.substring(0, 20) + '...' : description;
                 
                 return `
-                    <div class="report-card${isNew ? ' is-new' : ''}" onclick="showDetail(${index})">
+                    <div class="report-card${isNew ? ' is-new' : ''}" onclick="showDetail(${globalIndex})">
                         <div class="report-card-header">
                             <div class="report-card-title">${isNew ? '<span style="display:inline-block;width:8px;height:8px;background:#22c55e;border-radius:50%;margin-right:6px;vertical-align:middle;"></span>' : ''}${descShort}</div>
                             <span class="status-badge ${contractorStatusClass}">${contractorStatus}</span>
@@ -966,6 +1000,11 @@
                     </div>
                 `;
             }).join('');
+
+            renderPagination('reportPagination', rh_currentPage, totalPages, reports.length, function(page) {
+                rh_currentPage = page;
+                renderReports(allReports);
+            });
         }
 
         // CSVエクスポート

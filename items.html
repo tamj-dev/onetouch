@@ -880,10 +880,12 @@
 
                 <div class="form-group">
                     <label class="form-label">担当業者</label>
-                    <input type="text" class="form-input" id="itemAssignedPartnerDisplay" readonly style="background:#f5f5f5;color:#666;" placeholder="カテゴリ選択後に自動設定されます">
+                    <select class="form-input" id="itemAssignedPartnerSelect" onchange="document.getElementById('itemAssignedPartner').value=this.value">
+                        <option value="">カテゴリ選択後に自動設定</option>
+                    </select>
                     <input type="hidden" id="itemAssignedPartner" value="">
                     <div style="font-size: 12px; color: #888; margin-top: 4px;">
-                        ※ 契約テーブルのカテゴリ設定により自動で決まります
+                        ※ カテゴリに紐づく業者が自動表示されます（複数の場合は選択可）
                     </div>
                 </div>
 
@@ -918,16 +920,7 @@
                         <label class="form-label">カテゴリー（推奨）</label>
                         <select class="form-input" id="itemCategory" onchange="resolvePartnerFromCategory()">
                             <option value="">未設定</option>
-                            <option value="家具/什器">家具/什器</option>
-                            <option value="家電">家電</option>
-                            <option value="インターネット">インターネット</option>
-                            <option value="厨房/食器">厨房/食器</option>
-                            <option value="浴室">浴室</option>
-                            <option value="介護医療用品">介護医療用品</option>
-                            <option value="水道">水道</option>
-                            <option value="ガス">ガス</option>
-                            <option value="エレベーター/昇降機">エレベーター/昇降機</option>
-                            <option value="その他">その他</option>
+                            <!-- 契約テーブルから動的に生成 -->
                         </select>
                     </div>
                 </div>
@@ -985,6 +978,7 @@
             UnifiedHeader.init({ title: '商品マスタ', backButton: true, onBack: function() { window.location.href = backUrl; } });
             await ItemStorage.initDemoItems();
             await loadItems();
+            buildCategoryOptions();
         }
 
         // ユーザー情報表示
@@ -1020,31 +1014,92 @@
         });
 
         // 業者一覧を読み込む
-        // カテゴリ選択時に契約テーブルから担当業者を自動解決
+        // カテゴリプルダウンを契約テーブルから動的生成
+        function buildCategoryOptions() {
+            var catSelect = document.getElementById('itemCategory');
+            if (!catSelect) return;
+            var companyCode = currentUser.companyCode || '';
+            
+            // 契約テーブルからカテゴリを取得
+            var contracts = [];
+            try { contracts = JSON.parse(sessionStorage.getItem('onetouch.contracts') || '[]'); } catch(e) {}
+            try { var cl = JSON.parse(localStorage.getItem('onetouch.contracts') || '[]'); cl.forEach(function(c){ if(!contracts.find(function(x){return x.id===c.id;})) contracts.push(c); }); } catch(e) {}
+            
+            var categories = [];
+            contracts.forEach(function(c) {
+                if (c.status === 'active' && (!companyCode || c.companyCode === companyCode)) {
+                    (c.categories || []).forEach(function(cat) {
+                        if (categories.indexOf(cat) < 0) categories.push(cat);
+                    });
+                }
+            });
+            
+            // フォールバック: 契約がない場合は全カテゴリ表示
+            if (categories.length === 0) {
+                categories = ['家具/什器','家電','厨房/食器','水道','浴室','ガス','インターネット','エレベーター/昇降機','介護医療用品','その他'];
+            }
+            
+            catSelect.innerHTML = '<option value="">未設定</option>' + categories.map(function(cat) {
+                return '<option value="' + cat + '">' + cat + '</option>';
+            }).join('');
+        }
+
+        // カテゴリ選択時に契約テーブルから担当業者を解決
         function resolvePartnerFromCategory() {
             var category = document.getElementById('itemCategory').value;
-            var display = document.getElementById('itemAssignedPartnerDisplay');
+            var partnerSelect = document.getElementById('itemAssignedPartnerSelect');
             var hidden = document.getElementById('itemAssignedPartner');
+            
             if (!category) {
-                display.value = '';
+                partnerSelect.innerHTML = '<option value="">カテゴリ選択後に自動設定</option>';
                 hidden.value = '';
                 return;
             }
-            // resolvePartner（demo-mode.js）を使って解決
+            
             var companyCode = currentUser.companyCode || '';
-            var officeCode = currentUser.officeCode || '';
-            if (typeof resolvePartner === 'function') {
-                var result = resolvePartner({ category: category, companyCode: companyCode }, officeCode);
-                if (result.partnerId) {
-                    hidden.value = result.partnerId;
-                    display.value = result.partnerName || result.partnerId;
-                } else {
-                    hidden.value = '';
-                    display.value = '（未割当 — 契約設定をご確認ください）';
+            
+            // 契約テーブルから該当カテゴリの業者を検索
+            var contracts = [];
+            try { contracts = JSON.parse(sessionStorage.getItem('onetouch.contracts') || '[]'); } catch(e) {}
+            try { var cl = JSON.parse(localStorage.getItem('onetouch.contracts') || '[]'); cl.forEach(function(c){ if(!contracts.find(function(x){return x.id===c.id;})) contracts.push(c); }); } catch(e) {}
+            
+            var partners = [];
+            try { partners = JSON.parse(sessionStorage.getItem('partners') || '[]'); } catch(e) {}
+            try { var pl = JSON.parse(localStorage.getItem('partners') || '[]'); pl.forEach(function(p){ if(!partners.find(function(x){return x.id===p.id || x.partnerCode===p.partnerCode;})) partners.push(p); }); } catch(e) {}
+            
+            // 該当カテゴリを持つ有効な契約の業者を取得
+            var matchedPartners = [];
+            contracts.forEach(function(c) {
+                if (c.status === 'active' && (!companyCode || c.companyCode === companyCode) && (c.categories || []).indexOf(category) >= 0) {
+                    var p = partners.find(function(x) { return x.id === c.partnerId || x.partnerCode === c.partnerId; });
+                    var name = p ? p.name : c.partnerId;
+                    if (!matchedPartners.find(function(m) { return m.id === c.partnerId; })) {
+                        matchedPartners.push({ id: c.partnerId, name: name });
+                    }
                 }
-            } else {
+            });
+            
+            if (matchedPartners.length === 0) {
+                // フォールバック: resolvePartner関数を使用
+                if (typeof resolvePartner === 'function') {
+                    var result = resolvePartner({ category: category, companyCode: companyCode }, currentUser.officeCode || '');
+                    if (result.partnerId) {
+                        matchedPartners.push({ id: result.partnerId, name: result.partnerName || result.partnerId });
+                    }
+                }
+            }
+            
+            if (matchedPartners.length === 0) {
+                partnerSelect.innerHTML = '<option value="">（未割当 — 契約設定をご確認ください）</option>';
                 hidden.value = '';
-                display.value = '';
+            } else if (matchedPartners.length === 1) {
+                partnerSelect.innerHTML = '<option value="' + matchedPartners[0].id + '">' + matchedPartners[0].name + '</option>';
+                hidden.value = matchedPartners[0].id;
+            } else {
+                partnerSelect.innerHTML = '<option value="">業者を選択してください</option>' + matchedPartners.map(function(p) {
+                    return '<option value="' + p.id + '">' + p.name + '</option>';
+                }).join('');
+                hidden.value = '';
             }
         }
 
@@ -1415,7 +1470,7 @@
             document.getElementById('itemNumberGroup').style.display = 'none';
             // 担当業者をリセット
             document.getElementById('itemAssignedPartner').value = '';
-            document.getElementById('itemAssignedPartnerDisplay').value = '';
+            document.getElementById('itemAssignedPartnerSelect').innerHTML = '<option value="">カテゴリ選択後に自動設定</option>';
             
             // 業者ログインの場合、納品先会社を自動セット
             if (currentUser.role === 'contractor') {
@@ -1475,12 +1530,18 @@
             document.getElementById('itemMaker').value = item.maker || '';
             document.getElementById('itemModel').value = item.model || '';
             document.getElementById('itemCategory').value = item.category || '';
-            // 担当業者は契約ベースで自動表示（既存のassignedPartnerIdがあればそれを表示）
-            if (item.assignedPartnerId && item.assignedPartnerName) {
+            // 担当業者は契約ベースで表示（既存のassignedPartnerIdがあればそれを選択状態に）
+            resolvePartnerFromCategory();
+            if (item.assignedPartnerId) {
                 document.getElementById('itemAssignedPartner').value = item.assignedPartnerId;
-                document.getElementById('itemAssignedPartnerDisplay').value = item.assignedPartnerName;
-            } else {
-                resolvePartnerFromCategory();
+                var partnerSelect = document.getElementById('itemAssignedPartnerSelect');
+                // 既存の業者がプルダウンに含まれていれば選択
+                for (var i = 0; i < partnerSelect.options.length; i++) {
+                    if (partnerSelect.options[i].value === item.assignedPartnerId) {
+                        partnerSelect.selectedIndex = i;
+                        break;
+                    }
+                }
             }
             document.getElementById('itemUnit').value = item.unit || '個';
             document.getElementById('itemPrice').value = item.price || 0;
@@ -1534,7 +1595,8 @@
             }
 
             const partnerHidden = document.getElementById('itemAssignedPartner');
-            const partnerDisplay = document.getElementById('itemAssignedPartnerDisplay');
+            const partnerSelect = document.getElementById('itemAssignedPartnerSelect');
+            var partnerDisplayName = partnerSelect.options[partnerSelect.selectedIndex] ? partnerSelect.options[partnerSelect.selectedIndex].text : '';
             
             // 業者ログイン時は納品先会社を使用
             let companyCode = currentUser.companyCode;
@@ -1560,7 +1622,7 @@
                 model: document.getElementById('itemModel').value,
                 category: document.getElementById('itemCategory').value,
                 assignedPartnerId: partnerHidden.value || null,
-                assignedPartnerName: partnerDisplay.value || '',
+                assignedPartnerName: partnerDisplayName || '',
                 unit: document.getElementById('itemUnit').value,
                 price: parseFloat(document.getElementById('itemPrice').value) || 0,
                 stock: parseFloat(document.getElementById('itemStock').value) || 0,

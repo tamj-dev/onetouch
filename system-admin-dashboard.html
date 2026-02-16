@@ -319,35 +319,6 @@
         </div>
     </div>
 
-    <!-- 業者×会社 契約一覧 -->
-    <div class="section">
-        <div class="section-header">
-            <div class="section-title">
-                <span class="section-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6"/><path d="M23 11h-6"/></svg></span>
-                契約一覧（業者 × 会社）
-            </div>
-        </div>
-        <div class="table-container">
-            <table class="data-table" id="contractTable">
-                <thead>
-                    <tr>
-                        <th>業者コード</th>
-                        <th>業者名</th>
-                        <th>契約会社</th>
-                        <th>担当者</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody id="contractTableBody">
-                    <!-- JSで動的生成 -->
-                </tbody>
-            </table>
-        </div>
-        <div style="margin-top: 12px; font-size: 12px; color: #aaa;">
-            紐づけの変更は<a href="partner-master.html" style="color:#666;">取引先マスタ</a>から行えます
-        </div>
-    </div>
-
     <!-- 監査ログ -->
     <div class="section">
         <div class="section-header">
@@ -839,51 +810,6 @@
             }
         }
 
-        // 契約一覧を描画
-        function renderContractTable() {
-            var partners = [];
-            try { partners = JSON.parse(sessionStorage.getItem('partners') || '[]'); } catch(e) {}
-            try { var pl = JSON.parse(localStorage.getItem('partners') || '[]'); pl.forEach(function(p){ if(!partners.find(function(m){return m.id===p.id;})) partners.push(p); }); } catch(e) {}
-
-            var companies = [];
-            try { companies = JSON.parse(sessionStorage.getItem('companies') || '[]'); } catch(e) {}
-            try { var cl = JSON.parse(localStorage.getItem('companies') || '[]'); cl.forEach(function(c){ if(!companies.find(function(m){return m.companyCode===c.companyCode;})) companies.push(c); }); } catch(e) {}
-
-            // デモ用
-            if (partners.length === 0) {
-                partners = [
-                    { partnerCode: 'PN001', name: '東京設備工業株式会社', contactName: '山田太郎', assignedCompanies: ['TAMJ'] },
-                    { partnerCode: 'PN002', name: '関東水道サービス', contactName: '鈴木一郎', assignedCompanies: ['TAMJ'] },
-                    { partnerCode: 'PN003', name: '日本電気工事', contactName: '佐藤次郎', assignedCompanies: ['TAMJ'] }
-                ];
-            }
-
-            function getCompanyName(code) {
-                var c = companies.find(function(x) { return x.companyCode === code; });
-                return c ? c.companyName : code;
-            }
-
-            var tbody = document.getElementById('contractTableBody');
-            if (partners.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:#aaa;">業者データがありません</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = partners.map(function(p) {
-                var assigned = (p.assignedCompanies || []).map(function(code) {
-                    return '<span style="display:inline-block;padding:3px 10px;background:#f0f0f0;border-radius:4px;margin:2px;font-size:12px;">' + getCompanyName(code) + '</span>';
-                }).join('') || '<span style="color:#ccc;font-size:12px;">未設定</span>';
-
-                return '<tr>' +
-                    '<td style="font-family:monospace;font-size:13px;">' + (p.partnerCode || '-') + '</td>' +
-                    '<td>' + (p.name || '-') + '</td>' +
-                    '<td>' + assigned + '</td>' +
-                    '<td>' + (p.contactName || '-') + '</td>' +
-                    '<td><a href="partner-master.html" style="color:#666;font-size:13px;">編集</a></td>' +
-                '</tr>';
-            }).join('');
-        }
-
         // 全データ初期化
         function clearAllData() {
             if (!confirm('全データを初期化します。\n\n以下が全て削除されます：\n・会社/事業所/アカウント/業者マスタ\n・通報データ\n・商品マスタ\n・監査ログ\n・システム設定\n\nDEMOアカウントのみ残ります。\n\n本当に実行しますか？')) return;
@@ -924,7 +850,6 @@
             loadActivityRanking();
             loadMaintenanceMode();
             updateLastBackupInfo();
-            renderContractTable();
         }
 
         init();

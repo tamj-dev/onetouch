@@ -413,6 +413,7 @@
                     </thead>
                     <tbody id="partnerList"></tbody>
                 </table>
+                <div id="pmPagination"></div>
             </div>
         </div>
     </div>
@@ -586,6 +587,19 @@
     </div>
 
     <script>
+        function renderPagination(containerId, currentPage, totalPages, totalItems, onPageChange) {
+            var container = document.getElementById(containerId);
+            if (!container) return;
+            if (totalPages <= 1) { container.innerHTML = totalItems > 0 ? '<div style="text-align:center;padding:12px;font-size:13px;color:#999;">全 ' + totalItems + ' 件</div>' : ''; return; }
+            var html = '<div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:16px;flex-wrap:wrap;">';
+            html += '<span style="font-size:13px;color:#999;margin-right:8px;">全 ' + totalItems + ' 件</span>';
+            html += '<button onclick="window._pgCb' + containerId + '(' + (currentPage-1) + ')" ' + (currentPage<=1?'disabled':'') + ' style="padding:6px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;font-size:13px;' + (currentPage<=1?'opacity:0.4;cursor:default;':'') + '">前へ</button>';
+            var s=Math.max(1,currentPage-2),e=Math.min(totalPages,s+4); if(e-s<4) s=Math.max(1,e-4);
+            for(var p=s;p<=e;p++) html += '<button onclick="window._pgCb' + containerId + '(' + p + ')" style="padding:6px 12px;border:1px solid ' + (p===currentPage?'#2563eb':'#d1d5db') + ';border-radius:6px;background:' + (p===currentPage?'#2563eb':'#fff') + ';color:' + (p===currentPage?'#fff':'#333') + ';cursor:pointer;font-size:13px;font-weight:' + (p===currentPage?'700':'400') + ';">' + p + '</button>';
+            html += '<button onclick="window._pgCb' + containerId + '(' + (currentPage+1) + ')" ' + (currentPage>=totalPages?'disabled':'') + ' style="padding:6px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;font-size:13px;' + (currentPage>=totalPages?'opacity:0.4;cursor:default;':'') + '">次へ</button></div>';
+            container.innerHTML = html; window['_pgCb' + containerId] = onPageChange;
+        }
+
         // ログインチェックと権限確認
         const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
         if (!currentUser) {
@@ -912,9 +926,14 @@
         });
 
         // 取引先一覧を表示
+        var pm_currentPage = 1;
+        var pm_pageSize = 30;
+        var pm_lastFiltered = null;
+
         function renderPartners(filteredPartners = null) {
             const partnerList = document.getElementById('partnerList');
             const displayPartners = filteredPartners || partners;
+            pm_lastFiltered = filteredPartners;
             const isSystemAdmin = currentUser.role === 'system_admin';
             const colSpan = isSystemAdmin ? 6 : 5;
             
@@ -936,8 +955,14 @@
                         </td>
                     </tr>
                 `;
+                if (document.getElementById('pmPagination')) document.getElementById('pmPagination').innerHTML = '';
             } else {
-                partnerList.innerHTML = displayPartners.map((partner, index) => {
+                var totalPages = Math.ceil(displayPartners.length / pm_pageSize);
+                if (pm_currentPage > totalPages) pm_currentPage = totalPages;
+                var start = (pm_currentPage - 1) * pm_pageSize;
+                var pagePartners = displayPartners.slice(start, start + pm_pageSize);
+
+                partnerList.innerHTML = pagePartners.map((partner, index) => {
                     const originalIndex = partners.indexOf(partner);
                     var assignedCol = '';
                     if (isSystemAdmin) {
@@ -957,6 +982,11 @@
                     </tr>
                 `;
                 }).join('');
+
+                renderPagination('pmPagination', pm_currentPage, totalPages, displayPartners.length, function(page) {
+                    pm_currentPage = page;
+                    renderPartners(pm_lastFiltered);
+                });
             }
             
             document.getElementById('totalCount').textContent = partners.length;
@@ -965,6 +995,7 @@
 
         // 検索
         function searchPartners() {
+            pm_currentPage = 1;
             const searchId = document.getElementById('searchId').value.toLowerCase();
             const searchName = document.getElementById('searchName').value.toLowerCase();
 
