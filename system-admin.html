@@ -133,9 +133,9 @@
         <div class="cards-grid">
             <a href="setup-wizard.html" class="card">
                 <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
-                <div class="card-title">新規会社セットアップ</div>
+                <div class="card-title">新規セットアップ</div>
                 <div class="card-description">
-                    会社・事業所・アカウント・業者・商品を<br>
+                    業者・会社・事業所・契約・アカウント・商品を<br>
                     ステップに沿って登録
                 </div>
             </a>
@@ -203,12 +203,42 @@
                                 <th style="padding:10px 12px; text-align:left; font-weight:600; color:#64748b;">契約会社</th>
                                 <th style="padding:10px 12px; text-align:left; font-weight:600; color:#64748b;">担当カテゴリ</th>
                                 <th style="padding:10px 12px; text-align:left; font-weight:600; color:#64748b;">状態</th>
+                                <th style="padding:10px 12px; text-align:center; font-weight:600; color:#64748b;">操作</th>
                             </tr>
                         </thead>
                         <tbody id="sysContractBody">
-                            <tr><td colspan="5" style="text-align:center; padding:30px; color:#aaa;">読み込み中...</td></tr>
+                            <tr><td colspan="6" style="text-align:center; padding:30px; color:#aaa;">読み込み中...</td></tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- 契約編集モーダル -->
+                <div id="contractEditModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:9999; display:none; align-items:center; justify-content:center;">
+                    <div style="background:#fff; border-radius:14px; padding:28px; max-width:500px; width:90%; margin:auto; position:relative; top:50%; transform:translateY(-50%);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                            <h3 style="font-size:16px; font-weight:700; color:#1e293b;" id="contractEditTitle">契約編集</h3>
+                            <button onclick="closeContractEdit()" style="background:none; border:none; font-size:20px; color:#999; cursor:pointer;">✕</button>
+                        </div>
+                        <input type="hidden" id="editContractId">
+                        
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block; font-size:13px; font-weight:600; color:#64748b; margin-bottom:6px;">担当カテゴリ</label>
+                            <div id="editCategoryCheckboxes" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+                        </div>
+                        
+                        <div style="margin-bottom:20px;">
+                            <label style="display:block; font-size:13px; font-weight:600; color:#64748b; margin-bottom:6px;">状態</label>
+                            <select id="editContractStatus" style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
+                                <option value="active">有効</option>
+                                <option value="inactive">停止</option>
+                            </select>
+                        </div>
+                        
+                        <div style="display:flex; gap:10px;">
+                            <button onclick="closeContractEdit()" style="flex:1; padding:12px; background:#f1f5f9; color:#334155; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">キャンセル</button>
+                            <button onclick="saveContractEdit()" style="flex:1; padding:12px; background:#2563eb; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">保存</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -287,36 +317,47 @@
         backButton: false
     });
 
+    // 全カテゴリリスト
+    var ALL_CATEGORIES = ['家具/什器','家電','厨房/食器','水道','浴室','ガス','インターネット','エレベーター/昇降機','介護医療用品','その他'];
+
+    // 契約データをグローバルに保持
+    var _sysContracts = [];
+    var _sysPartners = [];
+    var _sysCompanies = [];
+
+    function _loadContractData() {
+        _sysContracts = [];
+        try { _sysContracts = JSON.parse(sessionStorage.getItem('onetouch.contracts') || '[]'); } catch(e) {}
+        try { var cl = JSON.parse(localStorage.getItem('onetouch.contracts') || '[]'); cl.forEach(function(c){ if(!_sysContracts.find(function(x){return x.id===c.id;})) _sysContracts.push(c); }); } catch(e) {}
+
+        _sysPartners = [];
+        try { _sysPartners = JSON.parse(sessionStorage.getItem('partners') || '[]'); } catch(e) {}
+        try { var pl = JSON.parse(localStorage.getItem('partners') || '[]'); pl.forEach(function(p){ if(!_sysPartners.find(function(x){return x.id===p.id || x.partnerCode===p.partnerCode;})) _sysPartners.push(p); }); } catch(e) {}
+
+        _sysCompanies = [];
+        try { _sysCompanies = JSON.parse(sessionStorage.getItem('companies') || '[]'); } catch(e) {}
+        try { var cl2 = JSON.parse(localStorage.getItem('companies') || '[]'); cl2.forEach(function(c){ if(!_sysCompanies.find(function(x){return (x.companyCode||x.code)===(c.companyCode||c.code);})) _sysCompanies.push(c); }); } catch(e) {}
+    }
+
+    function getPartnerName(id) {
+        var p = _sysPartners.find(function(x){ return x.id === id || x.partnerCode === id; });
+        return p ? p.name : id;
+    }
+    function getCompanyName(code) {
+        var c = _sysCompanies.find(function(x){ return (x.companyCode||x.code) === code; });
+        return c ? (c.companyName||c.name) : code;
+    }
+
     // 契約一覧テーブルを描画
-    (function renderSysContracts() {
-        var contracts = [];
-        try { contracts = JSON.parse(sessionStorage.getItem('onetouch.contracts') || '[]'); } catch(e) {}
-        try { var cl = JSON.parse(localStorage.getItem('onetouch.contracts') || '[]'); cl.forEach(function(c){ if(!contracts.find(function(x){return x.id===c.id;})) contracts.push(c); }); } catch(e) {}
-
-        var partners = [];
-        try { partners = JSON.parse(sessionStorage.getItem('partners') || '[]'); } catch(e) {}
-        try { var pl = JSON.parse(localStorage.getItem('partners') || '[]'); pl.forEach(function(p){ if(!partners.find(function(x){return x.id===p.id || x.partnerCode===p.partnerCode;})) partners.push(p); }); } catch(e) {}
-
-        var companies = [];
-        try { companies = JSON.parse(sessionStorage.getItem('companies') || '[]'); } catch(e) {}
-        try { var cl2 = JSON.parse(localStorage.getItem('companies') || '[]'); cl2.forEach(function(c){ if(!companies.find(function(x){return (x.companyCode||x.code)===(c.companyCode||c.code);})) companies.push(c); }); } catch(e) {}
-
-        function getPartnerName(id) {
-            var p = partners.find(function(x){ return x.id === id || x.partnerCode === id; });
-            return p ? p.name : id;
-        }
-        function getCompanyName(code) {
-            var c = companies.find(function(x){ return (x.companyCode||x.code) === code; });
-            return c ? (c.companyName||c.name) : code;
-        }
-
+    function renderSysContracts() {
+        _loadContractData();
         var tbody = document.getElementById('sysContractBody');
-        if (contracts.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#aaa;">契約データがありません</td></tr>';
+        if (_sysContracts.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#aaa;">契約データがありません</td></tr>';
             return;
         }
 
-        tbody.innerHTML = contracts.map(function(c) {
+        tbody.innerHTML = _sysContracts.map(function(c, idx) {
             var cats = (c.categories || []).map(function(cat) {
                 return '<span style="display:inline-block;padding:2px 8px;background:#f0f0f0;border-radius:4px;margin:2px;font-size:12px;">' + cat + '</span>';
             }).join('');
@@ -328,9 +369,81 @@
                 + '<td style="padding:10px 12px;">' + getCompanyName(c.companyCode) + (c.officeCode ? '<br><span style="font-size:11px;color:#999;">' + c.officeCode + '</span>' : '') + '</td>'
                 + '<td style="padding:10px 12px;">' + (cats || '<span style="color:#ccc;">未設定</span>') + '</td>'
                 + '<td style="padding:10px 12px;"><span style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:12px;font-weight:600;color:#fff;background:' + statusColor + ';">' + statusText + '</span></td>'
+                + '<td style="padding:10px 12px; text-align:center;"><button onclick="openContractEdit(\'' + c.id + '\')" style="padding:6px 14px;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">編集</button></td>'
                 + '</tr>';
         }).join('');
-    })();
+    }
+    renderSysContracts();
+
+    // 契約編集モーダルを開く
+    function openContractEdit(contractId) {
+        var contract = _sysContracts.find(function(c) { return c.id === contractId; });
+        if (!contract) return;
+        
+        document.getElementById('editContractId').value = contractId;
+        document.getElementById('contractEditTitle').textContent = getPartnerName(contract.partnerId) + ' の契約編集';
+        document.getElementById('editContractStatus').value = contract.status || 'active';
+        
+        // カテゴリチェックボックス生成
+        var currentCats = contract.categories || [];
+        var html = ALL_CATEGORIES.map(function(cat) {
+            var checked = currentCats.indexOf(cat) >= 0 ? 'checked' : '';
+            return '<label style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:' + (checked ? '#eff6ff' : '#f8f9fa') + ';border:1px solid ' + (checked ? '#2563eb' : '#e5e7eb') + ';border-radius:6px;cursor:pointer;font-size:13px;">'
+                + '<input type="checkbox" name="editCat" value="' + cat + '" ' + checked + ' style="accent-color:#2563eb;">'
+                + cat + '</label>';
+        }).join('');
+        document.getElementById('editCategoryCheckboxes').innerHTML = html;
+        
+        document.getElementById('contractEditModal').style.display = 'block';
+    }
+
+    function closeContractEdit() {
+        document.getElementById('contractEditModal').style.display = 'none';
+    }
+
+    // 契約保存
+    function saveContractEdit() {
+        var contractId = document.getElementById('editContractId').value;
+        var newStatus = document.getElementById('editContractStatus').value;
+        var checkboxes = document.querySelectorAll('input[name="editCat"]:checked');
+        var newCats = [];
+        checkboxes.forEach(function(cb) { newCats.push(cb.value); });
+        
+        if (newCats.length === 0) {
+            alert('カテゴリを1つ以上選択してください。');
+            return;
+        }
+        
+        // データ更新
+        var contracts = [];
+        try { contracts = JSON.parse(sessionStorage.getItem('onetouch.contracts') || '[]'); } catch(e) {}
+        if (contracts.length === 0) {
+            try { contracts = JSON.parse(localStorage.getItem('onetouch.contracts') || '[]'); } catch(e) {}
+        }
+        
+        var updated = false;
+        contracts.forEach(function(c) {
+            if (c.id === contractId) {
+                c.categories = newCats;
+                c.status = newStatus;
+                updated = true;
+            }
+        });
+        
+        if (updated) {
+            sessionStorage.setItem('onetouch.contracts', JSON.stringify(contracts));
+            localStorage.setItem('onetouch.contracts', JSON.stringify(contracts));
+            closeContractEdit();
+            renderSysContracts();
+            
+            // トースト表示
+            var toast = document.createElement('div');
+            toast.textContent = '契約を更新しました';
+            toast.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1e3a5f;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;z-index:99999;';
+            document.body.appendChild(toast);
+            setTimeout(function() { toast.remove(); }, 2000);
+        }
+    }
     </script>
 </body>
 </html>
