@@ -217,10 +217,10 @@
             
             var stepNames = ['業者選択','会社登録','事業所登録','契約設定','アカウント登録','商品登録'];
             
-            list.innerHTML = setups.filter(function(s) {
-                // ステップ1（会社名未入力）のものは非表示
-                return s.companyName && s.companyName !== '';
-            }).map(function(s) {
+            var inProgress = filtered.filter(function(s) { return !s.currentStep || s.currentStep <= 6; });
+            var completed = filtered.filter(function(s) { return s.currentStep > 6; });
+
+            function renderItem(s) {
                 var isComplete = s.currentStep > 6;
                 var badgeClass = isComplete ? 'complete' : 'in-progress';
                 var badgeText = isComplete ? '完了' : 'ステップ ' + s.currentStep + '/6';
@@ -235,7 +235,30 @@
                     + '</div>'
                     + '<span class="setup-badge ' + badgeClass + '">' + badgeText + '</span>'
                     + '</a>';
-            }).join('');
+            }
+
+            var html = '';
+
+            // 進行中を常に表示
+            if (inProgress.length > 0) {
+                html += inProgress.map(renderItem).join('');
+            }
+
+            // 完了済みは折りたたみ
+            if (completed.length > 0) {
+                html += '<div style="margin-top:8px;">'
+                    + '<button onclick="var el=document.getElementById(\'completedSetups\');var btn=this;if(el.style.display===\'none\'){el.style.display=\'block\';btn.textContent=\'▼ 完了済み（' + completed.length + '件）を閉じる\';}else{el.style.display=\'none\';btn.textContent=\'▶ 完了済み（' + completed.length + '件）を表示\';}" style="background:none;border:none;color:#888;cursor:pointer;font-size:13px;padding:8px 0;">▶ 完了済み（' + completed.length + '件）を表示</button>'
+                    + '<div id="completedSetups" style="display:none;">'
+                    + completed.map(renderItem).join('')
+                    + '</div></div>';
+            }
+
+            list.innerHTML = html;
+
+            // 進行中も完了済みもない場合は非表示
+            if (inProgress.length === 0 && completed.length === 0) {
+                document.getElementById('setupSection').style.display = 'none';
+            }
         })();
     </script>
     <script>
