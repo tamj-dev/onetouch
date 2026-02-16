@@ -1191,22 +1191,25 @@
                 var token = btoa(companyCode + ':' + loginName).replace(/[^a-zA-Z0-9]/g, '').substring(0, 8);
                 var baseUrl = window.location.origin + window.location.pathname.replace('account-master.html', 'login.html');
                 var qrUrl = baseUrl + '?qr=' + companyCode + ':' + loginName + ':' + token;
-                qrSection = '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;text-align:left;margin-bottom:16px;">'
-                    + '<div style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:8px;">📱 スタッフ用QRログインURL</div>'
-                    + '<div style="font-size:12px;color:#64748b;margin-bottom:8px;">このURLをQRコードに変換して掲示すると、スマホで読むだけでログインできます。</div>'
-                    + '<div style="font-size:12px;color:#1e293b;word-break:break-all;background:white;padding:8px;border-radius:4px;border:1px solid #e2e8f0;">' + qrUrl + '</div>'
+                var qrImageUrl = 'https://chart.googleapis.com/chart?cht=qr&chs=160x160&chl=' + encodeURIComponent(qrUrl);
+                qrSection = '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px;">'
+                    + '<div style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:8px;">📱 スタッフ用QRログイン</div>'
+                    + '<img src="' + qrImageUrl + '" alt="QRコード" style="width:160px;height:160px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:8px;" onerror="this.style.display=\'none\'">'
+                    + '<div style="font-size:11px;color:#1e293b;word-break:break-all;background:white;padding:8px;border-radius:4px;border:1px solid #e2e8f0;text-align:left;">' + qrUrl + '</div>'
                     + '</div>';
             }
             
             var ov = document.createElement('div');
+            ov.id = 'regOverlay';
             ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;z-index:9999;';
-            ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:32px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.15);text-align:center;">'
+            ov.onclick = function(e) { if (e.target === ov) closeRegModal(); };
+            ov._infoText = infoText;
+            ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:32px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.15);text-align:center;max-height:90vh;overflow-y:auto;">'
                 + '<div style="font-size:32px;margin-bottom:12px;">✓</div>'
                 + '<div style="font-size:18px;font-weight:700;margin-bottom:4px;">アカウントを登録しました</div>'
-                + '<div style="font-size:14px;color:#64748b;margin-bottom:16px;">ID: ' + account.id + ' / ' + account.name + '</div>'
+                + '<div style="font-size:14px;color:#64748b;margin-bottom:16px;">' + account.id + ' / ' + account.name + '</div>'
                 + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;text-align:left;margin-bottom:16px;">'
                 + '<div style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:8px;">🔑 ログイン情報</div>'
-                + '<div style="font-size:12px;color:#64748b;margin-bottom:8px;">このアカウントのログイン情報です。ご本人にお伝えください。</div>'
                 + '<div style="font-size:13px;color:#1e293b;background:white;padding:12px;border-radius:4px;border:1px solid #e2e8f0;text-align:left;line-height:1.8;">'
                 + '<div><span style="color:#64748b;">氏名:</span> <strong>' + (account.name || '') + '</strong></div>'
                 + '<div><span style="color:#64748b;">身分:</span> ' + roleName + '</div>'
@@ -1216,12 +1219,26 @@
                 + '</div>'
                 + qrSection
                 + '<div style="display:flex;gap:8px;">'
-                + '<button onclick="var t=this.closest(\'div[style]\').querySelector(\'._regInfoText\').value;navigator.clipboard.writeText(t).then(function(){});this.textContent=\'コピーしました\';this.style.background=\'#22c55e\';var b=this;setTimeout(function(){b.textContent=\'ログイン情報をコピー\';b.style.background=\'#1e3a5f\';},2000);" style="flex:1;padding:12px;background:#1e3a5f;color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">ログイン情報をコピー</button>'
-                + '<button onclick="document.body.classList.remove(\'modal-open\');document.body.style.top=\'\';window.scrollTo(0,document.body._scrollY||0);this.closest(\'div[style]\').parentElement.remove()" style="flex:1;padding:12px;background:#f1f5f9;color:#334155;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">閉じる</button>'
-                + '</div>'
-                + '<textarea class="_regInfoText" style="position:absolute;left:-9999px;">' + infoText + '</textarea>'
-                + '</div>';
+                + '<button onclick="copyRegInfo()" id="regCopyBtn" style="flex:1;padding:12px;background:#1e3a5f;color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">ログイン情報をコピー</button>'
+                + '<button onclick="closeRegModal()" style="flex:1;padding:12px;background:#f1f5f9;color:#334155;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">閉じる</button>'
+                + '</div></div>';
             document.body.appendChild(ov);
+        }
+
+        function copyRegInfo() {
+            var ov = document.getElementById('regOverlay');
+            if (!ov) return;
+            navigator.clipboard.writeText(ov._infoText).then(function() {
+                var btn = document.getElementById('regCopyBtn');
+                btn.textContent = 'コピーしました';
+                btn.style.background = '#22c55e';
+                setTimeout(function() { btn.textContent = 'ログイン情報をコピー'; btn.style.background = '#1e3a5f'; }, 2000);
+            });
+        }
+
+        function closeRegModal() {
+            var ov = document.getElementById('regOverlay');
+            if (ov) ov.remove();
         }
 
         // QRモーダル（既存アカウントからのQR発行用）
@@ -1232,21 +1249,44 @@
             var baseUrl = window.location.origin + window.location.pathname.replace('account-master.html', 'login.html');
             var qrUrl = baseUrl + '?qr=' + companyCode + ':' + loginName + ':' + token;
             
+            // QRコード画像をGoogle Chart APIで生成
+            var qrImageUrl = 'https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=' + encodeURIComponent(qrUrl);
+            
             var ov = document.createElement('div');
+            ov.id = 'qrOverlay';
             ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;z-index:9999;';
+            ov.onclick = function(e) { if (e.target === ov) closeQRModal(); };
             ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:32px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.15);text-align:center;">'
-                + '<div style="font-size:32px;margin-bottom:12px;">📱</div>'
-                + '<div style="font-size:18px;font-weight:700;margin-bottom:4px;">QRログインURL</div>'
-                + '<div style="font-size:14px;color:#64748b;margin-bottom:16px;">ID: ' + account.id + ' / ' + account.name + '</div>'
-                + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;text-align:left;margin-bottom:16px;">'
-                + '<div style="font-size:12px;color:#64748b;margin-bottom:8px;">このURLをQRコードに変換して掲示すると、スマホで読むだけでログインできます。</div>'
-                + '<div style="font-size:12px;color:#1e293b;word-break:break-all;background:white;padding:8px;border-radius:4px;border:1px solid #e2e8f0;">' + qrUrl + '</div>'
+                + '<div style="font-size:18px;font-weight:700;margin-bottom:4px;">QRログイン</div>'
+                + '<div style="font-size:14px;color:#64748b;margin-bottom:16px;">' + (account.name || account.id) + '</div>'
+                + '<div style="margin-bottom:16px;"><img src="' + qrImageUrl + '" alt="QRコード" style="width:200px;height:200px;border:1px solid #e2e8f0;border-radius:8px;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'block\';"><div style="display:none;padding:12px;background:#fef2f2;border-radius:8px;font-size:13px;color:#dc2626;">QRコード画像を生成できませんでした</div></div>'
+                + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;text-align:left;margin-bottom:16px;">'
+                + '<div style="font-size:11px;color:#64748b;margin-bottom:6px;">QRログインURL</div>'
+                + '<div id="qrUrlText" style="font-size:11px;color:#1e293b;word-break:break-all;background:white;padding:8px;border-radius:4px;border:1px solid #e2e8f0;">' + qrUrl + '</div>'
                 + '</div>'
                 + '<div style="display:flex;gap:8px;">'
-                + '<button onclick="navigator.clipboard.writeText(\'' + qrUrl + '\');this.textContent=\'コピーしました\';this.style.background=\'#22c55e\';var b=this;setTimeout(function(){b.textContent=\'URLをコピー\';b.style.background=\'#2563eb\';},2000);" style="flex:1;padding:12px;background:#2563eb;color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">URLをコピー</button>'
-                + '<button onclick="document.body.classList.remove(\'modal-open\');document.body.style.top=\'\';window.scrollTo(0,document.body._scrollY||0);this.closest(\'div[style]\').parentElement.remove()" style="flex:1;padding:12px;background:#f1f5f9;color:#334155;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">閉じる</button>'
+                + '<button onclick="copyQRUrl()" id="qrCopyBtn" style="flex:1;padding:12px;background:#2563eb;color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">URLをコピー</button>'
+                + '<button onclick="closeQRModal()" style="flex:1;padding:12px;background:#f1f5f9;color:#334155;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">閉じる</button>'
                 + '</div></div>';
             document.body.appendChild(ov);
+            // URLを保持
+            ov._qrUrl = qrUrl;
+        }
+
+        function copyQRUrl() {
+            var ov = document.getElementById('qrOverlay');
+            if (!ov) return;
+            navigator.clipboard.writeText(ov._qrUrl).then(function() {
+                var btn = document.getElementById('qrCopyBtn');
+                btn.textContent = 'コピーしました';
+                btn.style.background = '#22c55e';
+                setTimeout(function() { btn.textContent = 'URLをコピー'; btn.style.background = '#2563eb'; }, 2000);
+            });
+        }
+
+        function closeQRModal() {
+            var ov = document.getElementById('qrOverlay');
+            if (ov) ov.remove();
         }
 
         // 一覧からQR発行

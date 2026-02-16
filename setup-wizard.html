@@ -232,6 +232,7 @@
     <script src="unified-header.js"></script>
     <meta name="theme-color" content="#1e3a5f">
     <link rel="icon" type="image/png" href="icon-192.png">
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
     <div id="unified-header-mount"></div>
@@ -838,15 +839,21 @@
         // ステップ番号のマッピング:
         // 新1=業者選択, 新2=会社(旧1), 新3=事業所(旧2), 新4=契約(新規), 新5=アカウント(旧3), 新6=商品(旧5)
         function renderCurrentStep() {
-            updateStepBar();
-            var step = setupData.currentStep;
-            if (step === 1) renderStepPartner();
-            else if (step === 2) renderStep1(); // 会社登録
-            else if (step === 3) renderStep2(); // 事業所登録
-            else if (step === 4) renderStepContract(); // 契約設定
-            else if (step === 5) renderStep3(); // アカウント登録
-            else if (step === 6) renderStepItems(); // 商品登録
-            else renderComplete(); // 7以上は完了画面
+            try {
+                updateStepBar();
+                var step = setupData.currentStep;
+                if (step === 1) renderStepPartner();
+                else if (step === 2) renderStep1(); // 会社登録
+                else if (step === 3) renderStep2(); // 事業所登録
+                else if (step === 4) renderStepContract(); // 契約設定
+                else if (step === 5) renderStep3(); // アカウント登録
+                else if (step === 6) renderStepItems(); // 商品登録
+                else renderComplete(); // 7以上は完了画面
+            } catch(e) {
+                var content = document.getElementById('wizardContent');
+                if (content) content.innerHTML = '<div class="wizard-card" style="color:red;padding:20px;">エラー: ' + e.message + '</div>';
+                console.error('renderCurrentStep error:', e);
+            }
         }
 
         function renderComplete() {
@@ -1686,8 +1693,10 @@
         }
 
         // ========== 初期化 ==========
-        loadOrCreateSetup();
-        renderCurrentStep();
+        document.addEventListener('DOMContentLoaded', function() {
+            loadOrCreateSetup();
+            renderCurrentStep();
+        });
     </script>
 
     <script>
