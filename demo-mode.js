@@ -192,6 +192,12 @@ window.DEMO_ACCOUNTS = {
         companyName: 'タムジ株式会社', officeCode: 'TAMJ-H001', officeName: '本社',
         status: 'active', isFirstLogin: false, isDemoMode: true
     },
+    system_admin: {
+        companyCode: 'SYSTEM', id: 'admin', password: 'admin',
+        name: 'システム管理者', role: 'system_admin', scope: 'system',
+        companyName: 'ワンタッチ管理運営', officeCode: '', officeName: '',
+        status: 'active', isFirstLogin: false, isDemoMode: true
+    },
     contractor: {
         companyCode: 'PN001', id: 'pn001-yamada', password: 'demo',
         name: '山田 太郎', role: 'contractor',

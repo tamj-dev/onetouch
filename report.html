@@ -38,7 +38,9 @@
   <style>
     :root{--bg:#f5f5f5;--card:#fff;--border:#e8e8e8;--border-light:#ddd;--text:#1e293b;--text-dim:#888;--text-muted:#aaa;--danger:#dc2626;}
     *{margin:0;padding:0;box-sizing:border-box;}
-    body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+    html{overflow-x:hidden;}
+    body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;}
+    body.modal-open{overflow:hidden;position:fixed;width:100%;}
 
     .main{flex:0;display:flex;flex-direction:column;align-items:center;padding:24px;gap:16px;max-width:400px;margin:0 auto;width:100%;}
 
@@ -56,7 +58,7 @@
     .report-btn p{font-size:0.8rem;margin:0;color:var(--text-dim);}
 
     /* モーダル */
-    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);display:none;align-items:center;justify-content:center;padding:16px;z-index:999;}
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);display:none;align-items:center;justify-content:center;padding:16px;z-index:999;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
     .overlay.open{display:flex;}
     .modal{width:min(480px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:16px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.15);}
     .modal h3{font-size:1rem;font-weight:700;margin-bottom:16px;color:var(--text);}
@@ -200,7 +202,7 @@
         <div class="status-tab-count" id="countComplete">0</div>
       </div>
       <div class="status-tab" onclick="filterByStatus('対応不可', this)">
-        <div class="status-tab-label">確認中</div>
+        <div class="status-tab-label">対応できません</div>
         <div class="status-tab-count" id="countUnavailable">0</div>
       </div>
     </div>
@@ -339,6 +341,9 @@
     }
 
     function openForm(type){
+      document.body._scrollY=window.scrollY;
+      document.body.style.top=(-window.scrollY)+'px';
+      document.body.classList.add('modal-open');
       document.getElementById('formType').value=type;
       document.getElementById('formTitle').textContent='トラブル通報';
       document.getElementById('formResult').style.display='none';
@@ -562,7 +567,12 @@
       // カテゴリタブの見た目もリセット
       buildCategoryTabs(_allEquipments);
     }
-    function closeForm(){document.getElementById('formOverlay').classList.remove('open');}
+    function closeForm(){
+      document.body.classList.remove('modal-open');
+      document.body.style.top='';
+      window.scrollTo(0,document.body._scrollY||0);
+      document.getElementById('formOverlay').classList.remove('open');
+    }
 
     function getVendor(type){
       try{
@@ -892,7 +902,7 @@
         var statusText='受付しました';
         if(r.contractorStatus==='対応中'){statusClass='status-progress';statusText='対応しています';}
         else if(r.contractorStatus==='完了'){statusClass='status-complete';statusText='解決しました';}
-        else if(r.contractorStatus==='対応不可'){statusClass='status-unavailable';statusText='確認中です';}
+        else if(r.contractorStatus==='対応不可'){statusClass='status-unavailable';statusText='対応できません';}
         
         // 緊急度
         var priorityClass='priority-low';
@@ -1021,7 +1031,7 @@
       content += '</div>';
       
       // ステータス（スタッフ向け表示文言）
-      var staffStatusLabels = {'未対応':'受付しました','対応中':'対応しています','完了':'解決しました','対応不可':'確認中です'};
+      var staffStatusLabels = {'未対応':'受付しました','対応中':'対応しています','完了':'解決しました','対応不可':'対応できません'};
       if (r.contractorStatus) {
         content += '<div class="detail-row">';
         content += '<div class="detail-label">状況</div>';
@@ -1085,6 +1095,9 @@
       }
       
       document.getElementById('detailContent').innerHTML = content;
+      document.body._scrollY=window.scrollY;
+      document.body.style.top=(-window.scrollY)+'px';
+      document.body.classList.add('modal-open');
       document.getElementById('detailOverlay').classList.add('open');
     }
 
@@ -1148,10 +1161,16 @@
       content+='</div>';
       
       document.getElementById('detailContent').innerHTML=content;
+      document.body._scrollY=window.scrollY;
+      document.body.style.top=(-window.scrollY)+'px';
+      document.body.classList.add('modal-open');
       document.getElementById('detailOverlay').classList.add('open');
     }
 
     function closeDetail(){
+      document.body.classList.remove('modal-open');
+      document.body.style.top='';
+      window.scrollTo(0,document.body._scrollY||0);
       document.getElementById('detailOverlay').classList.remove('open');
     }
 

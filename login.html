@@ -294,6 +294,8 @@
                 window.location.href = 'contractor-dashboard.html';
             } else if (role === 'office_admin') {
                 window.location.href = 'master-top.html';
+            } else if (role === 'company_admin') {
+                window.location.href = 'master-top.html';
             } else {
                 window.location.href = 'report.html';
             }
@@ -315,13 +317,8 @@
 
         <form id="loginForm">
             <div class="form-group">
-                <label for="companyCode">会社コード</label>
-                <input type="text" id="companyCode" name="companyCode" autofocus placeholder="会社コードを入力">
-            </div>
-
-            <div class="form-group">
-                <label for="userId">ログイン名</label>
-                <input type="text" id="userId" name="userId" required placeholder="ログイン名を入力">
+                <label for="userId">ログインID</label>
+                <input type="text" id="userId" name="userId" required autofocus placeholder="例：TAMJ-tanaka">
             </div>
 
             <div class="form-group">
@@ -336,7 +333,7 @@
         </form>
 
         <div class="info">
-            アカウントマスタで登録されたログイン名と<br>パスワードを入力してください
+            アカウントマスタで登録されたログインIDと<br>パスワードを入力してください
         </div>
 
         <!-- DEMOワンタップボタン -->
@@ -378,6 +375,17 @@
                 <div>
                     <div style="font-size:14px; font-weight:700; color:#1e293b;">事業所管理者で体験</div>
                     <div style="font-size:11px; color:#999;">マスタ管理・設定画面を試す</div>
+                </div>
+                <div style="margin-left:auto; color:#ccc; font-size:18px;">›</div>
+            </button>
+
+            <button type="button" onclick="demoLogin('company_admin')" style="display:flex; align-items:center; gap:12px; padding:14px 16px; border:2px solid #e8e8e8; border-radius:12px; background:#fff; cursor:pointer; text-align:left; font-family:inherit; transition:all 0.2s;">
+                <div style="width:40px; height:40px; background:#ede7f6; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="#7B1FA2"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
+                </div>
+                <div>
+                    <div style="font-size:14px; font-weight:700; color:#1e293b;">本社管理者で体験</div>
+                    <div style="font-size:11px; color:#999;">法人全体の管理画面を試す</div>
                 </div>
                 <div style="margin-left:auto; color:#ccc; font-size:18px;">›</div>
             </button>
@@ -490,13 +498,12 @@
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const companyCode = document.getElementById('companyCode').value.trim().toUpperCase();
-            const userId = document.getElementById('userId').value.trim();
+            const loginInput = document.getElementById('userId').value.trim();
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('errorMessage');
             
             // adminの特別処理（会社コード不要）
-            if (userId === 'admin' && password === 'admin') {
+            if (loginInput === 'admin' && password === 'admin') {
                 const adminUser = {
                     id: 'admin',
                     userId: 'admin', // 追加
@@ -515,6 +522,19 @@
                 // セッションに保存
                 sessionStorage.setItem('currentUser', JSON.stringify(adminUser));
                 
+                // DEMOデータを投入（業者・契約・会社）
+                if (typeof DEMO_PARTNERS !== 'undefined') {
+                    sessionStorage.setItem('partners', JSON.stringify(DEMO_PARTNERS));
+                    localStorage.setItem('partners', JSON.stringify(DEMO_PARTNERS));
+                }
+                if (typeof DEMO_CONTRACTS !== 'undefined') {
+                    sessionStorage.setItem('onetouch.contracts', JSON.stringify(DEMO_CONTRACTS));
+                    localStorage.setItem('onetouch.contracts', JSON.stringify(DEMO_CONTRACTS));
+                }
+                var demoCompanies = [{ companyCode: 'TAMJ', companyName: 'タムジ株式会社', representative: '田村 次郎', phone: '03-1234-5678', address: '東京都千代田区', status: 'active' }];
+                sessionStorage.setItem('companies', JSON.stringify(demoCompanies));
+                localStorage.setItem('companies', JSON.stringify(demoCompanies));
+                
                 // 監査ログ
                 logEvent('login', { userId: 'admin', role: 'system_admin' });
                 
@@ -523,9 +543,19 @@
                 return;
             }
             
-            // 会社コードのチェック（admin以外は必須）
-            if (!companyCode) {
-                errorMessage.textContent = '会社コードを入力してください';
+            // ログインIDから会社コードとユーザー名を自動分離
+            // 形式: TAMJ-tanaka → companyCode=TAMJ, userId=tanaka
+            // ハイフンなし（例: demo-staff）はそのままIDとして全検索
+            var companyCode = '';
+            var userId = loginInput;
+            var dashIndex = loginInput.indexOf('-');
+            if (dashIndex > 0) {
+                companyCode = loginInput.substring(0, dashIndex).toUpperCase();
+                userId = loginInput.substring(dashIndex + 1);
+            }
+            
+            if (!loginInput) {
+                errorMessage.textContent = 'ログインIDを入力してください';
                 errorMessage.classList.add('show');
                 return;
             }
@@ -639,13 +669,20 @@
             // 全アカウント（デモ + マスタ登録 + 業者）
             const allAccounts = [...demoAccounts, ...accounts, ...partners];
             
-            // 会社コード + ユーザーID（またはログイン名） + パスワードで認証
-            const fullId = companyCode + '-' + userId;
-            const user = allAccounts.find(account => 
-                account.companyCode === companyCode &&
-                (account.id === userId || account.id === fullId || account.loginName === userId) && 
-                account.password === password
-            );
+            // ログインIDとパスワードで認証
+            // companyCodeが分離できた場合: companyCode + userId でマッチ
+            // 分離できなかった場合: fullId（入力そのまま）でマッチ
+            const fullId = loginInput;
+            const user = allAccounts.find(account => {
+                if (account.password !== password) return false;
+                // 会社コード分離できた場合
+                if (companyCode) {
+                    if (account.companyCode !== companyCode) return false;
+                    return account.id === userId || account.id === fullId || account.loginName === userId;
+                }
+                // ハイフンなし入力（フォールバック: IDそのままでマッチ）
+                return account.id === fullId || account.loginName === fullId;
+            });
             
             if (user) {
                 // メンテナンスモードチェック（システム管理者以外はブロック）

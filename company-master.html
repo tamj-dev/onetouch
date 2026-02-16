@@ -11,11 +11,14 @@
             box-sizing: border-box;
         }
 
+        html { overflow-x: hidden; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans CJK JP", sans-serif;
             background: #f5f5f5;
             min-height: 100vh;
+            overflow-x: hidden;
         }
+        body.modal-open { overflow: hidden; position: fixed; width: 100%; }
 .btn-add {
             background: #1e3a5f;
             color: white;
@@ -452,10 +455,16 @@
                 + '※ 初回ログイン後にパスワードを変更してください\n'
                 + '※ ID・パスワードは大文字小文字を区別します';
             document.getElementById('companyLoginInfoContent').textContent = _companyLoginInfoText;
+            document.body._scrollY = window.scrollY;
+            document.body.style.top = (-window.scrollY) + 'px';
+            document.body.classList.add('modal-open');
             document.getElementById('credentialsModal').style.display = 'flex';
         }
 
         function closeCredentialsModal() {
+            document.body.classList.remove('modal-open');
+            document.body.style.top = '';
+            window.scrollTo(0, document.body._scrollY || 0);
             document.getElementById('credentialsModal').style.display = 'none';
         }
 
@@ -617,6 +626,9 @@
 
         // 新規登録モーダルを開く
         function openAddModal() {
+            document.body._scrollY = window.scrollY;
+            document.body.style.top = (-window.scrollY) + 'px';
+            document.body.classList.add('modal-open');
             editingCompanyCode = null;
             document.getElementById('modalTitle').textContent = '会社を登録';
             document.getElementById('companyForm').reset();
@@ -628,6 +640,9 @@
 
         // 編集モーダルを開く
         function openEditModal(code) {
+            document.body._scrollY = window.scrollY;
+            document.body.style.top = (-window.scrollY) + 'px';
+            document.body.classList.add('modal-open');
             const company = companies.find(c => c.code === code);
             if (!company) return;
 
@@ -646,6 +661,9 @@
 
         // モーダルを閉じる
         function closeModal() {
+            document.body.classList.remove('modal-open');
+            document.body.style.top = '';
+            window.scrollTo(0, document.body._scrollY || 0);
             document.getElementById('companyModal').classList.remove('show');
             document.getElementById('companyForm').reset();
             editingCompanyCode = null;

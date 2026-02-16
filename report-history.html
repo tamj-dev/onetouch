@@ -11,11 +11,14 @@
             box-sizing: border-box;
         }
 
+        html { overflow-x: hidden; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans CJK JP", sans-serif;
             background: #f5f7fa;
             min-height: 100vh;
+            overflow-x: hidden;
         }
+        body.modal-open { overflow: hidden; position: fixed; width: 100%; }
 .container {
             max-width: 1200px;
             margin: 16px auto;
@@ -264,19 +267,19 @@
                         <div class="status-tab-count" id="countAll">0</div>
                     </div>
                     <div class="status-tab" onclick="filterByContractorStatus('未対応', this)">
-                        <div class="status-tab-label">受付しました</div>
+                        <div class="status-tab-label">未対応</div>
                         <div class="status-tab-count" id="countPending">0</div>
                     </div>
                     <div class="status-tab" onclick="filterByContractorStatus('対応中', this)">
-                        <div class="status-tab-label">対応しています</div>
+                        <div class="status-tab-label">対応中</div>
                         <div class="status-tab-count" id="countProgress">0</div>
                     </div>
                     <div class="status-tab" onclick="filterByContractorStatus('完了', this)">
-                        <div class="status-tab-label">解決しました</div>
+                        <div class="status-tab-label">完了</div>
                         <div class="status-tab-count" id="countComplete">0</div>
                     </div>
                     <div class="status-tab" onclick="filterByContractorStatus('対応不可', this)">
-                        <div class="status-tab-label">確認中です</div>
+                        <div class="status-tab-label">対応不可</div>
                         <div class="status-tab-count" id="countUnavailable">0</div>
                     </div>
                 </div>
@@ -347,9 +350,9 @@
             };
 
             const statusLabels = {
-                pending: '受付しました',
-                processing: '対応しています',
-                completed: '解決しました'
+                pending: '未対応',
+                processing: '対応中',
+                completed: '完了'
             };
 
             const label = report.emergency ? '緊急通報' : '通報';
@@ -435,9 +438,7 @@
                     var authorText = entry.author || entry.changedBy || '不明';
                     var isComment = entry.type === 'comment';
                     
-                    // スタッフ向け表示文言マッピング
-                    var staffLabels = {'未対応':'受付しました','対応中':'対応しています','完了':'解決しました','対応不可':'確認中です'};
-                    var displayStatus = staffLabels[statusText] || statusText;
+                    var displayStatus = statusText;
                     
                     var dotColor = '#999';
                     if (statusText === '未対応') dotColor = '#f59e0b';
@@ -452,8 +453,8 @@
                     
                     if (entry.from && entry.to) {
                         // from → to 形式
-                        var displayFrom = staffLabels[entry.from] || entry.from;
-                        var displayTo = staffLabels[entry.to] || entry.to;
+                        var displayFrom = entry.from;
+                        var displayTo = entry.to;
                         content += '<div style="display: flex; align-items: center; gap: 8px;">';
                         content += '<span class="status-badge status-pending" style="font-size: 12px;">' + displayFrom + '</span>';
                         content += '<span style="color: #666;">→</span>';
@@ -483,21 +484,26 @@
             if (report.contractorStatus) {
                 content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
                 content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">状況</div>';
-                var staffStatusLabels = {'未対応':'受付しました','対応中':'対応しています','完了':'解決しました','対応不可':'確認中です'};
                 const contractorStatusClass = report.contractorStatus === '未対応' ? 'status-pending' :
                                               report.contractorStatus === '対応中' ? 'status-processing' :
                                               report.contractorStatus === '完了' ? 'status-completed' :
                                               'status-unavailable';
-                content += '<div><span class="status-badge ' + contractorStatusClass + '">' + (staffStatusLabels[report.contractorStatus] || report.contractorStatus) + '</span></div>';
+                content += '<div><span class="status-badge ' + contractorStatusClass + '">' + (report.contractorStatus || '未対応') + '</span></div>';
                 content += '</div>';
             }
             
             document.getElementById('detailContent').innerHTML = content;
+            document.body._scrollY = window.scrollY;
+            document.body.style.top = (-window.scrollY) + 'px';
+            document.body.classList.add('modal-open');
             document.getElementById('detailOverlay').style.display = 'flex';
         }
 
         // 詳細を閉じる
         function closeDetail() {
+            document.body.classList.remove('modal-open');
+            document.body.style.top = '';
+            window.scrollTo(0, document.body._scrollY || 0);
             document.getElementById('detailOverlay').style.display = 'none';
         }
 
@@ -929,8 +935,6 @@
                                               contractorStatus === '対応中' ? 'status-processing' :
                                               contractorStatus === '完了' ? 'status-completed' :
                                               contractorStatus === '対応不可' ? 'status-unavailable' : '';
-                const staffLabel = {'未対応':'受付しました','対応中':'対応しています','完了':'解決しました','対応不可':'確認中です'};
-                
                 // 対応時間を計算
                 let responseTime = '';
                 if (report.assignedAt && report.firstResponseAt) {
@@ -950,7 +954,7 @@
                     <div class="report-card${isNew ? ' is-new' : ''}" onclick="showDetail(${index})">
                         <div class="report-card-header">
                             <div class="report-card-title">${isNew ? '<span style="display:inline-block;width:8px;height:8px;background:#22c55e;border-radius:50%;margin-right:6px;vertical-align:middle;"></span>' : ''}${descShort}</div>
-                            <span class="status-badge ${contractorStatusClass}">${staffLabel[contractorStatus] || contractorStatus}</span>
+                            <span class="status-badge ${contractorStatusClass}">${contractorStatus}</span>
                         </div>
                         <div class="report-card-date">${dateStr}　${report.reporter || '-'}</div>
                         <div class="report-card-info">

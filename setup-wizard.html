@@ -50,6 +50,10 @@
         }
         .step-dot.done { background: #16a34a; color: #fff; }
         .step-dot.current { background: #2563eb; color: #fff; box-shadow: 0 0 0 4px rgba(37,99,235,0.2); }
+        .step-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .step-label { font-size: 11px; color: #999; font-weight: 500; white-space: nowrap; }
+        .step-item.done .step-label { color: #16a34a; }
+        .step-item.current .step-label { color: #2563eb; font-weight: 700; }
         .step-connector {
             width: 40px;
             height: 2px;
@@ -58,8 +62,9 @@
         }
         .step-connector.done { background: #16a34a; }
         @media (max-width: 480px) {
-            .step-connector { width: 14px; }
+            .step-connector { width: 10px; }
             .step-dot { width: 28px; height: 28px; font-size: 11px; }
+            .step-label { font-size: 9px; }
         }
 
         /* カード */
@@ -235,17 +240,35 @@
         <!-- ステップバー -->
         <div class="step-bar">
             <div class="step-indicator">
-                <div class="step-dot" id="dot1">1</div>
+                <div class="step-item" id="item1">
+                    <div class="step-dot" id="dot1">1</div>
+                    <div class="step-label">業者登録</div>
+                </div>
                 <div class="step-connector" id="conn1"></div>
-                <div class="step-dot" id="dot2">2</div>
+                <div class="step-item" id="item2">
+                    <div class="step-dot" id="dot2">2</div>
+                    <div class="step-label">会社</div>
+                </div>
                 <div class="step-connector" id="conn2"></div>
-                <div class="step-dot" id="dot3">3</div>
+                <div class="step-item" id="item3">
+                    <div class="step-dot" id="dot3">3</div>
+                    <div class="step-label">事業所</div>
+                </div>
                 <div class="step-connector" id="conn3"></div>
-                <div class="step-dot" id="dot4">4</div>
+                <div class="step-item" id="item4">
+                    <div class="step-dot" id="dot4">4</div>
+                    <div class="step-label">契約設定</div>
+                </div>
                 <div class="step-connector" id="conn4"></div>
-                <div class="step-dot" id="dot5">5</div>
+                <div class="step-item" id="item5">
+                    <div class="step-dot" id="dot5">5</div>
+                    <div class="step-label">アカウント</div>
+                </div>
                 <div class="step-connector" id="conn5"></div>
-                <div class="step-dot" id="dot6">6</div>
+                <div class="step-item" id="item6">
+                    <div class="step-dot" id="dot6">6</div>
+                    <div class="step-label">商品</div>
+                </div>
             </div>
         </div>
 
@@ -336,18 +359,23 @@
             for (var i = 1; i <= 6; i++) {
                 var dot = document.getElementById('dot' + i);
                 var conn = document.getElementById('conn' + i);
+                var item = document.getElementById('item' + i);
                 dot.className = 'step-dot';
+                if (item) item.className = 'step-item';
                 if (i < current) {
                     dot.className = 'step-dot done';
                     dot.textContent = '✓';
+                    if (item) item.className = 'step-item done';
                     if (conn) conn.className = 'step-connector done';
                 } else if (i === current && current <= 6) {
                     dot.className = 'step-dot current';
                     dot.textContent = i;
+                    if (item) item.className = 'step-item current';
                     if (conn) conn.className = 'step-connector';
                 } else if (current > 6) {
                     dot.className = 'step-dot done';
                     dot.textContent = '✓';
+                    if (item) item.className = 'step-item done';
                     if (conn) conn.className = 'step-connector done';
                 } else {
                     dot.textContent = i;
@@ -356,67 +384,35 @@
             }
         }
 
-        // ========== ステップ1: 業者選択 ==========
+        // ========== ステップ1: 業者登録 ==========
         function renderStepPartner() {
             var content = document.getElementById('wizardContent');
 
-            // 既存業者を取得
-            var partners = [];
-            try { partners = JSON.parse(localStorage.getItem('partners') || '[]'); } catch(e) {}
-            try { var ps = JSON.parse(sessionStorage.getItem('partners') || '[]'); ps.forEach(function(p) { if (!partners.find(function(x) { return x.id === p.id; })) partners.push(p); }); } catch(e) {}
-
+            var np = setupData.newPartner || {};
             var html = '<div class="wizard-card">'
-                + '<div class="wizard-card-title">ステップ 1：業者選択</div>'
-                + '<div class="wizard-card-sub">この案件の業者を選択、または新規登録してください</div>';
-
-            // 既存業者から選択
-            if (partners.length > 0) {
-                html += '<div style="font-size:14px;font-weight:600;color:#555;margin-bottom:10px;">登録済みの業者から選択</div>';
-                partners.forEach(function(p) {
-                    var selected = setupData.partnerId === (p.id || p.partnerCode);
-                    html += '<label style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:' + (selected ? '#eff6ff' : '#f8f9fa') + ';border:2px solid ' + (selected ? '#2563eb' : '#e8e8e8') + ';border-radius:10px;margin-bottom:8px;cursor:pointer;">'
-                        + '<input type="radio" name="partnerSelect" value="' + esc(p.id || p.partnerCode) + '" ' + (selected ? 'checked' : '') + ' onchange="selectPartner(this.value, \'' + esc(p.name) + '\')">'
-                        + '<div>'
-                        + '<div style="font-size:15px;font-weight:600;color:#1e293b;">' + esc(p.name) + '</div>'
-                        + '<div style="font-size:13px;color:#888;">' + esc(p.id || p.partnerCode) + '　担当：' + esc(p.contactName || '-') + '</div>'
-                        + '</div>'
-                        + '</label>';
-                });
-                html += '<div style="text-align:center;padding:12px;font-size:14px;color:#888;">または</div>';
-            }
-
-            // 新規登録フォーム
-            var showNew = setupData.partnerIsNew || partners.length === 0;
-            html += '<div style="border:2px solid ' + (showNew ? '#2563eb' : '#e8e8e8') + ';border-radius:10px;padding:16px;background:' + (showNew ? '#eff6ff' : '#fff') + ';">'
-                + '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:' + (showNew ? '16' : '0') + 'px;">'
-                + '<input type="radio" name="partnerSelect" value="__new__" ' + (showNew ? 'checked' : '') + ' onchange="toggleNewPartner()">'
-                + '<span style="font-size:15px;font-weight:600;color:#1e293b;">新しい業者を登録</span>'
-                + '</label>'
-                + '<div id="newPartnerForm" style="display:' + (showNew ? 'block' : 'none') + ';">'
+                + '<div class="wizard-card-title">ステップ 1：業者登録</div>'
+                + '<div class="wizard-card-sub">この案件の業者情報を入力してください</div>'
                 + '<div class="form-group">'
                 + '  <label class="form-label">業者名（会社名）<span class="required">*</span></label>'
-                + '  <input type="text" class="form-input" id="npName" placeholder="例：東京設備工業株式会社" value="' + esc(setupData.newPartner ? setupData.newPartner.name : '') + '">'
+                + '  <input type="text" class="form-input" id="npName" placeholder="例：東京設備工業株式会社" value="' + esc(np.name || '') + '">'
                 + '  <div class="form-error" id="npNameError">業者名を入力してください</div>'
                 + '</div>'
                 + '<div class="form-group">'
                 + '  <label class="form-label">担当者名<span class="required">*</span></label>'
-                + '  <input type="text" class="form-input" id="npContact" placeholder="例：山田太郎" value="' + esc(setupData.newPartner ? setupData.newPartner.contactName : '') + '">'
+                + '  <input type="text" class="form-input" id="npContact" placeholder="例：山田太郎" value="' + esc(np.contactName || '') + '">'
                 + '  <div class="form-error" id="npContactError">担当者名を入力してください</div>'
                 + '</div>'
                 + '<div class="form-group">'
                 + '  <label class="form-label">担当者ローマ字<span class="required">*</span></label>'
-                + '  <input type="text" class="form-input" id="npRomaji" placeholder="例：yamada" value="' + esc(setupData.newPartner ? setupData.newPartner.loginId : '') + '">'
+                + '  <input type="text" class="form-input" id="npRomaji" placeholder="例：yamada" value="' + esc(np.loginId || '') + '">'
                 + '  <div class="form-hint">半角英字。ログインIDになります</div>'
                 + '  <div class="form-error" id="npRomajiError"></div>'
                 + '</div>'
                 + '<div class="form-group">'
                 + '  <label class="form-label">電話番号</label>'
-                + '  <input type="tel" class="form-input" id="npPhone" placeholder="例：03-1234-5678" value="' + esc(setupData.newPartner ? setupData.newPartner.phone : '') + '">'
+                + '  <input type="tel" class="form-input" id="npPhone" placeholder="例：03-1234-5678" value="' + esc(np.phone || '') + '">'
                 + '</div>'
-                + '</div>'
-                + '</div>';
-
-            html += '<div class="btn-row">'
+                + '<div class="btn-row">'
                 + '<button class="btn btn-secondary" onclick="goBack()">戻る</button>'
                 + '<button class="btn btn-primary" onclick="completeStepPartner()">次へ</button>'
                 + '</div>'
@@ -425,51 +421,36 @@
             content.innerHTML = html;
         }
 
-        function selectPartner(id, name) {
-            setupData.partnerId = id;
-            setupData.partnerName = name;
-            setupData.partnerIsNew = false;
-            document.getElementById('newPartnerForm').style.display = 'none';
-        }
-
-        function toggleNewPartner() {
-            setupData.partnerIsNew = true;
-            setupData.partnerId = '';
-            setupData.partnerName = '';
-            document.getElementById('newPartnerForm').style.display = 'block';
-        }
-
         function completeStepPartner() {
-            if (setupData.partnerIsNew || !setupData.partnerId) {
-                // 新規登録バリデーション
-                var name = document.getElementById('npName').value.trim();
-                var contact = document.getElementById('npContact').value.trim();
-                var romaji = document.getElementById('npRomaji').value.trim().toLowerCase();
-                var valid = true;
+            // 新規登録バリデーション
+            var name = document.getElementById('npName').value.trim();
+            var contact = document.getElementById('npContact').value.trim();
+            var romaji = document.getElementById('npRomaji').value.trim().toLowerCase();
+            var valid = true;
 
-                if (!name) { document.getElementById('npName').classList.add('error'); document.getElementById('npNameError').style.display = 'block'; valid = false; }
-                else { document.getElementById('npName').classList.remove('error'); document.getElementById('npNameError').style.display = 'none'; }
-                if (!contact) { document.getElementById('npContact').classList.add('error'); document.getElementById('npContactError').style.display = 'block'; valid = false; }
-                else { document.getElementById('npContact').classList.remove('error'); document.getElementById('npContactError').style.display = 'none'; }
-                if (!romaji || !/^[a-zA-Z]+$/.test(romaji)) {
-                    document.getElementById('npRomaji').classList.add('error');
-                    document.getElementById('npRomajiError').textContent = !romaji ? '担当者ローマ字を入力してください' : '半角英字のみ';
-                    document.getElementById('npRomajiError').style.display = 'block'; valid = false;
-                } else { document.getElementById('npRomaji').classList.remove('error'); document.getElementById('npRomajiError').style.display = 'none'; }
-                if (!valid) return;
+            if (!name) { document.getElementById('npName').classList.add('error'); document.getElementById('npNameError').style.display = 'block'; valid = false; }
+            else { document.getElementById('npName').classList.remove('error'); document.getElementById('npNameError').style.display = 'none'; }
+            if (!contact) { document.getElementById('npContact').classList.add('error'); document.getElementById('npContactError').style.display = 'block'; valid = false; }
+            else { document.getElementById('npContact').classList.remove('error'); document.getElementById('npContactError').style.display = 'none'; }
+            if (!romaji || !/^[a-zA-Z]+$/.test(romaji)) {
+                document.getElementById('npRomaji').classList.add('error');
+                document.getElementById('npRomajiError').textContent = !romaji ? '担当者ローマ字を入力してください' : '半角英字のみ';
+                document.getElementById('npRomajiError').style.display = 'block'; valid = false;
+            } else { document.getElementById('npRomaji').classList.remove('error'); document.getElementById('npRomajiError').style.display = 'none'; }
+            if (!valid) return;
 
-                // 業者コード自動生成
-                var partners = [];
-                try { partners = JSON.parse(localStorage.getItem('partners') || '[]'); } catch(e) {}
-                var num = partners.length + 1;
-                var code = 'PN' + String(num).padStart(3, '0');
-                while (partners.find(function(p) { return p.id === code; })) { num++; code = 'PN' + String(num).padStart(3, '0'); }
+            // 業者コード自動生成
+            var partners = [];
+            try { partners = JSON.parse(localStorage.getItem('partners') || '[]'); } catch(e) {}
+            var num = partners.length + 1;
+            var code = 'PN' + String(num).padStart(3, '0');
+            while (partners.find(function(p) { return p.id === code; })) { num++; code = 'PN' + String(num).padStart(3, '0'); }
 
-                var newPartner = {
-                    name: name, contactName: contact, loginId: romaji,
-                    phone: document.getElementById('npPhone').value.trim(),
-                    code: code
-                };
+            var newPartner = {
+                name: name, contactName: contact, loginId: romaji,
+                phone: document.getElementById('npPhone').value.trim(),
+                code: code
+            };
                 setupData.newPartner = newPartner;
                 setupData.partnerIsNew = true;
                 setupData.partnerId = code;
@@ -486,12 +467,11 @@
                 });
                 localStorage.setItem('partners', JSON.stringify(partners));
                 sessionStorage.setItem('partners', JSON.stringify(partners));
-            }
 
             setupData.currentStep = 2;
             saveCurrentSetup();
             renderCurrentStep();
-            showToast('業者「' + setupData.partnerName + '」を選択しました');
+            showToast('業者「' + setupData.partnerName + '」を登録しました');
         }
 
         // ========== ステップ2: 会社登録（旧ステップ1） ==========
@@ -501,7 +481,7 @@
 
             content.innerHTML = ''
                 + '<div class="wizard-card">'
-                + '  <div class="wizard-card-title">ステップ 1：会社登録</div>'
+                + '  <div class="wizard-card-title">ステップ 2：会社登録</div>'
                 + '  <div class="wizard-card-sub">セットアップする会社の情報を入力してください</div>'
                 + '  <div class="form-group">'
                 + '    <label class="form-label">会社名<span class="required">*</span></label>'
@@ -697,7 +677,7 @@
 
             // ステップ1完了サマリー
             html += '<div class="step-done-summary">'
-                + '<div class="title">✓ ステップ1 完了：会社登録</div>'
+                + '<div class="title">✓ ステップ2 完了：会社登録</div>'
                 + '<div class="detail">' + esc(setupData.companyName) + '（' + esc(setupData.companyCode) + '）</div>'
                 + '</div>';
 
@@ -722,7 +702,7 @@
             serviceTypes.forEach(function(s) { serviceOpts += '<option value="' + s + '">' + s + '</option>'; });
 
             html += '<div class="wizard-card">'
-                + '<div class="wizard-card-title">ステップ 2：事業所登録</div>'
+                + '<div class="wizard-card-title">ステップ 3：事業所登録</div>'
                 + '<div class="wizard-card-sub">' + esc(setupData.companyName) + ' の事業所を登録してください</div>'
                 + '<div class="form-group">'
                 + '  <label class="form-label">事業所名<span class="required">*</span></label>'
@@ -887,7 +867,7 @@
         function doneSummary() {
             var html = '';
             if (setupData.currentStep > 1) {
-                html += '<div class="step-done-summary"><div class="title">✓ 業者選択</div><div class="detail">' + esc(setupData.partnerName) + '（' + esc(setupData.partnerId) + '）</div></div>';
+                html += '<div class="step-done-summary"><div class="title">✓ 業者登録</div><div class="detail">' + esc(setupData.partnerName) + '（' + esc(setupData.partnerId) + '）</div></div>';
             }
             if (setupData.currentStep > 2) {
                 html += '<div class="step-done-summary"><div class="title">✓ 会社登録</div><div class="detail">' + esc(setupData.companyName) + '（' + esc(setupData.companyCode) + '）</div></div>';
@@ -932,7 +912,7 @@
             });
 
             html += '<div class="wizard-card">'
-                + '<div class="wizard-card-title">ステップ 3：アカウント登録</div>'
+                + '<div class="wizard-card-title">ステップ 5：アカウント登録</div>'
                 + '<div class="wizard-card-sub">スタッフや事業所管理者のアカウントを登録してください</div>'
                 + '<div class="form-group">'
                 + '  <label class="form-label">表示名<span class="required">*</span></label>'
@@ -1518,7 +1498,7 @@
             });
 
             html += '<div class="wizard-card">'
-                + '<div class="wizard-card-title">ステップ 5：商品（設備）登録</div>'
+                + '<div class="wizard-card-title">ステップ 6：商品（設備）登録</div>'
                 + '<div class="wizard-card-sub">施設の設備を登録してください。後からインポートで一括登録もできます。</div>'
                 + '<div class="form-group">'
                 + '  <label class="form-label">商品名<span class="required">*</span></label>'

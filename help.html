@@ -174,20 +174,20 @@
         <div class="faq-section" id="getting-started" style="background: #1e3a5f; color: white; border-radius: 16px; padding: 32px; margin-bottom: 32px;">
             <div class="faq-title" style="color: white;">はじめに</div>
             <div style="line-height: 1.8; margin-top: 16px;">
-                <p style="margin-bottom: 16px;">ワンタッチ管理へようこそ！このシステムは、施設運営に必要な通報管理・マスタ管理を一元化するプラットフォームです。</p>
+                <p style="margin-bottom: 16px;">ワンタッチ管理へようこそ！このシステムは、施設の設備トラブルを担当業者に通報し、対応状況を管理するプラットフォームです。</p>
                 
                 <h3 style="font-size: 18px; margin-top: 24px; margin-bottom: 12px;">基本的な使い方</h3>
                 <ol style="margin-left: 20px; line-height: 2;">
-                    <li><strong>ログイン:</strong> 会社コードとパスワードでログイン</li>
-                    <li><strong>通報:</strong> トラブル発生時は通報画面から業者へ通報</li>
-                    <li><strong>マスタ管理:</strong> 事業所・アカウント・取引先を管理</li>
-                    <li><strong>商品管理:</strong> 商品マスタで在庫や価格を管理</li>
+                    <li><strong>ログイン:</strong> ログインIDとパスワードでログイン</li>
+                    <li><strong>通報:</strong> 設備トラブル発生時に通報画面から業者へ通報</li>
+                    <li><strong>履歴確認:</strong> 通報履歴で業者の対応状況を確認</li>
+                    <li><strong>マスタ管理:</strong> 事業所・アカウント・商品マスタを管理</li>
                 </ol>
                 
                 <h3 style="font-size: 18px; margin-top: 24px; margin-bottom: 12px;">あなたの権限を確認</h3>
                 <p>
                     <a href="permissions.html?from=help" style="color: white; text-decoration: underline; font-weight: 600;">権限一覧ページ</a>で、
-                    あなたのロール（会社管理者・事業所管理者・スタッフ・業者）ごとに何ができるか確認できます。
+                    あなたのロール（本社管理者・事業所管理者・スタッフ）ごとに何ができるか確認できます。
                 </p>
             </div>
         </div>
@@ -199,70 +199,57 @@
             <div class="faq-item">
                 <div class="faq-question">ログインできません</div>
                 <div class="faq-answer">
-                    ユーザーID・パスワードが正しいか確認してください。<br>
-                    パスワードを忘れた場合は、管理者にパスワードリセットを依頼してください。
+                    ログインID（例：TAMJ-tanaka）とパスワードが正しいか確認してください。<br>
+                    パスワードを忘れた場合は、管理者にパスワードリセットを依頼してください。<br>
+                    スタッフの方はQRコードからもログインできます。
                 </div>
             </div>
 
             <div class="faq-item">
                 <div class="faq-question">通報を送信したのに業者から返信がありません</div>
                 <div class="faq-answer">
-                    通報画面の「通報履歴」から、業者ステータスと最新コメントを確認できます。<br>
-                    緊急度が「高」の場合、業者には6時間以内に対応するよう通知されます。
+                    通報画面の「通報履歴」から、業者のステータスと最新コメントを確認できます。<br>
+                    通報は担当業者に自動で振り分けられます。担当業者が見つからない場合は事業所管理者に通知されます。
                 </div>
             </div>
 
             <div class="faq-item">
                 <div class="faq-question">商品マスタにデータをインポートする方法は？</div>
                 <div class="faq-answer">
-                    マスタ管理画面 → 商品マスタ → インポートボタンをクリック。<br>
-                    PDF・Excel・CSV形式のファイルをアップロードできます。<br>
-                    1日のアップロード上限は10回、1回あたり5ファイルまでです。
+                    マスタ管理 → 商品マスタ → 「インポート」ボタンをクリック。<br>
+                    PDF・Excel・CSV形式のファイルをアップロードして一括登録できます。
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">通報した設備がリストにありません</div>
+                <div class="faq-answer">
+                    商品マスタに登録されていない設備は表示されません。<br>
+                    事業所管理者または本社管理者に、商品マスタへの登録を依頼してください。
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">担当業者はどうやって決まりますか？</div>
+                <div class="faq-answer">
+                    設備のカテゴリ（家電・水道・ガスなど）と契約設定に基づいて自動で決まります。<br>
+                    スタッフが業者を選ぶ必要はありません。契約設定はシステム管理者が管理しています。
                 </div>
             </div>
 
             <div class="faq-item">
                 <div class="faq-question">DEMOモードとは何ですか？</div>
                 <div class="faq-answer">
-                    会社コード「TAMJ」でログインすると、DEMOモードになります。<br>
-                    DEMOモードでは、データはsessionStorageに保存され、ブラウザを閉じると消えます。<br>
-                    削除・エクスポート機能は制限されます。
-                </div>
-            </div>
-
-            <div class="faq-item">
-                <div class="faq-question">データのバックアップは取れますか？</div>
-                <div class="faq-answer">
-                    システム管理者は「システム管理者ダッシュボード」からデータのバックアップ・復元ができます。<br>
-                    全データがJSON形式でエクスポートされます。<br>
-                    30日以上バックアップを取っていない場合、警告が表示されます。
-                </div>
-            </div>
-
-            <div class="faq-item">
-                <div class="faq-question">業者として対応した通報を完了にするには？</div>
-                <div class="faq-answer">
-                    業者ダッシュボード → 通報をクリック → 「完了」ボタンをクリック。<br>
-                    必要に応じてコメントを追加してください。
-                </div>
-            </div>
-
-            <div class="faq-item">
-                <div class="faq-question">監査ログは誰が見られますか？</div>
-                <div class="faq-answer">
-                    システム管理者：全ログを閲覧可能<br>
-                    会社管理者：自社のログのみ閲覧可能<br>
-                    事業所管理者：自事業所のログのみ閲覧可能<br>
-                    スタッフ・業者：閲覧不可
+                    ログイン画面の「体験してみる」ボタンからDEMOモードに入れます。<br>
+                    テスト用のダミーデータで動作し、ブラウザを閉じるとデータは消えます。
                 </div>
             </div>
 
             <div class="faq-item">
                 <div class="faq-question">エラーが発生しました。どうすればいいですか？</div>
                 <div class="faq-answer">
-                    エラーメッセージが表示された場合、まずページを再読み込みしてください。<br>
-                    問題が解決しない場合は、システム管理者に連絡してください。<br>
-                    エラーログは自動的に記録されています。
+                    まずページを再読み込みしてください。<br>
+                    問題が解決しない場合は、システム管理者にお問い合わせください。
                 </div>
             </div>
         </div>

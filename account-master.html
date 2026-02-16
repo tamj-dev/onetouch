@@ -13,11 +13,14 @@
             box-sizing: border-box;
         }
 
+        html { overflow-x: hidden; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans CJK JP", sans-serif;
             background: #f5f5f5;
             min-height: 100vh;
+            overflow-x: hidden;
         }
+        body.modal-open { overflow: hidden; position: fixed; width: 100%; }
 
         .main-container {
             max-width: 800px;
@@ -813,6 +816,9 @@
 
         // モーダル開閉
         function openModal() {
+            document.body._scrollY = window.scrollY;
+            document.body.style.top = (-window.scrollY) + 'px';
+            document.body.classList.add('modal-open');
             document.getElementById('modalTitle').textContent = 'アカウント設定';
             document.getElementById('accountModal').classList.add('active');
             document.getElementById('accountForm').reset();
@@ -853,6 +859,9 @@
         }
 
         function openEditModal(index) {
+            document.body._scrollY = window.scrollY;
+            document.body.style.top = (-window.scrollY) + 'px';
+            document.body.classList.add('modal-open');
             const account = accounts[index];
             document.getElementById('modalTitle').textContent = 'アカウント編集';
             document.getElementById('accountModal').classList.add('active');
@@ -908,6 +917,9 @@
         }
 
         function closeModal() {
+            document.body.classList.remove('modal-open');
+            document.body.style.top = '';
+            window.scrollTo(0, document.body._scrollY || 0);
             document.getElementById('accountModal').classList.remove('active');
         }
         
@@ -939,10 +951,10 @@
             
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
-                toggleButton.textContent = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'; // 開いた目
+                toggleButton.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
             } else {
                 passwordInput.type = 'password';
-                toggleButton.textContent = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'; // 閉じた目
+                toggleButton.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
             }
         }
 
@@ -1054,12 +1066,7 @@
                 }
                 accounts.push(accountData);
                 logEvent('add_account', { userId: accountData.id, userName: accountData.name });
-                // QRログインURL生成モーダルを表示（スタッフの場合）
-                if (accountData.role === 'staff') {
-                    showQRModal(accountData);
-                } else {
-                    alert('アカウントを登録しました（ID: ' + accountData.id + '）');
-                }
+                showRegistrationModal(accountData);
             }
 
             // LocalStorageに保存
@@ -1160,6 +1167,64 @@
         });
 
         // ===== QRログイン登録完了モーダル =====
+        function showRegistrationModal(account) {
+            var companyCode = account.companyCode || currentUser.companyCode || 'DEMO';
+            var password = account.password || '';
+            var roleName = {'staff':'スタッフ','office_admin':'事業所管理者','company_admin':'本社管理者'}[account.role] || account.role;
+            
+            // ログイン情報テキスト
+            var infoText = '━━━━━━━━━━━━━━━━━━━━\n'
+                + '【ワンタッチ管理】ログイン情報\n'
+                + '━━━━━━━━━━━━━━━━━━━━\n'
+                + '氏名: ' + (account.name || '') + '\n'
+                + '身分: ' + roleName + '\n'
+                + 'ログインID: ' + account.id + '\n'
+                + 'パスワード: ' + password + '\n'
+                + '━━━━━━━━━━━━━━━━━━━━\n'
+                + '※ 初回ログイン後にパスワードを変更してください\n'
+                + '※ ID・パスワードは大文字小文字を区別します';
+            
+            // QRログインURL（スタッフのみ）
+            var qrSection = '';
+            if (account.role === 'staff') {
+                var loginName = account.loginName || account.id;
+                var token = btoa(companyCode + ':' + loginName).replace(/[^a-zA-Z0-9]/g, '').substring(0, 8);
+                var baseUrl = window.location.origin + window.location.pathname.replace('account-master.html', 'login.html');
+                var qrUrl = baseUrl + '?qr=' + companyCode + ':' + loginName + ':' + token;
+                qrSection = '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;text-align:left;margin-bottom:16px;">'
+                    + '<div style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:8px;">📱 スタッフ用QRログインURL</div>'
+                    + '<div style="font-size:12px;color:#64748b;margin-bottom:8px;">このURLをQRコードに変換して掲示すると、スマホで読むだけでログインできます。</div>'
+                    + '<div style="font-size:12px;color:#1e293b;word-break:break-all;background:white;padding:8px;border-radius:4px;border:1px solid #e2e8f0;">' + qrUrl + '</div>'
+                    + '</div>';
+            }
+            
+            var ov = document.createElement('div');
+            ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;z-index:9999;';
+            ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:32px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.15);text-align:center;">'
+                + '<div style="font-size:32px;margin-bottom:12px;">✓</div>'
+                + '<div style="font-size:18px;font-weight:700;margin-bottom:4px;">アカウントを登録しました</div>'
+                + '<div style="font-size:14px;color:#64748b;margin-bottom:16px;">ID: ' + account.id + ' / ' + account.name + '</div>'
+                + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;text-align:left;margin-bottom:16px;">'
+                + '<div style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:8px;">🔑 ログイン情報</div>'
+                + '<div style="font-size:12px;color:#64748b;margin-bottom:8px;">このアカウントのログイン情報です。ご本人にお伝えください。</div>'
+                + '<div style="font-size:13px;color:#1e293b;background:white;padding:12px;border-radius:4px;border:1px solid #e2e8f0;text-align:left;line-height:1.8;">'
+                + '<div><span style="color:#64748b;">氏名:</span> <strong>' + (account.name || '') + '</strong></div>'
+                + '<div><span style="color:#64748b;">身分:</span> ' + roleName + '</div>'
+                + '<div><span style="color:#64748b;">ログインID:</span> <strong>' + account.id + '</strong></div>'
+                + '<div><span style="color:#64748b;">パスワード:</span> <strong>' + password + '</strong></div>'
+                + '</div>'
+                + '</div>'
+                + qrSection
+                + '<div style="display:flex;gap:8px;">'
+                + '<button onclick="var t=this.closest(\'div[style]\').querySelector(\'._regInfoText\').value;navigator.clipboard.writeText(t).then(function(){});this.textContent=\'コピーしました\';this.style.background=\'#22c55e\';var b=this;setTimeout(function(){b.textContent=\'ログイン情報をコピー\';b.style.background=\'#1e3a5f\';},2000);" style="flex:1;padding:12px;background:#1e3a5f;color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">ログイン情報をコピー</button>'
+                + '<button onclick="document.body.classList.remove(\'modal-open\');document.body.style.top=\'\';window.scrollTo(0,document.body._scrollY||0);this.closest(\'div[style]\').parentElement.remove()" style="flex:1;padding:12px;background:#f1f5f9;color:#334155;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">閉じる</button>'
+                + '</div>'
+                + '<textarea class="_regInfoText" style="position:absolute;left:-9999px;">' + infoText + '</textarea>'
+                + '</div>';
+            document.body.appendChild(ov);
+        }
+
+        // QRモーダル（既存アカウントからのQR発行用）
         function showQRModal(account) {
             var companyCode = account.companyCode || currentUser.companyCode || 'DEMO';
             var loginName = account.loginName || account.id;
@@ -1170,17 +1235,16 @@
             var ov = document.createElement('div');
             ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;z-index:9999;';
             ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:32px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.15);text-align:center;">'
-                + '<div style="font-size:32px;margin-bottom:12px;">✓</div>'
-                + '<div style="font-size:18px;font-weight:700;margin-bottom:4px;">アカウントを登録しました</div>'
+                + '<div style="font-size:32px;margin-bottom:12px;">📱</div>'
+                + '<div style="font-size:18px;font-weight:700;margin-bottom:4px;">QRログインURL</div>'
                 + '<div style="font-size:14px;color:#64748b;margin-bottom:16px;">ID: ' + account.id + ' / ' + account.name + '</div>'
                 + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;text-align:left;margin-bottom:16px;">'
-                + '<div style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:8px;">📱 スタッフ用QRログインURL</div>'
                 + '<div style="font-size:12px;color:#64748b;margin-bottom:8px;">このURLをQRコードに変換して掲示すると、スマホで読むだけでログインできます。</div>'
-                + '<div id="qrUrlText" style="font-size:12px;color:#1e293b;word-break:break-all;background:white;padding:8px;border-radius:4px;border:1px solid #e2e8f0;">' + qrUrl + '</div>'
+                + '<div style="font-size:12px;color:#1e293b;word-break:break-all;background:white;padding:8px;border-radius:4px;border:1px solid #e2e8f0;">' + qrUrl + '</div>'
                 + '</div>'
                 + '<div style="display:flex;gap:8px;">'
-                + '<button onclick="navigator.clipboard.writeText(\'' + qrUrl + '\');this.textContent=\'コピーしました\'" style="flex:1;padding:12px;background:#2563eb;color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">URLをコピー</button>'
-                + '<button onclick="this.closest(\'div[style]\').parentElement.remove()" style="flex:1;padding:12px;background:#f1f5f9;color:#334155;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">閉じる</button>'
+                + '<button onclick="navigator.clipboard.writeText(\'' + qrUrl + '\');this.textContent=\'コピーしました\';this.style.background=\'#22c55e\';var b=this;setTimeout(function(){b.textContent=\'URLをコピー\';b.style.background=\'#2563eb\';},2000);" style="flex:1;padding:12px;background:#2563eb;color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">URLをコピー</button>'
+                + '<button onclick="document.body.classList.remove(\'modal-open\');document.body.style.top=\'\';window.scrollTo(0,document.body._scrollY||0);this.closest(\'div[style]\').parentElement.remove()" style="flex:1;padding:12px;background:#f1f5f9;color:#334155;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">閉じる</button>'
                 + '</div></div>';
             document.body.appendChild(ov);
         }
