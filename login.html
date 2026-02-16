@@ -670,19 +670,27 @@
             const allAccounts = [...demoAccounts, ...accounts, ...partners];
             
             // ログインIDとパスワードで認証
-            // companyCodeが分離できた場合: companyCode + userId でマッチ
-            // 分離できなかった場合: fullId（入力そのまま）でマッチ
+            // 1. companyCode分離でマッチ試行（TAMJ-tanaka → companyCode=TAMJ, userId=tanaka）
+            // 2. 失敗したらfullId全体でマッチ（p002-sato → idそのままで検索）
             const fullId = loginInput;
-            const user = allAccounts.find(account => {
-                if (account.password !== password) return false;
-                // 会社コード分離できた場合
-                if (companyCode) {
+            let user = null;
+            
+            // まずcompanyCode分離でマッチ試行
+            if (companyCode) {
+                user = allAccounts.find(account => {
+                    if (account.password !== password) return false;
                     if (account.companyCode !== companyCode) return false;
                     return account.id === userId || account.id === fullId || account.loginName === userId;
-                }
-                // ハイフンなし入力（フォールバック: IDそのままでマッチ）
-                return account.id === fullId || account.loginName === fullId;
-            });
+                });
+            }
+            
+            // 見つからなければfullId全体でマッチ（業者のloginIdなど）
+            if (!user) {
+                user = allAccounts.find(account => {
+                    if (account.password !== password) return false;
+                    return account.id === fullId || account.loginName === fullId;
+                });
+            }
             
             if (user) {
                 // メンテナンスモードチェック（システム管理者以外はブロック）
@@ -812,6 +820,12 @@
         } catch (e) {
             // エラーは無視
         }
+    </script>
+    <script>
+    // PWA Service Worker登録
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(function() {});
+    }
     </script>
 </body>
 </html>
