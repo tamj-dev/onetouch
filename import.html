@@ -123,7 +123,7 @@
   <script src="document-storage.js"></script>
   <!-- Tesseract.js 削除: OCR処理はサーバ側 GCP Vision API で実行 -->
   <style>
-    :root{--bg:#fff;--bg2:#f8f9fa;--text:#1e293b;--muted:#666;--accent:#1e3a5f;--yellow:#E9A825;--border:#e5e7eb;--ok:#10b981;--err:#ef4444;--warn:#f59e0b;}
+    :root{--bg:#fff;--bg2:#f8f9fa;--text:#1e293b;--muted:#666;--accent:#1e3a5f;--yellow:#E9A825;--border:#e5e7eb;--ok:#2563eb;--err:#ef4444;--warn:#f59e0b;}
     *{margin:0;padding:0;box-sizing:border-box;}
     html{overflow-x:hidden;}
     body{font-family:'Noto Sans JP',sans-serif;background:var(--bg2);min-height:100vh;overflow-x:hidden;}
@@ -170,7 +170,7 @@
     .fcard-badge{font-size:0.78rem;padding:3px 10px;border-radius:99px;font-weight:600;flex-shrink:0;}
     .fcard-badge.parsing{background:#fef3c7;color:#d97706;}
     .fcard-badge.ready{background:#dbeafe;color:#2563eb;}
-    .fcard-badge.ok{background:#d1fae5;color:#059669;}
+    .fcard-badge.ok{background:#e8f0fe;color:#1e3a5f;}
     .fcard-badge.err{background:#fee2e2;color:#dc2626;}
     .fcard-stats{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0;font-size:0.82rem;}
     .fcard-stat{display:flex;align-items:center;gap:4px;}
@@ -247,7 +247,7 @@
     .hdr-cand-rank{background:var(--yellow);color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.75rem;flex-shrink:0;}
     .hdr-cand-cells{flex:1;display:flex;gap:6px;flex-wrap:wrap;min-width:0;}
     .hdr-cand-cell{background:var(--bg2);padding:2px 8px;border-radius:4px;font-size:0.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;}
-    .hdr-cand-cell.match{background:#d1fae5;color:#059669;font-weight:600;}
+    .hdr-cand-cell.match{background:#e8f0fe;color:#1e3a5f;font-weight:600;}
     .hdr-cand-score{font-size:0.72rem;color:var(--muted);flex-shrink:0;min-width:50px;text-align:right;}
 
     /*  ピッカー モード切替ツールバー */
@@ -261,7 +261,7 @@
     /*  設定サマリー */
     .pk-summary{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0;font-size:0.78rem;}
     .pk-sum-item{padding:5px 10px;border-radius:6px;display:flex;align-items:center;gap:5px;}
-    .pk-sum-item.set{background:#d1fae5;color:#059669;}
+    .pk-sum-item.set{background:#e8f0fe;color:#1e3a5f;}
     .pk-sum-item.unset{background:var(--bg2);color:var(--muted);}
 
     /*  テーブル拡張（ゾーン色分け） */
@@ -288,7 +288,7 @@
     /* 列ロールヘッダー */
     .hdr-raw-table td.pk-col-assigned{position:relative;}
     .pk-col-tag{position:absolute;top:1px;right:2px;font-size:0.6rem;font-weight:700;color:#fff;padding:1px 4px;border-radius:3px;z-index:1;line-height:1.1;}
-    .pk-col-tag.name{background:#059669;}
+    .pk-col-tag.name{background:#1e3a5f;}
     .pk-col-tag.model{background:#7c3aed;}
     .pk-col-tag.unitPrice{background:#dc2626;}
     .pk-col-tag.qty{background:#2563eb;}
@@ -306,11 +306,11 @@
     .pk-role-popup .pk-role-opt{padding:8px 14px;font-size:0.8rem;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:inherit;}
     .pk-role-popup .pk-role-opt:hover{background:var(--bg2);}
     .pk-role-popup .pk-role-opt .pk-r-dot{width:8px;height:8px;border-radius:50%;}
-    .pk-role-popup .pk-role-opt.active{font-weight:700;background:#d1fae5;}
+    .pk-role-popup .pk-role-opt.active{font-weight:700;background:#e8f0fe;}
     .pk-role-popup .pk-role-opt.clear{color:var(--err);}
     .hdr-picker-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:12px;}
     .hdr-info-badge{display:inline-flex;align-items:center;gap:4px;font-size:0.75rem;padding:4px 10px;border-radius:6px;margin-bottom:12px;}
-    .hdr-info-badge.auto{background:#d1fae5;color:#059669;}
+    .hdr-info-badge.auto{background:#e8f0fe;color:#1e3a5f;}
     .hdr-info-badge.manual{background:#fef3c7;color:#d97706;}
     .hdr-info-badge.low{background:#fee2e2;color:#dc2626;}
 
@@ -337,12 +337,12 @@
     .mapped-ok{color:var(--ok);font-weight:600;}
     .mapped-ng{color:var(--err);font-weight:600;}
     .req-status{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0;padding:10px 14px;border-radius:10px;font-size:0.82rem;}
-    .req-status.complete{background:#d1fae5;border:1px solid var(--ok);}
+    .req-status.complete{background:#e8f0fe;border:1px solid var(--ok);}
     .req-status.incomplete{background:#fee2e2;border:1px solid var(--err);}
 
     /* 信頼度バッジ */
     .conf-badge{display:inline-flex;align-items:center;gap:4px;font-size:0.72rem;font-weight:600;padding:3px 8px;border-radius:6px;margin-left:6px;}
-    .conf-badge.high{background:#d1fae5;color:#059669;}
+    .conf-badge.high{background:#e8f0fe;color:#1e3a5f;}
     .conf-badge.mid{background:#fef3c7;color:#d97706;}
     .conf-badge.low{background:#fee2e2;color:#dc2626;}
     .fcard-conf{display:flex;align-items:center;gap:6px;margin:8px 0;font-size:0.78rem;color:var(--muted);}
@@ -466,7 +466,7 @@
         </table>
       </div>
 
-      <div style="background:#f0fdf4;border:1px solid #22c55e;border-radius:8px;padding:14px;font-size:13px;line-height:1.7;color:#166534;">
+      <div style="background:#eef3ff;border:1px solid #2563eb;border-radius:8px;padding:14px;font-size:13px;line-height:1.7;color:#1e3a5f;">
         <div style="font-weight:700;margin-bottom:4px;">ヒント</div>
         ヘッダー名が自動認識されない場合は、プレビュー画面の「列の割当」で手動変更できます。<br>
         商品マスタからCSVエクスポートしたファイルはそのままインポート可能です。
@@ -2099,11 +2099,11 @@
         var count=partnerNames[name];
         if(matched){
           matchCount++;
-          h+='<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;margin-bottom:4px;background:#f0fdf4;border-radius:6px;font-size:13px;">';
-          h+='<span style="color:#22c55e;font-weight:600;">✓</span>';
+          h+='<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;margin-bottom:4px;background:#eef3ff;border-radius:6px;font-size:13px;">';
+          h+='<span style="color:#2563eb;font-weight:600;">✓</span>';
           h+='<span style="flex:1;">'+esc(name)+'</span>';
           h+='<span style="color:#888;font-size:12px;">'+count+'件</span>';
-          h+='<span style="color:#22c55e;font-size:12px;">→ '+esc(matched.id)+'</span>';
+          h+='<span style="color:#2563eb;font-size:12px;">→ '+esc(matched.id)+'</span>';
           h+='</div>';
         }else{
           unmatchCount++;
@@ -2434,7 +2434,7 @@
     };
 
     var PK_ROLES=[
-      {key:'name',    label:'商品名 ',color:'#059669',req:true},
+      {key:'name',    label:'商品名 ',color:'#1e3a5f',req:true},
       {key:'assignedPartnerName',label:'担当業者 ',color:'#ea580c',req:true},
       {key:'model',   label:'型番',    color:'#7c3aed',req:false},
       {key:'unitPrice',label:'単価',   color:'#dc2626',req:false},

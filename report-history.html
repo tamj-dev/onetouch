@@ -611,6 +611,7 @@
 
         // 事業所選択UIを初期化
         function initOfficeFilter() {
+            try {
             const officeFilterArea = document.getElementById('officeFilterArea');
             
             if (currentUser.role === 'system_admin') {
@@ -625,6 +626,7 @@
                 
                 // 事業所：全事業所を表示（会社選択で絞り込み）
                 initOfficeSelect('');
+                filterReports();
                 
             } else if (currentUser.role === 'company_admin') {
                 selectedOfficeCode = 'all_company';
@@ -632,7 +634,12 @@
                 filterReports();
             } else {
                 selectedOfficeCode = currentUser.officeCode || '';
-                officeFilterArea.innerHTML = `<div id="officeInfo" style="color: #666; font-size: 14px;">${currentUser.officeName || '全事業所'}</div>`;
+                officeFilterArea.innerHTML = '<div id="officeInfo" style="color: #666; font-size: 14px;">' + (currentUser.officeName || '全事業所') + '</div>';
+                filterReports();
+            }
+            } catch(e) {
+                console.error('initOfficeFilter error:', e);
+                document.getElementById('officeFilterArea').innerHTML = '<div style="color:#666;font-size:14px;">全事業所</div>';
                 filterReports();
             }
         }
@@ -1106,8 +1113,6 @@
                         </div>
                         ${assignedPartnerName ? `<div class="report-card-partner">担当: ${assignedPartnerName}</div>` : ''}
                     </div>
-                `;
-            }).join('');
                 `;
             }).join('');
 
