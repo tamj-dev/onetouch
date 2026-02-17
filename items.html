@@ -382,27 +382,28 @@
         /* 検索・フィルターエリア */
         .header {
             background: white;
-            border-bottom: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e2e8f0;
             padding: 16px 24px;
         }
 
         .search-bar {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             margin-bottom: 16px;
         }
 
         .search-input {
             flex: 1;
             padding: 10px 16px;
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
             font-size: 14px;
         }
 
         .search-input:focus {
             outline: none;
-            border-color: #1e3a5f;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
         }
 
         h1 {
@@ -479,7 +480,7 @@
         }
 
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 24px;
         }
@@ -487,9 +488,10 @@
         .stats {
             background: white;
             padding: 16px 24px;
-            border-radius: 8px;
-            margin-bottom: 24px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            border: 1px solid #e2e8f0;
             display: flex;
             gap: 32px;
             align-items: center;
@@ -513,41 +515,45 @@
 
         .table-container {
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            border: 1px solid #e2e8f0;
             overflow-x: auto;
         }
 
         .items-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             font-size: 13px;
         }
 
         .items-table thead th {
-            background: #f8f9fa;
-            padding: 10px 12px;
+            background: #f8fafc;
+            padding: 10px 14px;
             text-align: left;
             font-weight: 600;
-            color: #555;
-            border-bottom: 2px solid #e0e0e0;
+            color: #475569;
+            border-bottom: 2px solid #e2e8f0;
             white-space: nowrap;
             position: sticky;
             top: 0;
+            z-index: 1;
         }
 
         .items-table tbody tr {
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid #f1f5f9;
             transition: background 0.15s;
+            cursor: pointer;
         }
 
         .items-table tbody tr:hover {
-            background: #fafafa;
+            background: #f1f5f9;
         }
 
         .items-table td {
-            padding: 10px 12px;
-            color: #333;
+            padding: 10px 14px;
+            color: #334155;
             vertical-align: middle;
         }
 
@@ -602,8 +608,8 @@
         .badge-category {
             display: inline-block;
             padding: 2px 6px;
-            background: #f3e5f5;
-            color: #7b1fa2;
+            background: #f1f5f9;
+            color: #475569;
             border-radius: 4px;
             font-size: 11px;
         }
@@ -821,6 +827,16 @@
     </div>
 
     <div class="container">
+        <!-- スマホ向け案内 -->
+        <div id="mobileNotice" style="display:none; background:#e8f0fe; border:1px solid #93b4f5; border-radius:10px; padding:14px 18px; margin-bottom:16px; font-size:13px; color:#1e3a5f;">
+            <div style="font-weight:600; margin-bottom:4px;">この画面はPC表示に最適化されています</div>
+            <div style="color:#475569;">横スクロールで全項目を確認できます。一括登録は<a href="import.html" style="color:#2563eb; font-weight:600;">インポート機能</a>が便利です。</div>
+        </div>
+        <script>
+            if (window.innerWidth <= 768) {
+                document.getElementById('mobileNotice').style.display = 'block';
+            }
+        </script>
         <!-- 検索前のガイド表示 -->
         <div id="searchGuide" style="text-align: center; padding: 60px 20px; color: #999;">
             <div style="margin-bottom: 16px; color: #ccc;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
@@ -1059,6 +1075,7 @@
             var catSelect = document.getElementById('itemCategory');
             if (!catSelect) return;
             var companyCode = currentUser.companyCode || '';
+            var userRole = currentUser.role || '';
             
             // 契約テーブルからカテゴリを取得
             var contracts = [];
@@ -1067,7 +1084,21 @@
             
             var categories = [];
             contracts.forEach(function(c) {
-                if (c.status === 'active' && (!companyCode || c.companyCode === companyCode)) {
+                if (c.status !== 'active') return;
+                
+                // ロール別フィルタ
+                var match = false;
+                if (userRole === 'system_admin') {
+                    match = true; // 全契約
+                } else if (userRole === 'contractor') {
+                    // 業者: 自分のpartnerIdに紐づく契約
+                    match = (c.partnerId === currentUser.partnerId || c.partnerId === currentUser.partnerCode);
+                } else {
+                    // スタッフ・事業所管理者・本社管理者: 自社の契約
+                    match = (!companyCode || c.companyCode === companyCode);
+                }
+                
+                if (match) {
                     (c.categories || []).forEach(function(cat) {
                         if (categories.indexOf(cat) < 0) categories.push(cat);
                     });
@@ -1079,7 +1110,7 @@
                 categories = ['家具/什器','家電','厨房/食器','水道','浴室','ガス','インターネット','エレベーター/昇降機','介護医療用品','その他'];
             }
             
-            catSelect.innerHTML = '<option value="">未設定</option>' + categories.map(function(cat) {
+            catSelect.innerHTML = '<option value="">選択してください</option>' + categories.map(function(cat) {
                 return '<option value="' + cat + '">' + cat + '</option>';
             }).join('');
         }
@@ -1108,9 +1139,23 @@
             try { var pl = JSON.parse(localStorage.getItem('partners') || '[]'); pl.forEach(function(p){ if(!partners.find(function(x){return x.id===p.id || x.partnerCode===p.partnerCode;})) partners.push(p); }); } catch(e) {}
             
             // 該当カテゴリを持つ有効な契約の業者を取得
+            var userRole = currentUser.role || '';
             var matchedPartners = [];
             contracts.forEach(function(c) {
-                if (c.status === 'active' && (!companyCode || c.companyCode === companyCode) && (c.categories || []).indexOf(category) >= 0) {
+                if (c.status !== 'active') return;
+                if ((c.categories || []).indexOf(category) < 0) return;
+                
+                // ロール別フィルタ
+                var match = false;
+                if (userRole === 'system_admin') {
+                    match = true;
+                } else if (userRole === 'contractor') {
+                    match = (c.partnerId === currentUser.partnerId || c.partnerId === currentUser.partnerCode);
+                } else {
+                    match = (!companyCode || c.companyCode === companyCode);
+                }
+                
+                if (match) {
                     var p = partners.find(function(x) { return x.id === c.partnerId || x.partnerCode === c.partnerId; });
                     var name = p ? p.name : c.partnerId;
                     if (!matchedPartners.find(function(m) { return m.id === c.partnerId; })) {

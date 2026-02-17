@@ -454,11 +454,6 @@
                 </div>
                 
                 <div class="detail-section">
-                    <div class="detail-label">緊急度</div>
-                    <div class="detail-value" id="detailPriority">-</div>
-                </div>
-                
-                <div class="detail-section">
                     <div class="detail-label">場所</div>
                     <div class="detail-value" id="detailLocation">-</div>
                 </div>
@@ -626,7 +621,6 @@
                     <div class="request-card" onclick="showDetail('${report.id || report.reportId}')">
                         <div class="request-header">
                             <div class="request-title">${report.title || report.category || '未分類'}</div>
-                            <span class="priority-badge ${priorityClass}">緊急度: ${report.priority || '低'}</span>
                         </div>
                         <div class="request-meta">
                             ${dateStr} | ${report.location || '未記入'}
@@ -673,7 +667,6 @@
             document.getElementById('detailOffice').textContent = (report.officeName || '不明') + '（' + (report.reporter || '') + '）';
             document.getElementById('detailItemName').textContent = report.title || '-';
             document.getElementById('detailCategory').textContent = report.category || '未分類';
-            document.getElementById('detailPriority').textContent = '緊急度: ' + (report.priority || '低');
             document.getElementById('detailLocation').textContent = report.location || '未記入';
             
             const date = new Date(report.timestamp);

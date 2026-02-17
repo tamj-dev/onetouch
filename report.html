@@ -247,7 +247,7 @@
       
       <input type="hidden" id="formCat" value="その他">
       
-      <input type="hidden" id="formPriority" value="中">
+      <input type="hidden" id="formPriority" value="">
       
       <div class="field">
         <label>状況</label>
@@ -904,13 +904,6 @@
         else if(r.contractorStatus==='完了'){statusClass='status-complete';statusText='解決しました';}
         else if(r.contractorStatus==='対応不可'){statusClass='status-unavailable';statusText='対応できません';}
         
-        // 緊急度
-        var priorityClass='priority-low';
-        var priorityIcon='○';
-        if(r.priority==='高'){priorityClass='priority-high';priorityIcon='●';}
-        else if(r.priority==='中'){priorityClass='priority-mid';priorityIcon='●';}
-        else{priorityClass='priority-low';priorityIcon='●';}
-        
         // 最新コメント
         var latestComment='';
         if(r.contractorComments && r.contractorComments.length>0){
@@ -935,7 +928,6 @@
         h+='<span>'+time+'</span>';
         h+='<span>'+(r.location||'-')+'</span>';
         h+='<span>'+r.category+'</span>';
-        h+='<span class="'+priorityClass+'">'+priorityIcon+' '+r.priority+'</span>';
         h+='</div>';
         if(r.assignedPartnerName){
           h+='<div class="history-partner">業者: '+esc(r.assignedPartnerName)+'</div>';
@@ -990,13 +982,6 @@
         content += '<div class="detail-value">' + esc(r.title) + '</div>';
         content += '</div>';
       }
-      
-      content += '<div class="detail-row">';
-      content += '<div class="detail-label">緊急度</div>';
-      var priorityClass = r.priority === '高' ? 'priority-high' : r.priority === '中' ? 'priority-mid' : 'priority-low';
-      var priorityIcon = r.priority === '高' ? '●' : r.priority === '中' ? '●' : '●';
-      content += '<div class="detail-value"><span class="' + priorityClass + '">' + priorityIcon + ' ' + r.priority + '</span></div>';
-      content += '</div>';
       
       content += '<div class="detail-row">';
       content += '<div class="detail-label">通報者</div>';
