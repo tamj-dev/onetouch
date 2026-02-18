@@ -603,15 +603,6 @@
                     <textarea id="notes" placeholder="備考があれば入力してください"></textarea>
                 </div>
 
-                <!-- カテゴリ別担当業者設定 -->
-                <div class="form-group" style="margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 16px;">
-                    <label style="font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 12px; display: block;">カテゴリ別 担当業者</label>
-                    <div style="font-size: 12px; color: #64748b; margin-bottom: 12px;">カテゴリごとに担当業者を設定すると、通報時に自動で振り分けられます。</div>
-                    <div id="categoryPartnersArea" style="display: flex; flex-direction: column; gap: 8px;">
-                        <!-- JSで動的に生成 -->
-                    </div>
-                </div>
-
                 <div class="button-group">
                     <button type="button" class="btn-secondary" onclick="closeModal()">キャンセル</button>
                     <button type="submit" class="btn-primary">保存</button>
@@ -841,7 +832,6 @@
                 email: document.getElementById('email').value,
                 status: document.getElementById('status').value,
                 notes: document.getElementById('notes').value,
-                categoryPartners: getCategoryPartnersFromForm(),
                 createdAt: new Date().toLocaleDateString('ja-JP')
             };
 

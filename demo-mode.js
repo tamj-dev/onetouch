@@ -136,7 +136,7 @@ window.DEMO = { isDemo:isDemoMode, showWarning:showDemoWarning, save:demoSaveToL
 // ========== カテゴリ ==========
 window.SYSTEM_CATEGORIES = ['建物インフラ', '居室・生活', '介護・医療', '厨房・食事', 'IT・安全', 'その他'];
 
-window.DEMO_CATEGORY_PARTNERS = { '建物インフラ':'PN002', '居室・生活':'PN001', '介護・医療':'PN001', '厨房・食事':'PN001', 'IT・安全':'PN003', 'その他':null };
+// カテゴリ別業者は契約テーブル（DEMO_CONTRACTS）で管理
 
 // ========== アカウント ==========
 window.DEMO_ACCOUNTS = {
@@ -293,9 +293,9 @@ function initDemoData() {
     localStorage.setItem('companies', JSON.stringify(companies));
 
     var offices = [
-        {companyCode:'TAMJ',companyName:'タムジ株式会社',code:'TAMJ-J0001',name:'さくら苑',serviceType:'介護老人福祉施設',status:'active',postalCode:'',prefecture:'東京都',address:'',phone:'',fax:'',email:'',building:'',notes:'',categoryPartners:DEMO_CATEGORY_PARTNERS,createdAt:'2025-01-10'},
-        {companyCode:'TAMJ',companyName:'タムジ株式会社',code:'TAMJ-J0002',name:'ひまわり荘',serviceType:'認知症対応型共同生活介護',status:'active',postalCode:'',prefecture:'東京都',address:'',phone:'',fax:'',email:'',building:'',notes:'',categoryPartners:DEMO_CATEGORY_PARTNERS,createdAt:'2025-01-10'},
-        {companyCode:'TAMJ',companyName:'タムジ株式会社',code:'TAMJ-J0003',name:'あおぞらの家',serviceType:'通所介護',status:'active',postalCode:'',prefecture:'東京都',address:'',phone:'',fax:'',email:'',building:'',notes:'',categoryPartners:DEMO_CATEGORY_PARTNERS,createdAt:'2025-01-10'},
+        {companyCode:'TAMJ',companyName:'タムジ株式会社',code:'TAMJ-J0001',name:'さくら苑',serviceType:'介護老人福祉施設',status:'active',postalCode:'',prefecture:'東京都',address:'',phone:'',fax:'',email:'',building:'',notes:'',createdAt:'2025-01-10'},
+        {companyCode:'TAMJ',companyName:'タムジ株式会社',code:'TAMJ-J0002',name:'ひまわり荘',serviceType:'認知症対応型共同生活介護',status:'active',postalCode:'',prefecture:'東京都',address:'',phone:'',fax:'',email:'',building:'',notes:'',createdAt:'2025-01-10'},
+        {companyCode:'TAMJ',companyName:'タムジ株式会社',code:'TAMJ-J0003',name:'あおぞらの家',serviceType:'通所介護',status:'active',postalCode:'',prefecture:'東京都',address:'',phone:'',fax:'',email:'',building:'',notes:'',createdAt:'2025-01-10'},
         {companyCode:'TAMJ',companyName:'タムジ株式会社',code:'TAMJ-H001',name:'本社',serviceType:'',status:'active',postalCode:'',prefecture:'東京都',address:'',phone:'',fax:'',email:'',building:'',notes:'',createdAt:'2025-01-10'},
         {companyCode:'JMAT',companyName:'ジェイマットジャパン合同会社',code:'JMAT-J0001',name:'グリーンヒル',serviceType:'介護老人保健施設',status:'active',postalCode:'',prefecture:'神奈川県',address:'',phone:'',fax:'',email:'',building:'',notes:'',createdAt:'2025-01-15'},
         {companyCode:'JMAT',companyName:'ジェイマットジャパン合同会社',code:'JMAT-J0002',name:'コスモス園',serviceType:'介護老人福祉施設',status:'active',postalCode:'',prefecture:'神奈川県',address:'',phone:'',fax:'',email:'',building:'',notes:'',createdAt:'2025-01-15'},
@@ -339,11 +339,6 @@ function resolvePartner(item, officeCode) {
         var contracts=[]; try{contracts=JSON.parse(localStorage.getItem('onetouch.contracts')||'[]');}catch(e){}
         var matched=contracts.filter(function(c){return c.status==='active'&&c.companyCode===item.companyCode&&c.categories&&c.categories.indexOf(item.category)>=0&&(!c.officeCode||c.officeCode===officeCode);});
         if(matched.length>0){var ps=getPartnersData();var p=ps.find(function(pp){return pp.id===matched[0].partnerId||pp.partnerCode===matched[0].partnerId;});return{partnerId:matched[0].partnerId,partnerName:p?p.name:''};}
-    }
-    if (item.category && officeCode) {
-        var offices=[]; try{offices=JSON.parse(localStorage.getItem('offices')||'[]');}catch(e){}
-        var office=offices.find(function(o){return o.code===officeCode;});
-        if(office&&office.categoryPartners){var pid=office.categoryPartners[item.category];if(pid){var p2=getPartnersData();var pr=p2.find(function(p){return p.id===pid||p.partnerCode===pid;});return{partnerId:pid,partnerName:pr?pr.name:''};}}
     }
     return {partnerId:null,partnerName:''};
 }

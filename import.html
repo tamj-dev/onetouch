@@ -453,7 +453,7 @@
           <tbody>
             <tr><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;font-weight:600;">商品No.</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;"><span style="color:#b45309;">上書き時のみ</span></td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#666;">商品No, 商品ナンバー, 品番</td></tr>
             <tr><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;font-weight:600;">商品名</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;"><span style="color:#dc2626;font-weight:600;">必須</span></td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#666;">商品名, 品名, 名称, 摘要</td></tr>
-            <tr><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;font-weight:600;">担当業者</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;"><span style="color:#dc2626;font-weight:600;">必須</span></td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#666;">担当業者, 業者名, 取引先, 外注先</td></tr>
+            <tr><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;font-weight:600;">担当業者</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;"><span style="color:#2563eb;font-weight:600;">任意（自動判定）</span></td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#666;">担当業者, 業者名, 取引先, 外注先</td></tr>
             <tr><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;">メーカー</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#999;">任意</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#666;">メーカー, 製造元</td></tr>
             <tr><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;">型番</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#999;">任意</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#666;">型番, 品番, 型式, 規格</td></tr>
             <tr><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;">数量</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#999;">任意</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#666;">数量, 個数</td></tr>
@@ -769,7 +769,7 @@
     var FIELDS=[
       {key:'itemId',label:'商品No.（上書き時必須）',req:false,p:['商品No','商品ナンバー','商品番号','商品no','itemId','item_id','品番','No','NO','no']},
       {key:'name',label:'商品名 必須',req:true,p:['商品名','品名','名称','item','name','品目','product','摘要','内容','明細']},
-      {key:'assignedPartnerName',label:'担当業者 必須',req:true,p:['担当業者','業者','業者名','取引先','外注先','販売会社','partner','vendor','supplier']},
+      {key:'assignedPartnerName',label:'担当業者（任意・自動判定）',req:false,p:['担当業者','業者','業者名','取引先','外注先','販売会社','partner','vendor','supplier']},
       {key:'qty',label:'数量',req:false,p:['数量','個数','qty','quantity','入数','本数','数']},
       {key:'unitPrice',label:'単価',req:false,p:['単価','定価','unit','price','unitprice']},
       {key:'amount',label:'金額',req:false,p:['金額','合計','amount','total','小計','税込','税抜']},
@@ -2208,9 +2208,8 @@
       var map=getMap();
       if(map.name===undefined){alert('「商品名」列が必要です。①列の割当で商品名を選んでください。');showPanel('colMap');return;}
 
-      //  警告（担当業者が無い場合）
+      //  警告（商品名は必須）
       var missingReq=[];
-      if(map.assignedPartnerName===undefined)missingReq.push('担当業者');
       if(missingReq.length>0){
         var ok=confirm('以下の項目が未設定です:\n・'+missingReq.join('\n・')+'\n\n担当業者が未設定の商品は通報時に自動割当できません。\nこのまま取り込みますか？');
         if(!ok)return;
@@ -2278,6 +2277,26 @@
               return (p.name&&p.name===partnerName)||(p.companyName&&p.companyName===partnerName);
             });
             if(matched)partnerId=matched.id;
+          }
+
+          // 担当業者が空の場合: カテゴリ＋会社コードで契約テーブルから自動判定
+          var itemCategory=map.category!==undefined?String(row[map.category]||'').trim():'';
+          if(!partnerId && itemCategory){
+            var companyCode=currentUser.companyCode||'';
+            var contracts=[];
+            try{contracts=JSON.parse(localStorage.getItem('onetouch.contracts')||'[]');}catch(e){}
+            try{var cl2=JSON.parse(sessionStorage.getItem('onetouch.contracts')||'[]');cl2.forEach(function(c){if(!contracts.find(function(x){return x.id===c.id;}))contracts.push(c);});}catch(e){}
+            var partners2=[];
+            try{partners2=JSON.parse(localStorage.getItem('partners')||'[]');}catch(e){}
+            try{var pl2=JSON.parse(sessionStorage.getItem('partners')||'[]');pl2.forEach(function(p){if(!partners2.find(function(x){return x.id===p.id;}))partners2.push(p);});}catch(e){}
+            var matchedContract=contracts.find(function(c){
+              return c.status==='active'&&(!companyCode||c.companyCode===companyCode)&&(c.categories||[]).indexOf(itemCategory)>=0;
+            });
+            if(matchedContract){
+              partnerId=matchedContract.partnerId;
+              var mp=partners2.find(function(p){return p.id===matchedContract.partnerId||p.partnerCode===matchedContract.partnerId;});
+              partnerName=mp?mp.name:matchedContract.partnerId;
+            }
           }
 
           // 商品ナンバー（Excelに記載があれば使用）
