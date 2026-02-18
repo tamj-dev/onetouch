@@ -53,12 +53,10 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/categories', require('./routes/categories'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/items', require('./routes/items'));
-
-// Phase 2 以降で追加
-// app.use('/api/offices', require('./routes/offices'));
-// app.use('/api/partners', require('./routes/partners'));
-// app.use('/api/contracts', require('./routes/contracts'));
-// app.use('/api/accounts', require('./routes/accounts'));
+app.use('/api/offices', require('./routes/offices'));
+app.use('/api/partners', require('./routes/partners'));
+app.use('/api/contracts', require('./routes/contracts'));
+app.use('/api/accounts', require('./routes/accounts'));
 
 // ========== 静的ファイル（フロントエンド）==========
 // public/ に現在のHTML/JS/CSSを配置
