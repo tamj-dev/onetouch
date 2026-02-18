@@ -213,7 +213,8 @@ window.DEMO_PARTNERS = [
         categories: ['居室・生活', '厨房・食事', '介護・医療'],
         status: 'active',
         contactName: '山田 太郎', loginId: 'pn001-yamada', password: 'demo',
-        contacts: [ loginId: 'pn001-yamada', password: 'demo', phone: '090-1234-5678', isMain: true },
+        contacts: [
+            { name: '山田 太郎', loginId: 'pn001-yamada', password: 'demo', phone: '090-1234-5678', isMain: true },
             { name: '高橋 次郎', loginId: 'pn001-takahashi', password: 'demo', phone: '090-8765-4321', isMain: false }
         ]
     },
