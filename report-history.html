@@ -761,6 +761,8 @@
             if (companyCode) {
                 offices = offices.filter(o => o.companyCode === companyCode);
             }
+            // 本社は通報対象外なので除外
+            offices = offices.filter(o => o.code.indexOf('-H') === -1);
             
             let optionsHTML = '<option value="">-- 事業所を選択 --</option>';
             optionsHTML += '<option value="all">全事業所</option>';
@@ -787,6 +789,8 @@
             if (companyCode) {
                 offices = offices.filter(o => o.companyCode === companyCode);
             }
+            // 本社は通報対象外なので除外
+            offices = offices.filter(o => o.code.indexOf('-H') === -1);
 
             let optionsHTML = '<option value="all_company">全事業所</option>';
             offices.forEach(office => {

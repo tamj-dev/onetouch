@@ -813,15 +813,20 @@
         </div>
 
         <div class="filters">
+            <span class="filter-label" id="officeFilterLabel" style="display:none;">事業所:</span>
+            <select class="filter-select" id="officeFilter" onchange="applyFilters()" style="display:none;">
+                <option value="">全て</option>
+            </select>
+
             <span class="filter-label" id="partnerFilterLabel">担当業者:</span>
             <select class="filter-select" id="partnerFilter" onchange="applyFilters()">
                 <option value="">全て</option>
             </select>
             
             <div style="margin-left: auto; display: flex; gap: 8px;">
-                <button class="btn btn-secondary" onclick="openImport()">インポート</button>
+                <button class="btn btn-secondary" id="btnImport" onclick="openImport()">インポート</button>
                 <button class="btn btn-secondary" onclick="exportItems()">エクスポート</button>
-                <button class="btn btn-primary" onclick="openCreateModal()">新規登録</button>
+                <button class="btn btn-primary" id="btnCreate" onclick="openCreateModal()">新規登録</button>
             </div>
         </div>
     </div>
@@ -1007,6 +1012,28 @@
             await loadItems();
             buildCategoryOptions();
             initOfficeSelect();
+
+            // 本社管理者: インポート/新規登録を非表示、事業所フィルタを表示
+            if (currentUser.role === 'company_admin') {
+                var btnImport = document.getElementById('btnImport');
+                var btnCreate = document.getElementById('btnCreate');
+                if (btnImport) btnImport.style.display = 'none';
+                if (btnCreate) btnCreate.style.display = 'none';
+
+                // 事業所フィルタを表示＆選択肢生成
+                var ofLabel = document.getElementById('officeFilterLabel');
+                var ofSelect = document.getElementById('officeFilter');
+                if (ofLabel) ofLabel.style.display = '';
+                if (ofSelect) {
+                    ofSelect.style.display = '';
+                    var offices = [];
+                    try { offices = JSON.parse(localStorage.getItem('offices') || '[]'); } catch(e) {}
+                    offices = offices.filter(function(o) { return o.companyCode === currentUser.companyCode && o.code.indexOf('-H') === -1; });
+                    ofSelect.innerHTML = '<option value="">全事業所</option>' + offices.map(function(o) {
+                        return '<option value="' + o.code + '">' + o.name + '</option>';
+                    }).join('');
+                }
+            }
         }
 
         // ユーザー情報表示
@@ -1369,6 +1396,8 @@
         function applyFilters() {
             const searchQuery = normalizeSearch(document.getElementById('searchInput').value);
             const partnerFilter = document.getElementById('partnerFilter').value;
+            const officeFilterEl = document.getElementById('officeFilter');
+            const officeFilter = officeFilterEl ? officeFilterEl.value : '';
 
             filteredItems = allItems.filter(item => {
                 // 業者ログインの場合: 自社が担当している商品のみ表示
@@ -1389,10 +1418,13 @@
                     normalizeSearch(item.floor).includes(searchQuery) ||
                     normalizeSearch(item.location).includes(searchQuery);
 
+                // 事業所フィルタ
+                const matchOffice = !officeFilter || item.officeCode === officeFilter;
+
                 // 担当業者
                 const matchPartner = !partnerFilter || item.assignedPartnerName === partnerFilter;
 
-                return matchSearch && matchPartner;
+                return matchSearch && matchOffice && matchPartner;
             });
 
             // 検索・フィルタ時はページを1に戻す
@@ -1415,6 +1447,8 @@
         function clearSearch() {
             document.getElementById('searchInput').value = '';
             document.getElementById('partnerFilter').value = '';
+            var ofSelect = document.getElementById('officeFilter');
+            if (ofSelect) ofSelect.value = '';
             
             document.getElementById('resultsSection').style.display = 'none';
             document.getElementById('searchGuide').style.display = 'block';

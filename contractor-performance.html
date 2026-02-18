@@ -50,6 +50,7 @@
         .empty-state { text-align:center; padding:60px 20px; color:#999; }
         .empty-state .icon { font-size:48px; margin-bottom:12px; }
     </style>
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
     <div id="unified-header-mount"></div>
@@ -168,8 +169,8 @@
         var filtered = getFilteredReports();
 
         // サマリー
-        var completed = filtered.filter(function(r) { return r.status === '完了'; });
-        var rejected = filtered.filter(function(r) { return r.status === '対応不可'; });
+        var completed = filtered.filter(function(r) { var s = r.contractorStatus || r.status || ''; return s === '完了' || s === 'completed'; });
+        var rejected = filtered.filter(function(r) { var s = r.contractorStatus || r.status || ''; return s === '対応不可' || s === 'rejected'; });
         var total = completed.length + rejected.length;
 
         document.getElementById('totalCompleted').innerHTML = completed.length + '<span class="unit">件</span>';
@@ -259,7 +260,8 @@
 
         // 完了・対応不可のみ、新しい順
         var history = reports.filter(function(r) {
-            return r.status === '完了' || r.status === '対応不可';
+            var s = r.contractorStatus || r.status || '';
+            return s === '完了' || s === '対応不可' || s === 'completed' || s === 'rejected';
         }).sort(function(a, b) {
             return new Date(b.completedAt || b.timestamp) - new Date(a.completedAt || a.timestamp);
         });
@@ -274,8 +276,9 @@
             var dateStr = isNaN(date.getTime()) ? '-' :
                 date.getFullYear() + '/' + String(date.getMonth()+1).padStart(2,'0') + '/' + String(date.getDate()).padStart(2,'0');
 
-            var statusClass = r.status === '完了' ? 'completed' : 'rejected';
-            var statusLabel = r.status;
+            var rawStatus = r.contractorStatus || r.status || '';
+            var statusClass = (rawStatus === '完了' || rawStatus === 'completed') ? 'completed' : 'rejected';
+            var statusLabel = (rawStatus === 'completed') ? '完了' : (rawStatus === 'rejected') ? '対応不可' : rawStatus;
 
             // 対応時間計算
             var timeStr = '-';

@@ -387,13 +387,14 @@ const UnifiedHeader = {
 
         // DEMOモード切替メニュー
         var demoSwitchMenu = '';
-        const isDemoMode = user && (user.isDemoMode || user.companyCode === 'TAMJ' || user.companyCode === 'PN001');
+        const isDemoMode = user && (user.isDemoMode || user.companyCode === 'TAMJ' || user.companyCode === 'JMAT' || user.companyCode === 'SYSTEM' || user.companyCode === 'PN001');
         if (isDemoMode) {
             const currentRole = user.role;
             const roles = [
                 { key: 'staff', label: 'スタッフで表示', color: '#4CAF50', active: currentRole === 'staff' },
                 { key: 'contractor', label: '業者で表示', color: '#2196F3', active: currentRole === 'contractor' },
-                { key: 'office_admin', label: '事業所管理者で表示', color: '#FF9800', active: currentRole === 'office_admin' }
+                { key: 'office_admin', label: '事業所管理者で表示', color: '#FF9800', active: currentRole === 'office_admin' },
+                { key: 'company_admin', label: '本社管理者で表示', color: '#9C27B0', active: currentRole === 'company_admin' }
             ];
             const roleItems = roles.map(r => `
                 <a href="#" class="uh-menu-item${r.active ? ' uh-demo-active' : ''}" onclick="UnifiedHeader._demoSwitch('${r.key}'); return false;">
@@ -906,33 +907,29 @@ const UnifiedHeader = {
     },
 
     // ========== DEMO切替 ==========
-    _demoSwitch(role) {
+    _demoSwitch(roleOrId) {
         // ドロップダウンを閉じる
         var dd = document.getElementById('uhDropdown');
         if (dd) dd.classList.remove('show');
 
-        var user = window.DEMO_ACCOUNTS && window.DEMO_ACCOUNTS[role];
+        // IDで直接検索、なければロール名でマッピング
+        var user = window.DEMO_ACCOUNTS && window.DEMO_ACCOUNTS[roleOrId];
+        if (!user && window.DEMO_ACCOUNTS) {
+            var roleMap = {
+                'staff': 'tamj-j1-staff1',
+                'office_admin': 'tamj-j1-admin',
+                'company_admin': 'TAMJ-H001',
+                'system_admin': 'admin',
+                'contractor': 'pn001-yamada'
+            };
+            var mappedId = roleMap[roleOrId];
+            if (mappedId) user = window.DEMO_ACCOUNTS[mappedId];
+        }
         if (!user) return;
 
-        // 3. DEMOデータを確実に保持しつつセッション切替
-        const keepData = {};
-        for (let i = 0; i < sessionStorage.length; i++) {
-            const key = sessionStorage.key(i);
-            if (key && (key.startsWith('demo.') || key.startsWith('onetouch.'))) {
-                keepData[key] = sessionStorage.getItem(key);
-            }
-        }
-        // partnersデータも保持（通報→業者画面で参照するため）
-        var partnersData = localStorage.getItem('partners');
-
-        // currentUser/currentContractorのみクリア
+        // セッション切替
         sessionStorage.removeItem('currentUser');
         sessionStorage.removeItem('currentContractor');
-
-        // 保持データを復元
-        Object.keys(keepData).forEach(function(key) {
-            sessionStorage.setItem(key, keepData[key]);
-        });
 
         // 新しいユーザー情報をセット
         const userInfo = {
@@ -949,7 +946,7 @@ const UnifiedHeader = {
         localStorage.setItem('ONE_userName', user.name);
 
         // 業者の場合はcontractor情報も保存
-        if (role === 'contractor') {
+        if (user.role === 'contractor') {
             sessionStorage.setItem('currentContractor', JSON.stringify({
                 id: user.partnerId, partnerId: user.partnerId,
                 partnerCode: user.partnerCode, companyName: user.companyName,
@@ -958,7 +955,9 @@ const UnifiedHeader = {
                 role: 'contractor'
             }));
             window.location.href = 'contractor-dashboard.html';
-        } else if (role === 'office_admin') {
+        } else if (user.role === 'office_admin') {
+            window.location.href = 'master-top.html';
+        } else if (user.role === 'company_admin') {
             window.location.href = 'master-top.html';
         } else {
             window.location.href = 'report.html';
