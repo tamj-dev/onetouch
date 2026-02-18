@@ -289,7 +289,7 @@
             } else if (user.role === 'company_admin') {
                 window.location.href = 'master-top.html';
             } else if (user.role === 'system_admin') {
-                window.location.href = 'system-admin-dashboard.html';
+                window.location.href = 'system-admin.html';
             } else {
                 window.location.href = 'report.html';
             }
@@ -525,7 +525,7 @@
                 }
                 
                 logEvent('login', { userId: 'admin', role: 'system_admin' });
-                window.location.href = 'system-admin-dashboard.html';
+                window.location.href = 'system-admin.html';
                 return;
             }
             
