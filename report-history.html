@@ -104,6 +104,87 @@
             margin-right: 6px;
             vertical-align: middle;
         }
+
+        /* 既読チェックボックス操作バー */
+        .read-action-bar {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .read-action-bar label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e3a5f;
+            cursor: pointer;
+            white-space: nowrap;
+            user-select: none;
+        }
+        .read-action-bar label input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #2563eb;
+            cursor: pointer;
+        }
+        .read-action-bar .read-count {
+            font-size: 12px;
+            color: #64748b;
+            margin-left: auto;
+        }
+        .btn-mark-read {
+            background: #1e3a5f;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 7px 16px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: background 0.15s;
+        }
+        .btn-mark-read:hover {
+            background: #15304f;
+        }
+
+        /* 行チェックボックス */
+        .report-table td.td-check,
+        .report-table th.th-check {
+            width: 36px;
+            text-align: center;
+            padding: 10px 4px;
+        }
+        .report-table td.td-check input[type="checkbox"],
+        .report-card-check input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #2563eb;
+            cursor: pointer;
+        }
+
+        /* スマホカード内チェックボックス */
+        .report-card-check {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            margin-right: 10px;
+        }
+        .report-card-with-check {
+            display: flex;
+            align-items: flex-start;
+        }
+        .report-card-with-check .report-card-body {
+            flex: 1;
+            min-width: 0;
+        }
         .td-desc {
             max-width: 200px;
             overflow: hidden;
@@ -356,6 +437,7 @@
             <table class="report-table">
                 <thead>
                     <tr>
+                        <th class="th-check"></th>
                         <th>日時</th>
                         <th>内容</th>
                         <th>カテゴリ</th>
@@ -848,11 +930,60 @@
             filterReports();
         }
 
-        // 確認済みにする（新着バナーを消す）
-        function markReportsViewed() {
+        // ===== 既読管理（個別ID方式） =====
+        function getReadReportIds() {
             const userId = currentUser.userId || currentUser.id || '';
-            localStorage.setItem('ONE_report_lastViewed_' + userId, new Date().toISOString());
-            filterReports(); // 再描画
+            try {
+                return JSON.parse(localStorage.getItem('ONE_readReports_' + userId) || '[]');
+            } catch(e) { return []; }
+        }
+        function saveReadReportIds(ids) {
+            const userId = currentUser.userId || currentUser.id || '';
+            localStorage.setItem('ONE_readReports_' + userId, JSON.stringify(ids));
+        }
+        function isReportRead(reportId) {
+            return getReadReportIds().indexOf(reportId) >= 0;
+        }
+
+        // チェックされた通報を既読にする
+        function markCheckedAsRead() {
+            var checkboxes = document.querySelectorAll('.report-read-check:checked');
+            if (checkboxes.length === 0) {
+                alert('既読にする通報を選択してください');
+                return;
+            }
+            var readIds = getReadReportIds();
+            checkboxes.forEach(function(cb) {
+                var rid = cb.getAttribute('data-report-id');
+                if (rid && readIds.indexOf(rid) < 0) {
+                    readIds.push(rid);
+                }
+            });
+            saveReadReportIds(readIds);
+            renderReports(allReports);
+        }
+
+        // 現ページ全選択/解除
+        function toggleSelectAll(masterCb) {
+            var checkboxes = document.querySelectorAll('.report-read-check');
+            checkboxes.forEach(function(cb) { cb.checked = masterCb.checked; });
+            updateReadCount();
+        }
+
+        // チェック件数表示更新
+        function updateReadCount() {
+            var checked = document.querySelectorAll('.report-read-check:checked').length;
+            var total = document.querySelectorAll('.report-read-check').length;
+            var countEl = document.getElementById('readCheckCount');
+            if (countEl) {
+                countEl.textContent = checked > 0 ? checked + '件選択中' : '';
+            }
+            // マスターチェックボックスの状態同期
+            var masterCb = document.getElementById('selectAllCheck');
+            if (masterCb) {
+                masterCb.checked = total > 0 && checked === total;
+                masterCb.indeterminate = checked > 0 && checked < total;
+            }
         }
 
         function updateStatusCounts(reports) {
@@ -986,30 +1117,29 @@
             // フィルタリング後の通報をグローバル変数に保存
             allReports = reports;
 
-            // 新着判定
-            const userId = currentUser.userId || currentUser.id || '';
-            const lastViewed = localStorage.getItem('ONE_report_lastViewed_' + userId) || '1970-01-01';
-            const newCount = reports.filter(function(r) { return r.timestamp > lastViewed; }).length;
+            // 新着判定（個別ID方式）
+            const readIds = getReadReportIds();
+            const newCount = reports.filter(function(r) {
+                var rid = r.id || r.timestamp;
+                return readIds.indexOf(rid) < 0 && readIds.indexOf(String(rid)) < 0;
+            }).length;
 
-            // 新着バナー表示
-            var banner = document.getElementById('newReportBanner');
-            if (!banner) {
-                banner = document.createElement('div');
-                banner.id = 'newReportBanner';
-                banner.style.cssText = 'background:#e8f0fe;border:1px solid #93b4f5;border-radius:8px;padding:12px 20px;margin-bottom:16px;display:none;align-items:center;justify-content:space-between;';
+            // 既読操作バー表示
+            var actionBar = document.getElementById('readActionBar');
+            if (!actionBar) {
+                actionBar = document.createElement('div');
+                actionBar.id = 'readActionBar';
+                actionBar.className = 'read-action-bar';
                 var tableContainer = document.querySelector('.table-container');
-                tableContainer.parentNode.insertBefore(banner, tableContainer);
+                tableContainer.parentNode.insertBefore(actionBar, tableContainer);
             }
-            if (newCount > 0 && banner) {
-                banner.style.display = 'flex';
-                banner.innerHTML = '<span style="font-weight:600;color:#1e3a5f;">新着 ' + newCount + ' 件の通報があります</span>'
-                    + '<button onclick="markReportsViewed()" style="background:#1e3a5f;color:#fff;border:none;border-radius:6px;padding:6px 16px;cursor:pointer;font-size:13px;">確認済みにする</button>';
-            } else if (banner) {
-                banner.style.display = 'none';
-            }
+            actionBar.innerHTML = '<label><input type="checkbox" id="selectAllCheck" onchange="toggleSelectAll(this)"> すべて✓</label>'
+                + '<button class="btn-mark-read" onclick="markCheckedAsRead()">対象を既読済にする</button>'
+                + '<span class="read-count" id="readCheckCount"></span>'
+                + (newCount > 0 ? '<span style="font-size:12px;color:#3b82f6;font-weight:600;margin-left:auto;">未読 ' + newCount + ' 件</span>' : '');
             
             if (reports.length === 0) {
-                reportTableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:60px 20px;color:#94a3b8;">通報履歴がありません</td></tr>';
+                reportTableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:60px 20px;color:#94a3b8;">通報履歴がありません</td></tr>';
                 reportCards.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#94a3b8;"><div style="font-size:48px;margin-bottom:16px;"></div><div>通報履歴がありません</div></div>';
                 renderPagination('reportPagination', 0, 0, 0, function(){});
                 return;
@@ -1059,13 +1189,15 @@
                     responseTime = diffH > 0 ? diffH + '時間' + diffM + '分' : diffM + '分';
                 }
                 
-                const isNew = report.timestamp > lastViewed;
+                const reportId = report.id || report.timestamp;
+                const isNew = readIds.indexOf(reportId) < 0 && readIds.indexOf(String(reportId)) < 0;
                 const description = (report.description || report.category || '通報');
                 const descShort = description.length > 25 ? description.substring(0, 25) + '…' : description;
                 
-                return '<tr class="' + (isNew ? 'is-new' : '') + '" onclick="showDetail(' + globalIndex + ')">'
-                    + '<td style="white-space:nowrap;font-size:12px;color:#64748b;">' + dateStr + '<br>' + timeStr + '</td>'
-                    + '<td class="td-desc">' + (isNew ? '<span class="new-dot"></span>' : '') + descShort + '</td>'
+                return '<tr class="' + (isNew ? 'is-new' : '') + '">'
+                    + '<td class="td-check"><input type="checkbox" class="report-read-check" data-report-id="' + reportId + '" onchange="updateReadCount()"' + (isNew ? '' : ' checked disabled') + '></td>'
+                    + '<td style="white-space:nowrap;font-size:12px;color:#64748b;cursor:pointer;" onclick="showDetail(' + globalIndex + ')">' + dateStr + '<br>' + timeStr + '</td>'
+                    + '<td class="td-desc" onclick="showDetail(' + globalIndex + ')" style="cursor:pointer;">' + (isNew ? '<span class="new-dot"></span>' : '') + descShort + '</td>'
                     + '<td>' + category + '</td>'
                     + '<td>' + officeName + '</td>'
                     + '<td>' + (report.reporter || '-') + '</td>'
@@ -1096,22 +1228,30 @@
                                               contractorStatus === '完了' ? 'status-completed' :
                                               contractorStatus === '対応不可' ? 'status-unavailable' : '';
                 
-                const isNew = report.timestamp > lastViewed;
+                const reportId = report.id || report.timestamp;
+                const isNew = readIds.indexOf(reportId) < 0 && readIds.indexOf(String(reportId)) < 0;
                 const description = (report.description || report.category || '通報');
                 const descShort = description.length > 20 ? description.substring(0, 20) + '...' : description;
                 
                 return `
-                    <div class="report-card${isNew ? ' is-new' : ''}" onclick="showDetail(${globalIndex})">
-                        <div class="report-card-header">
-                            <div class="report-card-title">${isNew ? '<span class="new-dot"></span>' : ''}${descShort}</div>
-                            <span class="status-badge ${contractorStatusClass}">${contractorStatus}</span>
+                    <div class="report-card${isNew ? ' is-new' : ''}">
+                        <div class="report-card-with-check">
+                            <div class="report-card-check">
+                                <input type="checkbox" class="report-read-check" data-report-id="${reportId}" onchange="updateReadCount()"${isNew ? '' : ' checked disabled'}>
+                            </div>
+                            <div class="report-card-body" onclick="showDetail(${globalIndex})">
+                                <div class="report-card-header">
+                                    <div class="report-card-title">${isNew ? '<span class="new-dot"></span>' : ''}${descShort}</div>
+                                    <span class="status-badge ${contractorStatusClass}">${contractorStatus}</span>
+                                </div>
+                                <div class="report-card-date">${dateStr}　${report.reporter || '-'}</div>
+                                <div class="report-card-info">
+                                    <span>${officeName}</span>
+                                    <span>${category}</span>
+                                </div>
+                                ${assignedPartnerName ? `<div class="report-card-partner">担当: ${assignedPartnerName}</div>` : ''}
+                            </div>
                         </div>
-                        <div class="report-card-date">${dateStr}　${report.reporter || '-'}</div>
-                        <div class="report-card-info">
-                            <span>${officeName}</span>
-                            <span>${category}</span>
-                        </div>
-                        ${assignedPartnerName ? `<div class="report-card-partner">担当: ${assignedPartnerName}</div>` : ''}
                     </div>
                 `;
             }).join('');

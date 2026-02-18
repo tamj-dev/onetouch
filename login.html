@@ -228,9 +228,25 @@
     <script src="demo-mode.js"></script>
     <script>
         // DEMOワンタップログイン
-        function demoLogin(role) {
-            var user = window.DEMO_ACCOUNTS && window.DEMO_ACCOUNTS[role];
+        function demoLogin(roleOrId) {
+            // まずIDで直接検索、なければロール名で最初の1件を取得
+            var user = window.DEMO_ACCOUNTS && window.DEMO_ACCOUNTS[roleOrId];
+            if (!user && window.DEMO_ACCOUNTS) {
+                // ロール名の場合: TAMJの代表アカウントを返す
+                var roleMap = {
+                    'staff': 'tamj-j1-staff1',
+                    'office_admin': 'tamj-j1-admin',
+                    'company_admin': 'TAMJ-H001',
+                    'system_admin': 'admin',
+                    'contractor': 'pn001-yamada'
+                };
+                var mappedId = roleMap[roleOrId];
+                if (mappedId) user = window.DEMO_ACCOUNTS[mappedId];
+            }
             if (!user) return;
+
+            // 初回のみマスタデータをlocalStorageに投入
+            if (typeof initDemoData === 'function') { initDemoData(); }
 
             // セッション保存
             const userInfo = {
@@ -246,45 +262,13 @@
             localStorage.setItem('ONE_userId', user.id);
             localStorage.setItem('ONE_userName', user.name);
 
-            // DEMO事業所にcategoryPartnersを設定
-            if (typeof DEMO_CATEGORY_PARTNERS !== 'undefined') {
-                var offices = [];
-                try { offices = JSON.parse(localStorage.getItem('offices') || '[]'); } catch(e) {}
-                var demoOffice = offices.find(function(o) { return o.code === 'TAMJ-J0001'; });
-                if (demoOffice) {
-                    demoOffice.categoryPartners = DEMO_CATEGORY_PARTNERS;
-                } else {
-                    offices.push({
-                        companyCode: 'TAMJ', companyName: 'タムジ株式会社',
-                        code: 'TAMJ-J0001', name: '東京事業所',
-                        serviceType: '介護老人福祉施設', status: 'active',
-                        postalCode: '', prefecture: '東京都', address: '',
-                        phone: '', fax: '', email: '', building: '', notes: '',
-                        categoryPartners: DEMO_CATEGORY_PARTNERS,
-                        createdAt: new Date().toLocaleDateString('ja-JP')
-                    });
-                }
-                localStorage.setItem('offices', JSON.stringify(offices));
-                sessionStorage.setItem('offices', JSON.stringify(offices));
-            }
-
-            // DEMO契約データを保存
-            if (typeof DEMO_CONTRACTS !== 'undefined') {
-                sessionStorage.setItem('onetouch.contracts', JSON.stringify(DEMO_CONTRACTS));
-                localStorage.setItem('onetouch.contracts', JSON.stringify(DEMO_CONTRACTS));
-            }
-
-            // DEMOアカウントデータをsessionStorageに保存
-            if (typeof DEMO_ACCOUNTS !== 'undefined') {
-                var demoAccountList = Object.values(DEMO_ACCOUNTS).filter(function(a) { return a.role !== 'contractor'; }).map(function(a, i) {
-                    return { id: a.id, name: a.name, role: a.role, companyCode: a.companyCode, companyName: a.companyName, officeCode: a.officeCode, officeName: a.officeName, status: 'active', password: a.password };
-                });
-                sessionStorage.setItem('accounts', JSON.stringify(demoAccountList));
+            // DEMOユーザー（システム管理者以外）→ スナップショット保存（ログアウト時に復元用）
+            if (user.role !== 'system_admin' && typeof saveDemoSnapshot === 'function') {
+                saveDemoSnapshot();
             }
 
             // 業者の場合はcontractor情報も保存
-            if (role === 'contractor') {
-                // 契約テーブルから担当会社を取得
+            if (user.role === 'contractor') {
                 var partnerCompanies = [];
                 if (typeof getPartnerCompanies === 'function') {
                     partnerCompanies = getPartnerCompanies(user.partnerId || user.partnerCode);
@@ -300,10 +284,12 @@
                     role: 'contractor'
                 }));
                 window.location.href = 'contractor-dashboard.html';
-            } else if (role === 'office_admin') {
+            } else if (user.role === 'office_admin') {
                 window.location.href = 'master-top.html';
-            } else if (role === 'company_admin') {
+            } else if (user.role === 'company_admin') {
                 window.location.href = 'master-top.html';
+            } else if (user.role === 'system_admin') {
+                window.location.href = 'system-admin-dashboard.html';
             } else {
                 window.location.href = 'report.html';
             }
@@ -513,40 +499,33 @@
             if (loginInput === 'admin' && password === 'admin') {
                 const adminUser = {
                     id: 'admin',
-                    userId: 'admin', // 追加
+                    userId: 'admin',
                     password: 'admin',
                     name: 'システム管理者',
-                    userName: 'システム管理者', // 追加
+                    userName: 'システム管理者',
                     role: 'system_admin',
                     scope: 'system',
-                    companyCode: null,
-                    companyName: '',
+                    companyCode: 'SYSTEM',
+                    companyName: 'ワンタッチ管理運営',
                     officeCode: '',
                     officeName: '',
-                    status: 'active'
+                    status: 'active',
+                    isDemoMode: true
                 };
                 
-                // セッションに保存
                 sessionStorage.setItem('currentUser', JSON.stringify(adminUser));
-                
-                // DEMOデータを投入（業者・契約・会社）
-                if (typeof DEMO_PARTNERS !== 'undefined') {
-                    sessionStorage.setItem('partners', JSON.stringify(DEMO_PARTNERS));
-                    localStorage.setItem('partners', JSON.stringify(DEMO_PARTNERS));
+                localStorage.setItem('currentAccount', JSON.stringify(adminUser));
+                localStorage.setItem('ONE_loggedIn', '1');
+                localStorage.setItem('ONE_userId', 'admin');
+                localStorage.setItem('ONE_userName', 'システム管理者');
+
+                // 初回のみデモデータ投入（既存変更は保持）
+                if (typeof initDemoData === 'function') {
+                    initDemoData();
                 }
-                if (typeof DEMO_CONTRACTS !== 'undefined') {
-                    sessionStorage.setItem('onetouch.contracts', JSON.stringify(DEMO_CONTRACTS));
-                    localStorage.setItem('onetouch.contracts', JSON.stringify(DEMO_CONTRACTS));
-                }
-                var demoCompanies = [{ companyCode: 'TAMJ', companyName: 'タムジ株式会社', representative: '田村 次郎', phone: '03-1234-5678', address: '東京都千代田区', status: 'active' }];
-                sessionStorage.setItem('companies', JSON.stringify(demoCompanies));
-                localStorage.setItem('companies', JSON.stringify(demoCompanies));
                 
-                // 監査ログ
                 logEvent('login', { userId: 'admin', role: 'system_admin' });
-                
-                // システム管理画面へ
-                window.location.href = 'system-admin.html';
+                window.location.href = 'system-admin-dashboard.html';
                 return;
             }
             
@@ -567,45 +546,20 @@
                 return;
             }
             
-            // デモアカウント（TAMJ - タムジ株式会社）
-            const demoAccounts = [
-                {
-                    companyCode: 'TAMJ',
-                    id: 'TAMJ-H001',
-                    password: 'demo',
-                    name: 'デモ本社管理者',
-                    role: 'company_admin',
-                    scope: 'company',
-                    companyName: 'タムジ株式会社',
-                    officeCode: 'TAMJ-H001',
-                    officeName: '本社',
-                    status: 'active'
-                },
-                {
-                    companyCode: 'TAMJ',
-                    id: 'demo-office',
-                    password: 'demo',
-                    name: 'デモ事業所管理者',
-                    role: 'office_admin',
-                    scope: 'office',
-                    companyName: 'タムジ株式会社',
-                    officeCode: 'TAMJ-J0001',
-                    officeName: '東京事業所',
-                    status: 'active'
-                },
-                {
-                    companyCode: 'TAMJ',
-                    id: 'demo-staff',
-                    password: 'demo',
-                    name: 'デモスタッフ',
-                    role: 'staff',
-                    scope: 'office',
-                    companyName: 'タムジ株式会社',
-                    officeCode: 'TAMJ-J0001',
-                    officeName: '東京事業所',
-                    status: 'active'
-                }
-            ];
+            // デモアカウント（DEMO_ACCOUNTSから動的生成）
+            const demoAccounts = [];
+            if (typeof DEMO_ACCOUNTS !== 'undefined') {
+                Object.keys(DEMO_ACCOUNTS).forEach(function(key) {
+                    var a = DEMO_ACCOUNTS[key];
+                    if (a.role !== 'contractor') {
+                        demoAccounts.push({
+                            companyCode: a.companyCode, id: a.id, password: a.password,
+                            name: a.name, role: a.role, scope: a.scope || (a.role === 'company_admin' ? 'company' : a.role === 'system_admin' ? 'system' : 'office'),
+                            companyName: a.companyName, officeCode: a.officeCode || '', officeName: a.officeName || '', status: 'active'
+                        });
+                    }
+                });
+            }
             
             // LocalStorageからアカウントデータを取得
             let accounts = [];
@@ -700,6 +654,11 @@
             }
             
             if (user) {
+                // 初回のみデモデータ投入
+                if (typeof initDemoData === 'function') { initDemoData(); }
+                // DEMOユーザー → スナップショット保存
+                if (user.role !== 'system_admin' && typeof saveDemoSnapshot === 'function') { saveDemoSnapshot(); }
+
                 // メンテナンスモードチェック（システム管理者以外はブロック）
                 if (localStorage.getItem('maintenanceMode') === 'true' && user.role !== 'system_admin') {
                     const maintenanceMsg = localStorage.getItem('maintenanceMessage') || '現在システムメンテナンス中です。しばらくお待ちください。';

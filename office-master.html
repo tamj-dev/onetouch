@@ -740,12 +740,20 @@
             return result;
         }
 
-        // 事業所コードを自動生成
+        // 事業所コードを自動生成（既存コードとの重複を回避）
         function generateOfficeCode() {
-            // 会社コード-J0001 形式（J = 事業所 Jigyosho）
             const companyCode = currentUser.companyCode || 'DEMO';
-            const code = companyCode + '-J' + String(officeCounter).padStart(4, '0');
-            officeCounter++;
+            // 既存の全事業所コードを取得
+            var allOff = JSON.parse(localStorage.getItem('offices') || '[]');
+            var existingCodes = allOff.map(function(o) { return o.code; });
+            // 重複しない番号を探す
+            var num = officeCounter;
+            var code;
+            do {
+                code = companyCode + '-J' + String(num).padStart(4, '0');
+                num++;
+            } while (existingCodes.indexOf(code) >= 0);
+            officeCounter = num;
             return code;
         }
 

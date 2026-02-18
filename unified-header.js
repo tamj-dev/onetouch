@@ -875,20 +875,14 @@ const UnifiedHeader = {
     logout() {
         if (confirm('ログアウトしますか？')) {
             this._logAudit('logout', {});
-            // DEMOモードのデータを保持（ブラウザを閉じた時だけ消える）
-            // demo.* キーとonetouch.* キー（通報データ等）を保持
-            const keepData = {};
-            for (let i = 0; i < sessionStorage.length; i++) {
-                const key = sessionStorage.key(i);
-                if (key && (key.startsWith('demo.') || key.startsWith('onetouch.'))) {
-                    keepData[key] = sessionStorage.getItem(key);
+            // DEMOユーザーの場合、localStorageをスナップショットから復元（変更をリセット）
+            try {
+                var cu = JSON.parse(sessionStorage.getItem('currentUser'));
+                if (cu && cu.isDemoMode && cu.role !== 'system_admin' && typeof restoreDemoSnapshot === 'function') {
+                    restoreDemoSnapshot();
                 }
-            }
+            } catch(e) {}
             sessionStorage.clear();
-            // 保持データを復元
-            Object.keys(keepData).forEach(key => {
-                sessionStorage.setItem(key, keepData[key]);
-            });
             // localStorageのログイン情報もクリア
             localStorage.removeItem('currentUser');
             localStorage.removeItem('currentAccount');
