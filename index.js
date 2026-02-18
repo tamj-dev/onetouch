@@ -57,6 +57,10 @@ app.use('/api/offices', require('./routes/offices'));
 app.use('/api/partners', require('./routes/partners'));
 app.use('/api/contracts', require('./routes/contracts'));
 app.use('/api/accounts', require('./routes/accounts'));
+app.use('/api/setups', require('./routes/setups'));
+app.use('/api/settings', require('./routes/settings'));
+app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/companies', require('./routes/companies'));
 
 // ========== 静的ファイル（フロントエンド）==========
 // public/ に現在のHTML/JS/CSSを配置
