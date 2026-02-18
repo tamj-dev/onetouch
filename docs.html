@@ -221,6 +221,7 @@
         .doc-search:focus { outline: none; border-color: #2563eb; }
         .highlight { background: #fef08a; padding: 1px 2px; border-radius: 2px; }
     </style>
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
     <div id="unified-header-mount"></div>
@@ -289,7 +290,7 @@
                     <div class="flow-arrow">→</div>
                     <div class="flow-item">完了</div>
                 </div>
-                <div class="doc-note">商品のカテゴリ（家電、水道など）と契約設定に基づいて、担当業者が自動で決まります。スタッフが業者を選ぶ必要はありません。</div>
+                <div class="doc-note">商品のカテゴリ（居室・生活、建物インフラなど）と契約設定に基づいて、担当業者が自動で決まります。スタッフが業者を選ぶ必要はありません。</div>
             </div>
 
             <div class="doc-card">
@@ -297,8 +298,8 @@
                 <p>「どの業者が、どの会社の、どのカテゴリを担当するか」を管理する仕組みです。</p>
                 <h3>例</h3>
                 <ul>
-                    <li>東京設備工業 × タムジ株式会社 × 家電・家具/什器・厨房/食器 → エアコンが壊れたら東京設備に通知</li>
-                    <li>関東水道サービス × タムジ株式会社 × 水道・浴室・ガス → トイレの水漏れなら関東水道に通知</li>
+                    <li>東京設備工業 × タムジ株式会社 × 居室・生活・居室・生活・厨房・食事 → エアコンが壊れたら東京設備に通知</li>
+                    <li>関東建物インフラサービス × タムジ株式会社 × 建物インフラ・浴室・ガス → トイレの水漏れなら関東建物インフラに通知</li>
                 </ul>
                 <div class="doc-note">契約は事業所単位でも設定できます。「全事業所」にすれば、その会社の全施設に適用されます。</div>
             </div>
@@ -649,15 +650,15 @@
                 <h2>カテゴリ体系</h2>
                 <p>現在のシステムで使用している固定カテゴリ（10種類）です。</p>
                 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">
-                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">家具/什器</span>
-                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">家電</span>
+                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">居室・生活</span>
+                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">居室・生活</span>
                     <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">インターネット</span>
-                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">厨房/食器</span>
+                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">厨房・食事</span>
                     <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">浴室</span>
-                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">介護医療用品</span>
-                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">水道</span>
+                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">介護・医療</span>
+                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">建物インフラ</span>
                     <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">ガス</span>
-                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">エレベーター/昇降機</span>
+                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">建物インフラ</span>
                     <span style="background:#f1f5f9;color:#64748b;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">その他</span>
                 </div>
             </div>

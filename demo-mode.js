@@ -202,7 +202,7 @@ window.DEMO_ACCOUNTS = {
         companyCode: 'PN001', id: 'pn001-yamada', password: 'demo',
         name: '山田 太郎', role: 'contractor',
         companyName: '東京設備工業株式会社', partnerId: 'PN001',
-        partnerCode: 'PN001', categories: ['家電', '浴室', 'インターネット'],
+        partnerCode: 'PN001', categories: ['居室・生活', '厨房・食事', '介護・医療'],
         assignedCompanies: ['TAMJ'], status: 'active', isDemoMode: true
     }
 };
@@ -210,17 +210,16 @@ window.DEMO_ACCOUNTS = {
 window.DEMO_PARTNERS = [
     {
         id: 'PN001', name: '東京設備工業株式会社', partnerCode: 'PN001',
-        categories: ['家電', '浴室', 'インターネット'],
+        categories: ['居室・生活', '厨房・食事', '介護・医療'],
         status: 'active',
         contactName: '山田 太郎', loginId: 'pn001-yamada', password: 'demo',
-        contacts: [
-            { name: '山田 太郎', loginId: 'pn001-yamada', password: 'demo', phone: '090-1234-5678', isMain: true },
+        contacts: [ loginId: 'pn001-yamada', password: 'demo', phone: '090-1234-5678', isMain: true },
             { name: '高橋 次郎', loginId: 'pn001-takahashi', password: 'demo', phone: '090-8765-4321', isMain: false }
         ]
     },
     {
         id: 'PN002', name: '関東水道サービス', partnerCode: 'PN002',
-        categories: ['水道', '浴室', 'ガス'],
+        categories: ['建物インフラ'],
         status: 'active',
         contactName: '佐藤 花子', loginId: 'p002-sato', password: 'demo',
         contacts: [
@@ -229,7 +228,7 @@ window.DEMO_PARTNERS = [
     },
     {
         id: 'PN003', name: '日本電気工事', partnerCode: 'PN003',
-        categories: ['インターネット', 'エレベーター/昇降機', '家電'],
+        categories: ['IT・安全'],
         status: 'active',
         contactName: '鈴木 一郎', loginId: 'p003-suzuki', password: 'demo',
         contacts: [
@@ -240,29 +239,24 @@ window.DEMO_PARTNERS = [
 
 // DEMOモードのカテゴリ別担当業者設定
 window.DEMO_CATEGORY_PARTNERS = {
-    '家具/什器': 'PN001',
-    '家電': 'PN001',
-    'インターネット': 'PN003',
-    '厨房/食器': 'PN001',
-    '浴室': 'PN002',
-    '介護医療用品': 'PN001',
-    '水道': 'PN002',
-    'ガス': 'PN002',
-    'エレベーター/昇降機': 'PN003',
+    '建物インフラ': 'PN002',
+    '居室・生活': 'PN001',
+    '介護・医療': 'PN001',
+    '厨房・食事': 'PN001',
+    'IT・安全': 'PN003',
     'その他': null
 };
 
 // 契約テーブル（DEMOデータ）
 window.DEMO_CONTRACTS = [
-    { id: 'CNT-001', partnerId: 'PN001', companyCode: 'TAMJ', officeCode: '', categories: ['家具/什器','家電','厨房/食器','介護医療用品'], status: 'active', createdAt: new Date().toISOString() },
-    { id: 'CNT-002', partnerId: 'PN002', companyCode: 'TAMJ', officeCode: '', categories: ['水道','浴室','ガス'], status: 'active', createdAt: new Date().toISOString() },
-    { id: 'CNT-003', partnerId: 'PN003', companyCode: 'TAMJ', officeCode: '', categories: ['インターネット','エレベーター/昇降機','家電'], status: 'active', createdAt: new Date().toISOString() }
+    { id: 'CNT-001', partnerId: 'PN001', companyCode: 'TAMJ', officeCode: '', categories: ['居室・生活','厨房・食事','介護・医療'], status: 'active', createdAt: new Date().toISOString() },
+    { id: 'CNT-002', partnerId: 'PN002', companyCode: 'TAMJ', officeCode: '', categories: ['建物インフラ'], status: 'active', createdAt: new Date().toISOString() },
+    { id: 'CNT-003', partnerId: 'PN003', companyCode: 'TAMJ', officeCode: '', categories: ['IT・安全'], status: 'active', createdAt: new Date().toISOString() }
 ];
 
 // カテゴリ一覧（全画面共通）
 window.SYSTEM_CATEGORIES = [
-    '家具/什器', '家電', 'インターネット', '厨房/食器',
-    '浴室', '介護医療用品', '水道', 'ガス', 'エレベーター/昇降機', 'その他'
+    '建物インフラ', '居室・生活', '介護・医療', '厨房・食事', 'IT・安全', 'その他'
 ];
 
 /**

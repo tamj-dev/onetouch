@@ -328,8 +328,8 @@
         backButton: currentUser && (currentUser.role === 'company_admin' || currentUser.role === 'office_admin' || currentUser.role === 'system_admin'),
     });
 
-    var labels={wholesale:'家具/什器',building:'家電',welfare:'介護医療用品',emergency:'緊急',report:'設備トラブル'};
-    var typeLabels={wholesale:'家具/什器',building:'家電',welfare:'介護医療用品',emergency:'緊急',report:'設備トラブル'};
+    var labels={wholesale:'居室・生活',building:'居室・生活',welfare:'介護・医療',emergency:'緊急',report:'設備トラブル'};
+    var typeLabels={wholesale:'居室・生活',building:'居室・生活',welfare:'介護・医療',emergency:'緊急',report:'設備トラブル'};
 
     // 文字数カウンター
     var formDesc = document.getElementById('formDesc');
@@ -369,33 +369,33 @@
         
         if (items.length === 0 && isDemoMode) {
           items = [
-            // 家具/什器
-            { itemId:'ITEM-DEMO-001', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'介護ベッド 101号室', maker:'パラマウントベッド', model:'KQ-60330', category:'家具/什器', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:280000, stock:1, description:'電動3モーター', floor:'1F', location:'居室101', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
-            { itemId:'ITEM-DEMO-002', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'食堂テーブル A', maker:'コクヨ', model:'MT-V159', category:'家具/什器', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:45000, stock:1, description:'6人掛け', floor:'1F', location:'食堂', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            // 居室・生活
+            { itemId:'ITEM-DEMO-001', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'介護ベッド 101号室', maker:'パラマウントベッド', model:'KQ-60330', category:'居室・生活', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:280000, stock:1, description:'電動3モーター', floor:'1F', location:'居室101', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            { itemId:'ITEM-DEMO-002', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'食堂テーブル A', maker:'コクヨ', model:'MT-V159', category:'居室・生活', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:45000, stock:1, description:'6人掛け', floor:'1F', location:'食堂', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
             // 家電
-            { itemId:'ITEM-DEMO-003', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'エアコン 1号機', maker:'ダイキン', model:'AN22XRS-W', category:'家電', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:150000, stock:1, description:'2F 会議室に設置', floor:'2F', location:'会議室', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
-            { itemId:'ITEM-DEMO-004', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'照明器具 LED-01', maker:'パナソニック', model:'LGB51210', category:'家電', assignedPartnerId:'PN003', assignedPartnerName:'日本電気工事', unit:'個', price:12000, stock:10, description:'各フロア共通', floor:'共用部', location:'各フロア', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
-            { itemId:'ITEM-DEMO-005', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'洗濯機 2F', maker:'パナソニック', model:'NA-FA120V5', category:'家電', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:180000, stock:1, description:'', floor:'2F', location:'洗濯室', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            { itemId:'ITEM-DEMO-003', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'エアコン 1号機', maker:'ダイキン', model:'AN22XRS-W', category:'居室・生活', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:150000, stock:1, description:'2F 会議室に設置', floor:'2F', location:'会議室', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            { itemId:'ITEM-DEMO-004', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'照明器具 LED-01', maker:'パナソニック', model:'LGB51210', category:'居室・生活', assignedPartnerId:'PN003', assignedPartnerName:'日本電気工事', unit:'個', price:12000, stock:10, description:'各フロア共通', floor:'共用部', location:'各フロア', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            { itemId:'ITEM-DEMO-005', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'洗濯機 2F', maker:'パナソニック', model:'NA-FA120V5', category:'居室・生活', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:180000, stock:1, description:'', floor:'2F', location:'洗濯室', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
             // インターネット
-            { itemId:'ITEM-DEMO-006', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'Wi-Fiルーター 1F', maker:'バッファロー', model:'WSR-5400AX6S', category:'インターネット', assignedPartnerId:'PN003', assignedPartnerName:'日本電気工事', unit:'台', price:15000, stock:1, description:'', floor:'1F', location:'事務室', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
-            { itemId:'ITEM-DEMO-007', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'ナースコール受信機', maker:'アイホン', model:'NFX-SER', category:'インターネット', assignedPartnerId:'PN003', assignedPartnerName:'日本電気工事', unit:'台', price:350000, stock:1, description:'', floor:'1F', location:'スタッフステーション', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
-            // 厨房/食器
-            { itemId:'ITEM-DEMO-008', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'業務用冷蔵庫', maker:'ホシザキ', model:'HR-120AT', category:'厨房/食器', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:350000, stock:1, description:'', floor:'1F', location:'厨房', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
-            { itemId:'ITEM-DEMO-009', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'食器洗浄機', maker:'ホシザキ', model:'JWE-400TUB', category:'厨房/食器', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:280000, stock:1, description:'', floor:'1F', location:'厨房', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            { itemId:'ITEM-DEMO-006', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'Wi-Fiルーター 1F', maker:'バッファロー', model:'WSR-5400AX6S', category:'IT・安全', assignedPartnerId:'PN003', assignedPartnerName:'日本電気工事', unit:'台', price:15000, stock:1, description:'', floor:'1F', location:'事務室', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            { itemId:'ITEM-DEMO-007', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'ナースコール受信機', maker:'アイホン', model:'NFX-SER', category:'IT・安全', assignedPartnerId:'PN003', assignedPartnerName:'日本電気工事', unit:'台', price:350000, stock:1, description:'', floor:'1F', location:'スタッフステーション', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            // 厨房・食事
+            { itemId:'ITEM-DEMO-008', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'業務用冷蔵庫', maker:'ホシザキ', model:'HR-120AT', category:'厨房・食事', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:350000, stock:1, description:'', floor:'1F', location:'厨房', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            { itemId:'ITEM-DEMO-009', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'食器洗浄機', maker:'ホシザキ', model:'JWE-400TUB', category:'厨房・食事', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:280000, stock:1, description:'', floor:'1F', location:'厨房', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
             // 浴室
-            { itemId:'ITEM-DEMO-010', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'機械浴槽', maker:'酒井医療', model:'ヌクティ', category:'浴室', assignedPartnerId:'PN002', assignedPartnerName:'関東水道サービス', unit:'台', price:2500000, stock:1, description:'リフト式', floor:'1F', location:'浴室', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
-            { itemId:'ITEM-DEMO-011', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'給湯器 A', maker:'リンナイ', model:'RUX-A1615W-E', category:'浴室', assignedPartnerId:'PN002', assignedPartnerName:'関東水道サービス', unit:'台', price:80000, stock:1, description:'', floor:'1F', location:'浴室', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
-            // 介護医療用品
-            { itemId:'ITEM-DEMO-012', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'車椅子 標準型', maker:'カワムラサイクル', model:'KA822-40B', category:'介護医療用品', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:45000, stock:5, description:'', floor:'共用部', location:'倉庫', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
-            { itemId:'ITEM-DEMO-013', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'吸引器', maker:'新鋭工業', model:'QS-101', category:'介護医療用品', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:38000, stock:2, description:'', floor:'2F', location:'スタッフステーション', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            { itemId:'ITEM-DEMO-010', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'機械浴槽', maker:'酒井医療', model:'ヌクティ', category:'建物インフラ', assignedPartnerId:'PN002', assignedPartnerName:'関東水道サービス', unit:'台', price:2500000, stock:1, description:'リフト式', floor:'1F', location:'建物インフラ', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            { itemId:'ITEM-DEMO-011', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'給湯器 A', maker:'リンナイ', model:'RUX-A1615W-E', category:'建物インフラ', assignedPartnerId:'PN002', assignedPartnerName:'関東水道サービス', unit:'台', price:80000, stock:1, description:'', floor:'1F', location:'建物インフラ', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            // 介護・医療
+            { itemId:'ITEM-DEMO-012', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'車椅子 標準型', maker:'カワムラサイクル', model:'KA822-40B', category:'介護・医療', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:45000, stock:5, description:'', floor:'共用部', location:'倉庫', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            { itemId:'ITEM-DEMO-013', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'吸引器', maker:'新鋭工業', model:'QS-101', category:'介護・医療', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:38000, stock:2, description:'', floor:'2F', location:'スタッフステーション', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
             // 水道
-            { itemId:'ITEM-DEMO-014', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'トイレ 1F', maker:'TOTO', model:'CES9788F', category:'水道', assignedPartnerId:'PN002', assignedPartnerName:'関東水道サービス', unit:'台', price:180000, stock:1, description:'', floor:'1F', location:'男子トイレ', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
-            { itemId:'ITEM-DEMO-015', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'手洗い場 2F', maker:'LIXIL', model:'L-A74TA', category:'水道', assignedPartnerId:'PN002', assignedPartnerName:'関東水道サービス', unit:'台', price:25000, stock:1, description:'', floor:'2F', location:'廊下', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            { itemId:'ITEM-DEMO-014', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'トイレ 1F', maker:'TOTO', model:'CES9788F', category:'建物インフラ', assignedPartnerId:'PN002', assignedPartnerName:'関東水道サービス', unit:'台', price:180000, stock:1, description:'', floor:'1F', location:'男子トイレ', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            { itemId:'ITEM-DEMO-015', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'手洗い場 2F', maker:'LIXIL', model:'L-A74TA', category:'建物インフラ', assignedPartnerId:'PN002', assignedPartnerName:'関東水道サービス', unit:'台', price:25000, stock:1, description:'', floor:'2F', location:'廊下', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
             // ガス
-            { itemId:'ITEM-DEMO-016', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'ガスコンロ 厨房', maker:'リンナイ', model:'RSW-F404C', category:'ガス', assignedPartnerId:'PN002', assignedPartnerName:'関東水道サービス', unit:'台', price:120000, stock:1, description:'', floor:'1F', location:'厨房', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
-            // エレベーター/昇降機
-            { itemId:'ITEM-DEMO-017', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'エレベーター', maker:'三菱電機', model:'AXIEZ', category:'エレベーター/昇降機', assignedPartnerId:'PN003', assignedPartnerName:'日本電気工事', unit:'基', price:5000000, stock:1, description:'本館', floor:'共用部', location:'本館', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
-            { itemId:'ITEM-DEMO-018', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'階段昇降機', maker:'シンドラー', model:'S200', category:'エレベーター/昇降機', assignedPartnerId:'PN003', assignedPartnerName:'日本電気工事', unit:'台', price:800000, stock:1, description:'', floor:'共用部', location:'北棟階段', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() }
+            { itemId:'ITEM-DEMO-016', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'ガスコンロ 厨房', maker:'リンナイ', model:'RSW-F404C', category:'建物インフラ', assignedPartnerId:'PN002', assignedPartnerName:'関東水道サービス', unit:'台', price:120000, stock:1, description:'', floor:'1F', location:'厨房', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            // 建物インフラ（昇降機）
+            { itemId:'ITEM-DEMO-017', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'エレベーター', maker:'三菱電機', model:'AXIEZ', category:'建物インフラ', assignedPartnerId:'PN003', assignedPartnerName:'日本電気工事', unit:'基', price:5000000, stock:1, description:'本館', floor:'共用部', location:'本館', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+            { itemId:'ITEM-DEMO-018', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'階段昇降機', maker:'シンドラー', model:'S200', category:'建物インフラ', assignedPartnerId:'PN003', assignedPartnerName:'日本電気工事', unit:'台', price:800000, stock:1, description:'', floor:'共用部', location:'北棟階段', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() }
           ];
           storage.setItem(storageKey, JSON.stringify(items));
         }
@@ -440,7 +440,7 @@
     }
 
     function buildCategoryTabs(items) {
-      var catOrder = ['家具/什器','家電','インターネット','厨房/食器','浴室','介護医療用品','水道','ガス','エレベーター/昇降機'];
+      var catOrder = ['建物インフラ','居室・生活','介護・医療','厨房・食事','IT・安全'];
       var cats = {};
       items.forEach(function(i) { var c = i.category || 'その他'; cats[c] = (cats[c]||0) + 1; });
       var tabsEl = document.getElementById('categoryTabs');

@@ -695,7 +695,7 @@
         function renderCategoryPartners(categoryPartners) {
             var area = document.getElementById('categoryPartnersArea');
             if (!area) return;
-            var categories = (typeof SYSTEM_CATEGORIES !== 'undefined') ? SYSTEM_CATEGORIES : ['家具/什器','家電','インターネット','厨房/食器','浴室','介護医療用品','水道','ガス','エレベーター/昇降機','その他'];
+            var categories = (typeof SYSTEM_CATEGORIES !== 'undefined') ? SYSTEM_CATEGORIES : ['建物インフラ','居室・生活','介護・医療','厨房・食事','IT・安全','その他'];
             // 業者リストを取得
             var partners = [];
             try { partners = JSON.parse(sessionStorage.getItem('partners') || '[]'); } catch(e) {}
@@ -731,7 +731,7 @@
 
         // カテゴリ別担当業者の値を取得
         function getCategoryPartnersFromForm() {
-            var categories = (typeof SYSTEM_CATEGORIES !== 'undefined') ? SYSTEM_CATEGORIES : ['家具/什器','家電','インターネット','厨房/食器','浴室','介護医療用品','水道','ガス','エレベーター/昇降機','その他'];
+            var categories = (typeof SYSTEM_CATEGORIES !== 'undefined') ? SYSTEM_CATEGORIES : ['建物インフラ','居室・生活','介護・医療','厨房・食事','IT・安全','その他'];
             var result = {};
             categories.forEach(function(cat) {
                 var sel = document.getElementById('cp_' + cat.replace(/[\/]/g, '_'));
