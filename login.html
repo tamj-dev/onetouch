@@ -274,6 +274,14 @@
                 localStorage.setItem('onetouch.contracts', JSON.stringify(DEMO_CONTRACTS));
             }
 
+            // DEMOアカウントデータをsessionStorageに保存
+            if (typeof DEMO_ACCOUNTS !== 'undefined') {
+                var demoAccountList = Object.values(DEMO_ACCOUNTS).filter(function(a) { return a.role !== 'contractor'; }).map(function(a, i) {
+                    return { id: a.id, name: a.name, role: a.role, companyCode: a.companyCode, companyName: a.companyName, officeCode: a.officeCode, officeName: a.officeName, status: 'active', password: a.password };
+                });
+                sessionStorage.setItem('accounts', JSON.stringify(demoAccountList));
+            }
+
             // 業者の場合はcontractor情報も保存
             if (role === 'contractor') {
                 // 契約テーブルから担当会社を取得
