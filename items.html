@@ -1308,32 +1308,10 @@
                 
                 // DEMOモードで業者データが空の場合、デフォルトデータを使用
                 if (partners.length === 0 && isDemoMode()) {
-                    partners = [
-                        {
-                            id: 'PN001',
-                            name: '東京設備工業株式会社',
-                            partnerCode: 'PN001',
-                            categories: ['部屋・共用部の家具・家電', '厨房・食事の道具', '介護医療・お風呂の道具'],
-                            assignedCompanies: ['TAMJ'],
-                            status: 'active'
-                        },
-                        {
-                            id: 'PN002',
-                            name: '関東水道サービス',
-                            partnerCode: 'PN002',
-                            categories: ['建物・外まわり'],
-                            assignedCompanies: ['TAMJ'],
-                            status: 'active'
-                        },
-                        {
-                            id: 'PN003',
-                            name: '日本電気工事',
-                            partnerCode: 'PN003',
-                            categories: ['通信・呼出し・防火の機器'],
-                            assignedCompanies: ['TAMJ'],
-                            status: 'active'
-                        }
-                    ];
+                    // DEMO_PARTNERSがあればそこから取得
+                    if (typeof DEMO_PARTNERS !== 'undefined') {
+                        partners = DEMO_PARTNERS;
+                    }
                 }
                 
                 
