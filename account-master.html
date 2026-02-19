@@ -505,7 +505,7 @@
             <div class="search-label">名前</div>
             <input type="text" class="search-input" id="searchName" placeholder="名前を入力">
         </div>
-        <div class="search-row">
+        <div class="search-row" id="searchOfficeRow">
             <div class="search-label">所属事業所</div>
             <select class="search-input" id="searchOffice">
                 <option value="">すべて</option>
@@ -516,7 +516,7 @@
             <select class="search-input" id="searchRole">
                 <option value="">すべて</option>
                 <option value="staff">スタッフ</option>
-                <option value="admin">管理者</option>
+                <option value="office_admin">事業所管理者</option>
             </select>
         </div>
 
@@ -809,6 +809,16 @@
         window.addEventListener('DOMContentLoaded', function() {
             updateOfficeSelect();
             updateSearchOfficeSelect();
+
+            // 事業所管理者: 検索の事業所フィルタは不要（自事業所のみ）
+            if (currentUser.role === 'office_admin' || currentUser.role === 'staff') {
+                var officeRow = document.getElementById('searchOfficeRow');
+                if (officeRow) officeRow.style.display = 'none';
+                // モーダルの事業所選択も非表示（自事業所が自動適用）
+                var officeGroup = document.getElementById('officeSelect');
+                if (officeGroup && officeGroup.parentElement) officeGroup.parentElement.style.display = 'none';
+            }
+
             // アカウントがある場合は表示
             if (accounts.length > 0) {
                 document.getElementById('resultsSection').classList.add('visible');
@@ -1026,8 +1036,10 @@
                 return;
             }
 
-            const selectedOfficeCode = document.getElementById('officeSelect').value;
-            const selectedOffice = offices.find(o => o.code === selectedOfficeCode);
+            const selectedOfficeCode = document.getElementById('officeSelect').value || 
+                ((currentUser.role === 'office_admin' || currentUser.role === 'staff') ? currentUser.officeCode : '');
+            const selectedOffice = offices.find(o => o.code === selectedOfficeCode) || 
+                ((currentUser.role === 'office_admin' || currentUser.role === 'staff') ? {code: currentUser.officeCode, name: currentUser.officeName, companyCode: currentUser.companyCode} : null);
             
             const status = document.querySelector('input[name="status"]:checked').value;
             const retiredDate = status === 'retired' ? document.getElementById('retiredDate').value : null;
