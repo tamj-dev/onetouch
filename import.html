@@ -2329,8 +2329,8 @@
         // DEMOモード・本番モード両方のキーから読み込み
         try { existingItems = JSON.parse(localStorage.getItem('onetouch.items') || '[]'); } catch(e) {}
         try { var il2 = JSON.parse(localStorage.getItem('onetouch.items') || '[]'); il2.forEach(function(i){ if(!existingItems.find(function(m){return m.itemId===i.itemId;})) existingItems.push(i); }); } catch(e) {}
-        try { var il3 = JSON.parse(sessionStorage.getItem('items') || '[]'); il3.forEach(function(i){ if(!existingItems.find(function(m){return m.itemId===i.itemId;})) existingItems.push(i); }); } catch(e) {}
-        try { var il4 = JSON.parse(localStorage.getItem('items') || '[]'); il4.forEach(function(i){ if(!existingItems.find(function(m){return m.itemId===i.itemId;})) existingItems.push(i); }); } catch(e) {}
+        try { var il3 = JSON.parse(sessionStorage.getItem('onetouch.items') || '[]'); il3.forEach(function(i){ if(!existingItems.find(function(m){return m.itemId===i.itemId;})) existingItems.push(i); }); } catch(e) {}
+        try { var il4 = JSON.parse(localStorage.getItem('onetouch.items') || '[]'); il4.forEach(function(i){ if(!existingItems.find(function(m){return m.itemId===i.itemId;})) existingItems.push(i); }); } catch(e) {}
 
         var newItems = [];
         var updateItems = [];

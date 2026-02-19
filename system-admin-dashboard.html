@@ -342,7 +342,7 @@
         <div style="background: #eff6ff; border: 1px solid #93c5fd; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
             <div style="color: #1e40af; font-size: 14px; font-weight: 600; margin-bottom: 8px;">デモデータを初期状態に戻します</div>
             <div style="color: #1e40af; font-size: 13px; line-height: 1.6;">
-                会社・事業所・アカウント・管理会社・契約・商品（600件）・通報履歴（48件）を<br>
+                会社・事業所・アカウント・管理会社・契約・商品（600件）・通報履歴（108件）を<br>
                 初期のデモデータで上書きします。カスタマイズした内容はリセットされます。
             </div>
         </div>
@@ -777,7 +777,7 @@
                     if (backupData.data.accounts) localStorage.setItem('accounts', JSON.stringify(backupData.data.accounts));
                     if (backupData.data.partners) localStorage.setItem('partners', JSON.stringify(backupData.data.partners));
                     if (backupData.data.reports) localStorage.setItem('onetouch.reports', JSON.stringify(backupData.data.reports));
-                    if (backupData.data.items) localStorage.setItem('items', JSON.stringify(backupData.data.items));
+                    if (backupData.data.items) localStorage.setItem('onetouch.items', JSON.stringify(backupData.data.items));
                     if (backupData.data.auditLogs) localStorage.setItem('audit.logs', JSON.stringify(backupData.data.auditLogs));
                     if (backupData.data.maintenanceMode) localStorage.setItem('maintenanceMode', backupData.data.maintenanceMode);
                     if (backupData.data.maintenanceMessage) localStorage.setItem('maintenanceMessage', backupData.data.maintenanceMessage);
@@ -837,7 +837,7 @@
             if (typeof initDemoData === 'function') {
                 initDemoData();
             }
-            alert('デモデータをリセットしました。\n\n会社2社・事業所8件・アカウント38名・管理会社15社・商品600件・通報48件が初期状態に戻りました。');
+            alert('デモデータをリセットしました。\n\n会社2社・事業所8件・アカウント36名・管理会社15社・商品600件・通報108件が初期状態に戻りました。');
             window.location.reload();
         }
 
