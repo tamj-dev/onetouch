@@ -53,6 +53,15 @@
           const allItems = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
           if (currentUser.role === 'system_admin') return allItems;
           if (currentUser.role === 'company_admin') return allItems.filter(i => i.companyCode === currentUser.companyCode);
+          if (currentUser.role === 'contractor') {
+            // 業者: assignedCompaniesに含まれる会社の商品で、自分が担当する商品
+            var assignedCompanies = currentUser.assignedCompanies || [];
+            var partnerId = currentUser.partnerId || currentUser.partnerCode || '';
+            return allItems.filter(i => 
+              assignedCompanies.indexOf(i.companyCode) >= 0 && 
+              (i.assignedPartnerId === partnerId || !i.assignedPartnerId)
+            );
+          }
           return allItems.filter(i => i.officeCode === currentUser.officeCode);
         }
 
@@ -1037,6 +1046,19 @@
                 }
             }
 
+            // 事業所管理者: 事業所フィルタ不要（自事業所のみ）、インポート/新規登録を表示
+            if (currentUser.role === 'office_admin') {
+                // 事業所フィルタは非表示のまま（自事業所の商品だけが表示される）
+            }
+
+            // スタッフ: インポート/新規登録を非表示
+            if (currentUser.role === 'staff') {
+                var btnImport = document.getElementById('btnImport');
+                var btnCreate = document.getElementById('btnCreate');
+                if (btnImport) btnImport.style.display = 'none';
+                if (btnCreate) btnCreate.style.display = 'none';
+            }
+
             // システム管理者: 会社・事業所・管理会社フィルタを全て表示
             if (currentUser.role === 'system_admin') {
                 // 会社フィルタ
@@ -1122,6 +1144,18 @@
             if (currentUser.role === 'company_admin') {
                 offices = offices.filter(function(o) { return o.companyCode === currentUser.companyCode; });
             }
+
+            // システム管理者は会社フィルタの選択に連動
+            if (currentUser.role === 'system_admin') {
+                var companyFilter = document.getElementById('companyFilter');
+                var selectedCompany = companyFilter ? companyFilter.value : '';
+                if (selectedCompany) {
+                    offices = offices.filter(function(o) { return o.companyCode === selectedCompany; });
+                }
+            }
+
+            // 本社（-H）を除外
+            offices = offices.filter(function(o) { return o.code.indexOf('-H') === -1; });
 
             select.innerHTML = '<option value="">選択してください</option>' + offices.map(function(o) {
                 return '<option value="' + o.code + '">' + o.name + '</option>';
