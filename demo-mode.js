@@ -189,8 +189,22 @@ window.DEMO_ACCOUNTS = {
     // システム管理者
     'admin': {companyCode:'SYSTEM',id:'admin',password:'admin',name:'システム管理者',role:'system_admin',scope:'system',companyName:'ワンタッチ管理運営',officeCode:'',officeName:'',status:'active',isFirstLogin:false,isDemoMode:true},
 
-    // 業者ログイン用（TAMJ建設 = PN001）
-    'pn001-yamada': {companyCode:'PN001',id:'pn001-yamada',password:'demo',name:'山田 太郎',role:'contractor',companyName:'TAMJ建設',partnerId:'PN001',partnerCode:'PN001',categories:['建物・外まわり','部屋・共用部の家具・家電','介護医療・お風呂の道具','厨房・食事の道具','通信・呼出し・防火の機器'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true}
+    // 業者ログイン用（15社 管理会社）
+    'pn001-yamada':     {companyCode:'PN001',id:'pn001-yamada',password:'demo',name:'山田 太郎',role:'contractor',companyName:'TAMJ建設',partnerId:'PN001',partnerCode:'PN001',categories:['建物・外まわり','部屋・共用部の家具・家電','介護医療・お風呂の道具','厨房・食事の道具','通信・呼出し・防火の機器'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn002-aoki':       {companyCode:'PN002',id:'pn002-aoki',password:'demo',name:'青木 一郎',role:'contractor',companyName:'ACタムジ',partnerId:'PN002',partnerCode:'PN002',categories:['建物・外まわり'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn003-eto':        {companyCode:'PN003',id:'pn003-eto',password:'demo',name:'江藤 健太',role:'contractor',companyName:'EVタムジ',partnerId:'PN003',partnerCode:'PN003',categories:['建物・外まわり'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn004-tamura':     {companyCode:'PN004',id:'pn004-tamura',password:'demo',name:'田村 美咲',role:'contractor',companyName:'タムタム家具',partnerId:'PN004',partnerCode:'PN004',categories:['部屋・共用部の家具・家電','介護医療・お風呂の道具','厨房・食事の道具','通信・呼出し・防火の機器'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn005-hayashi':    {companyCode:'PN005',id:'pn005-hayashi',password:'demo',name:'林 誠',role:'contractor',companyName:'リネンTAMJ',partnerId:'PN005',partnerCode:'PN005',categories:['部屋・共用部の家具・家電'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn006-fukuda':     {companyCode:'PN006',id:'pn006-fukuda',password:'demo',name:'福田 裕子',role:'contractor',companyName:'福たむ',partnerId:'PN006',partnerCode:'PN006',categories:['部屋・共用部の家具・家電','介護医療・お風呂の道具','厨房・食事の道具'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn007-ando':       {companyCode:'PN007',id:'pn007-ando',password:'demo',name:'安藤 大輔',role:'contractor',companyName:'AEDタム',partnerId:'PN007',partnerCode:'PN007',categories:['介護医療・お風呂の道具'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn008-oshima':     {companyCode:'PN008',id:'pn008-oshima',password:'demo',name:'大島 春菜',role:'contractor',companyName:'お掃除タムタム',partnerId:'PN008',partnerCode:'PN008',categories:['厨房・食事の道具'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn009-kitamura':   {companyCode:'PN009',id:'pn009-kitamura',password:'demo',name:'北村 和也',role:'contractor',companyName:'キッチンタムジ',partnerId:'PN009',partnerCode:'PN009',categories:['厨房・食事の道具'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn010-nakata':     {companyCode:'PN010',id:'pn010-nakata',password:'demo',name:'中田 翔',role:'contractor',companyName:'タムネット',partnerId:'PN010',partnerCode:'PN010',categories:['通信・呼出し・防火の機器'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn011-domoto':     {companyCode:'PN011',id:'pn011-domoto',password:'demo',name:'堂本 光',role:'contractor',companyName:'タム電気',partnerId:'PN011',partnerCode:'PN011',categories:['通信・呼出し・防火の機器'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn012-sekiguchi':  {companyCode:'PN012',id:'pn012-sekiguchi',password:'demo',name:'関口 武',role:'contractor',companyName:'タムセキュリティ',partnerId:'PN012',partnerCode:'PN012',categories:['通信・呼出し・防火の機器'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn013-kato':       {companyCode:'PN013',id:'pn013-kato',password:'demo',name:'加藤 優',role:'contractor',companyName:'介護タム',partnerId:'PN013',partnerCode:'PN013',categories:['通信・呼出し・防火の機器'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn014-nishimura':  {companyCode:'PN014',id:'pn014-nishimura',password:'demo',name:'西村 拓',role:'contractor',companyName:'Nタムタム',partnerId:'PN014',partnerCode:'PN014',categories:['通信・呼出し・防火の機器'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn015-kobayashi':  {companyCode:'PN015',id:'pn015-kobayashi',password:'demo',name:'小林 恵',role:'contractor',companyName:'タムコール',partnerId:'PN015',partnerCode:'PN015',categories:['通信・呼出し・防火の機器'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true}
 };
 
 // ========== 管理会社マスタ（15社） ==========
@@ -250,12 +264,12 @@ window.DEMO_CONTRACTS = [
 function generateDemoItems(companyCode, officeCodes, officeNames) {
     var items = [];
     var tpl = {
-        '建物・外まわり': [{n:'業務用エアコン',mk:'ダイキン',md:'SZRC140BF',f:'1F',l:'共用廊下'},{n:'給湯器',mk:'リンナイ',md:'RUF-E2405SAW',f:'B1',l:'機械室'},{n:'自動ドア',mk:'ナブコ',md:'NKS-200',f:'1F',l:'正面玄関'},{n:'消火器',mk:'ヤマトプロテック',md:'YA-10NX',f:'各階',l:'廊下'},{n:'防火シャッター',mk:'文化シヤッター',md:'SFD-2500',f:'1F',l:'避難通路'},{n:'非常灯',mk:'パナソニック',md:'FA21312',f:'各階',l:'階段室'},{n:'排水ポンプ',mk:'荏原製作所',md:'DWV-0.4B',f:'B1',l:'排水槽'},{n:'昇降機',mk:'日立ビルシステム',md:'VFS-M',f:'1F',l:'EV室'},{n:'受水槽',mk:'前澤化成',md:'FRP-3000L',f:'屋上',l:'屋上機械室'},{n:'LED照明器具',mk:'アイリスオーヤマ',md:'LDR8-TW',f:'各階',l:'居室'},{n:'分電盤',mk:'河村電器',md:'EL4060',f:'1F',l:'電気室'},{n:'浴室換気扇',mk:'三菱電機',md:'VD-15ZFC',f:'1F',l:'浴室'}],
-        '部屋・共用部の家具・家電': [{n:'介護用電動ベッド',mk:'パラマウントベッド',md:'KQ-63310',f:'2F',l:'居室'},{n:'ナースコール子機',mk:'アイホン',md:'NFR-TA',f:'各階',l:'居室'},{n:'床頭台',mk:'イノアック',md:'KBT-660',f:'各階',l:'居室'},{n:'テレビ 32型',mk:'シャープ',md:'2T-C32DE',f:'各階',l:'居室'},{n:'エアマット',mk:'モルテン',md:'プライム',f:'各階',l:'居室'},{n:'カーテン（防炎）',mk:'サンゲツ',md:'PK9026',f:'各階',l:'居室'},{n:'洗濯機 8kg',mk:'パナソニック',md:'NA-FA8H3',f:'1F',l:'洗濯室'},{n:'冷蔵庫（共用）',mk:'三菱電機',md:'MR-WX52H',f:'各階',l:'共用スペース'},{n:'掃除機',mk:'ダイソン',md:'V12',f:'各階',l:'倉庫'},{n:'電子レンジ',mk:'パナソニック',md:'NE-FL222',f:'各階',l:'共用スペース'}],
-        '介護医療・お風呂の道具': [{n:'車いす（自走式）',mk:'カワムラサイクル',md:'KA822-40B',f:'1F',l:'倉庫'},{n:'歩行器',mk:'星医療酸器',md:'アルコー1S',f:'1F',l:'リハビリ室'},{n:'吸引器',mk:'新鋭工業',md:'パワースマイル',f:'各階',l:'ナースステーション'},{n:'血圧計',mk:'オムロン',md:'HEM-907',f:'各階',l:'ナースステーション'},{n:'パルスオキシメーター',mk:'コニカミノルタ',md:'PULSOX-Neo',f:'各階',l:'ナースステーション'},{n:'AED',mk:'フィリップス',md:'HS1',f:'1F',l:'事務所前'},{n:'ストレッチャー',mk:'パラマウントベッド',md:'KK-726',f:'1F',l:'医務室'},{n:'シャワーチェア',mk:'アロン化成',md:'安寿',f:'1F',l:'浴室'},{n:'体重計（車いす対応）',mk:'タニタ',md:'PW-650A',f:'1F',l:'医務室'},{n:'電動リフト',mk:'モリトー',md:'つるべー',f:'1F',l:'浴室'}],
+        '建物・外まわり': [{n:'業務用エアコン',mk:'ダイキン',md:'SZRC140BF',f:'1F',l:'共用廊下'},{n:'給湯器',mk:'リンナイ',md:'RUF-E2405SAW',f:'B1',l:'機械室'},{n:'自動ドア',mk:'ナブコ',md:'NKS-200',f:'1F',l:'正面玄関'},{n:'防火シャッター',mk:'文化シヤッター',md:'SFD-2500',f:'1F',l:'避難通路'},{n:'非常灯',mk:'パナソニック',md:'FA21312',f:'各階',l:'階段室'},{n:'排水ポンプ',mk:'荏原製作所',md:'DWV-0.4B',f:'B1',l:'排水槽'},{n:'昇降機',mk:'日立ビルシステム',md:'VFS-M',f:'1F',l:'EV室'},{n:'受水槽',mk:'前澤化成',md:'FRP-3000L',f:'屋上',l:'屋上機械室'},{n:'LED照明器具',mk:'アイリスオーヤマ',md:'LDR8-TW',f:'各階',l:'居室'},{n:'分電盤',mk:'河村電器',md:'EL4060',f:'1F',l:'電気室'},{n:'浴室換気扇',mk:'三菱電機',md:'VD-15ZFC',f:'1F',l:'浴室'},{n:'インターホン',mk:'アイホン',md:'JH-45',f:'1F',l:'正面玄関'}],
+        '部屋・共用部の家具・家電': [{n:'介護用電動ベッド',mk:'パラマウントベッド',md:'KQ-63310',f:'2F',l:'居室'},{n:'床頭台',mk:'イノアック',md:'KBT-660',f:'各階',l:'居室'},{n:'テレビ 32型',mk:'シャープ',md:'2T-C32DE',f:'各階',l:'居室'},{n:'エアマット',mk:'モルテン',md:'プライム',f:'各階',l:'居室'},{n:'カーテン（防炎）',mk:'サンゲツ',md:'PK9026',f:'各階',l:'居室'},{n:'洗濯機 8kg',mk:'パナソニック',md:'NA-FA8H3',f:'1F',l:'洗濯室'},{n:'冷蔵庫（共用）',mk:'三菱電機',md:'MR-WX52H',f:'各階',l:'共用スペース'},{n:'掃除機',mk:'ダイソン',md:'V12',f:'各階',l:'倉庫'},{n:'電子レンジ',mk:'パナソニック',md:'NE-FL222',f:'各階',l:'共用スペース'}],
+        '介護医療・お風呂の道具': [{n:'車いす（自走式）',mk:'カワムラサイクル',md:'KA822-40B',f:'1F',l:'倉庫'},{n:'歩行器',mk:'星医療酸器',md:'アルコー1S',f:'1F',l:'リハビリ室'},{n:'吸引器',mk:'新鋭工業',md:'パワースマイル',f:'各階',l:'ナースステーション'},{n:'血圧計',mk:'オムロン',md:'HEM-907',f:'各階',l:'ナースステーション'},{n:'パルスオキシメーター',mk:'コニカミノルタ',md:'PULSOX-Neo',f:'各階',l:'ナースステーション'},{n:'AED',mk:'フィリップス',md:'HS1',f:'1F',l:'事務所前'},{n:'ストレッチャー',mk:'パラマウントベッド',md:'KK-726',f:'1F',l:'医務室'},{n:'シャワーチェア',mk:'アロン化成',md:'安寿',f:'1F',l:'浴室'},{n:'体重計（車いす対応）',mk:'タニタ',md:'PW-650A',f:'1F',l:'医務室'},{n:'電動リフト',mk:'モリトー',md:'つるべー',f:'1F',l:'浴室'},{n:'車いす用スロープ（仮設）',mk:'ケアメディックス',md:'CS-200',f:'1F',l:'倉庫'}],
         '厨房・食事の道具': [{n:'業務用冷凍冷蔵庫',mk:'ホシザキ',md:'HRF-180LAF3',f:'1F',l:'厨房'},{n:'ガスレンジ',mk:'マルゼン',md:'RGR-1265D',f:'1F',l:'厨房'},{n:'スチームコンベクションオーブン',mk:'コメットカトウ',md:'CSI3-G5',f:'1F',l:'厨房'},{n:'食器洗浄機',mk:'ホシザキ',md:'JWE-400TUB',f:'1F',l:'厨房'},{n:'炊飯器（業務用）',mk:'タイガー',md:'JCC-2700',f:'1F',l:'厨房'},{n:'コールドテーブル',mk:'フクシマガリレイ',md:'LRC-150RM',f:'1F',l:'厨房'},{n:'配膳車',mk:'象印マホービン',md:'CW-28B',f:'1F',l:'厨房'},{n:'製氷機',mk:'ホシザキ',md:'IM-45M',f:'1F',l:'厨房'}],
-        '通信・呼出し・防火の機器': [{n:'Wi-Fiアクセスポイント',mk:'バッファロー',md:'WXR-5700AX7S',f:'各階',l:'天井'},{n:'防犯カメラ',mk:'パナソニック',md:'WV-S1136',f:'1F',l:'玄関'},{n:'ナースコール親機',mk:'アイホン',md:'NFR-TX-S',f:'各階',l:'ナースステーション'},{n:'複合機',mk:'リコー',md:'IM C2500',f:'1F',l:'事務室'},{n:'UPS',mk:'APC',md:'SMT1500J',f:'1F',l:'サーバー室'},{n:'ネットワークスイッチ',mk:'TP-Link',md:'TL-SG108',f:'1F',l:'サーバー室'},{n:'インターホン',mk:'アイホン',md:'JH-45',f:'1F',l:'正面玄関'},{n:'ノートPC',mk:'富士通',md:'LIFEBOOK A577',f:'1F',l:'事務室'}],
-        'その他': [{n:'非常用食料セット',mk:'尾西食品',md:'アルファ米',f:'1F',l:'備蓄倉庫'},{n:'送迎車 車載備品',mk:'—',md:'—',f:'—',l:'駐車場'},{n:'避難用担架',mk:'レスキューハウス',md:'RH-1',f:'1F',l:'防災備品庫'},{n:'訓練用消火器',mk:'ヤマトプロテック',md:'YTS-3',f:'1F',l:'防災備品庫'},{n:'車いす用スロープ（仮設）',mk:'ケアメディックス',md:'CS-200',f:'1F',l:'倉庫'},{n:'季節装飾品',mk:'—',md:'—',f:'共用部',l:'倉庫'},{n:'レクリエーション用品',mk:'—',md:'—',f:'共用部',l:'多目的室'},{n:'園芸用品セット',mk:'—',md:'—',f:'屋外',l:'中庭'}]
+        '通信・呼出し・防火の機器': [{n:'Wi-Fiアクセスポイント',mk:'バッファロー',md:'WXR-5700AX7S',f:'各階',l:'天井'},{n:'防犯カメラ',mk:'パナソニック',md:'WV-S1136',f:'1F',l:'玄関'},{n:'ナースコール親機',mk:'アイホン',md:'NFR-TX-S',f:'各階',l:'ナースステーション'},{n:'ナースコール子機',mk:'アイホン',md:'NFR-TA',f:'各階',l:'居室'},{n:'複合機',mk:'リコー',md:'IM C2500',f:'1F',l:'事務室'},{n:'UPS',mk:'APC',md:'SMT1500J',f:'1F',l:'サーバー室'},{n:'ネットワークスイッチ',mk:'TP-Link',md:'TL-SG108',f:'1F',l:'サーバー室'},{n:'ノートPC',mk:'富士通',md:'LIFEBOOK A577',f:'1F',l:'事務室'},{n:'消火器',mk:'ヤマトプロテック',md:'YA-10NX',f:'各階',l:'廊下'},{n:'訓練用消火器',mk:'ヤマトプロテック',md:'YTS-3',f:'1F',l:'防災備品庫'}],
+        'その他': [{n:'非常用食料セット',mk:'尾西食品',md:'アルファ米',f:'1F',l:'備蓄倉庫'},{n:'送迎車 車載備品',mk:'—',md:'—',f:'—',l:'駐車場'},{n:'避難用担架',mk:'レスキューハウス',md:'RH-1',f:'1F',l:'防災備品庫'},{n:'季節装飾品',mk:'—',md:'—',f:'共用部',l:'倉庫'},{n:'レクリエーション用品',mk:'—',md:'—',f:'共用部',l:'多目的室'},{n:'園芸用品セット',mk:'—',md:'—',f:'屋外',l:'中庭'}]
     };
     var counter = 1;
     Object.keys(tpl).forEach(function(cat) {
@@ -327,7 +341,7 @@ function generateDemoReports(companyCode, officeCodes, officeNames, accounts) {
 
 // ========== デモマスタデータ初期化 ==========
 function initDemoData() {
-    if (localStorage.getItem('demo_initialized') === 'v9') return;
+    if (localStorage.getItem('demo_initialized') === 'v10') return;
 
     var companies = [
         {code:'TAMJ',name:'タムジ株式会社',status:'active',postalCode:'100-0001',prefecture:'東京都',address:'千代田区千代田1-1',phone:'03-1234-5678'},
@@ -371,7 +385,9 @@ function initDemoData() {
     });
     localStorage.setItem('onetouch.reports', JSON.stringify(allReports));
 
-    localStorage.setItem('demo_initialized', 'v9');
+    localStorage.setItem('demo_initialized', 'v10');
+    // スナップショットを保存（デモ切替/ログアウト時の復元用）
+    saveDemoSnapshot();
 }
 
 // ========== 業者振り分けロジック ==========
