@@ -31,7 +31,7 @@ function isSystemAdmin() {
 // ========== スナップショット管理 ==========
 // DEMOユーザーログイン時: localStorageの現状を退避
 // DEMOユーザーログアウト/ブラウザ閉じ: 退避から復元
-var SNAPSHOT_KEYS = ['companies','offices','accounts','partners','onetouch.contracts','onetouch.items','onetouch.reports','officeCounter'];
+var SNAPSHOT_KEYS = ['companies','offices','accounts','partners','onetouch.contracts','onetouch.items','onetouch.reports','officeCounter','onetouch.stagnationDays'];
 
 function saveDemoSnapshot() {
     SNAPSHOT_KEYS.forEach(function(key) {
@@ -229,6 +229,16 @@ function generateDemoItems(companyCode, officeCodes, officeNames) {
     var counter = 1;
     Object.keys(tpl).forEach(function(cat) {
         var ts = tpl[cat];
+        // 契約テーブルからこのカテゴリに対応する管理会社を検索
+        var matchContract = DEMO_CONTRACTS.find(function(c) {
+            return c.companyCode === companyCode && c.categories && c.categories.indexOf(cat) !== -1;
+        });
+        var pId = matchContract ? matchContract.partnerId : null;
+        var pName = '';
+        if (pId) {
+            var pObj = DEMO_PARTNERS.find(function(pp) { return pp.id === pId; });
+            pName = pObj ? pObj.name : '';
+        }
         for (var r = 0; r < 50; r++) {
             var t = ts[r % ts.length]; var oi = r % officeCodes.length;
             items.push({
@@ -236,7 +246,7 @@ function generateDemoItems(companyCode, officeCodes, officeNames) {
                 companyCode:companyCode, officeCode:officeCodes[oi], officeName:officeNames[oi],
                 name:t.n+(r>=ts.length?' #'+(r+1):''), category:cat, maker:t.mk, model:t.md,
                 unit:'台', price:Math.floor(Math.random()*500000)+10000, stock:1,
-                floor:t.f, location:t.l, description:'', assignedPartnerId:null, assignedPartnerName:'',
+                floor:t.f, location:t.l, description:'', assignedPartnerId:pId, assignedPartnerName:pName,
                 status:'active', createdAt:'2025-01-'+String(10+(counter%20)).padStart(2,'0')+'T09:00:00Z',
                 updatedAt:'2025-01-'+String(10+(counter%20)).padStart(2,'0')+'T09:00:00Z'
             });
@@ -284,7 +294,7 @@ function generateDemoReports(companyCode, officeCodes, officeNames, accounts) {
 
 // ========== デモマスタデータ初期化 ==========
 function initDemoData() {
-    if (localStorage.getItem('demo_initialized') === 'v5') return;
+    if (localStorage.getItem('demo_initialized') === 'v7') return;
 
     var companies = [
         {code:'TAMJ',name:'タムジ株式会社',status:'active',postalCode:'100-0001',prefecture:'東京都',address:'千代田区千代田1-1',phone:'03-1234-5678'},
@@ -297,11 +307,9 @@ function initDemoData() {
         {companyCode:'TAMJ',companyName:'タムジ株式会社',code:'TAMJ-J0001',name:'さくら苑',serviceType:'介護老人福祉施設',status:'active',postalCode:'',prefecture:'東京都',address:'',phone:'',fax:'',email:'',building:'',notes:'',createdAt:'2025-01-10'},
         {companyCode:'TAMJ',companyName:'タムジ株式会社',code:'TAMJ-J0002',name:'ひまわり荘',serviceType:'認知症対応型共同生活介護',status:'active',postalCode:'',prefecture:'東京都',address:'',phone:'',fax:'',email:'',building:'',notes:'',createdAt:'2025-01-10'},
         {companyCode:'TAMJ',companyName:'タムジ株式会社',code:'TAMJ-J0003',name:'あおぞらの家',serviceType:'通所介護',status:'active',postalCode:'',prefecture:'東京都',address:'',phone:'',fax:'',email:'',building:'',notes:'',createdAt:'2025-01-10'},
-        {companyCode:'TAMJ',companyName:'タムジ株式会社',code:'TAMJ-H001',name:'本社',serviceType:'',status:'active',postalCode:'',prefecture:'東京都',address:'',phone:'',fax:'',email:'',building:'',notes:'',createdAt:'2025-01-10'},
         {companyCode:'JMAT',companyName:'ジェイマットジャパン合同会社',code:'JMAT-J0001',name:'グリーンヒル',serviceType:'介護老人保健施設',status:'active',postalCode:'',prefecture:'神奈川県',address:'',phone:'',fax:'',email:'',building:'',notes:'',createdAt:'2025-01-15'},
         {companyCode:'JMAT',companyName:'ジェイマットジャパン合同会社',code:'JMAT-J0002',name:'コスモス園',serviceType:'介護老人福祉施設',status:'active',postalCode:'',prefecture:'神奈川県',address:'',phone:'',fax:'',email:'',building:'',notes:'',createdAt:'2025-01-15'},
-        {companyCode:'JMAT',companyName:'ジェイマットジャパン合同会社',code:'JMAT-J0003',name:'やすらぎの丘',serviceType:'特別養護老人ホーム',status:'active',postalCode:'',prefecture:'神奈川県',address:'',phone:'',fax:'',email:'',building:'',notes:'',createdAt:'2025-01-15'},
-        {companyCode:'JMAT',companyName:'ジェイマットジャパン合同会社',code:'JMAT-H001',name:'本社',serviceType:'',status:'active',postalCode:'',prefecture:'神奈川県',address:'',phone:'',fax:'',email:'',building:'',notes:'',createdAt:'2025-01-15'}
+        {companyCode:'JMAT',companyName:'ジェイマットジャパン合同会社',code:'JMAT-J0003',name:'やすらぎの丘',serviceType:'特別養護老人ホーム',status:'active',postalCode:'',prefecture:'神奈川県',address:'',phone:'',fax:'',email:'',building:'',notes:'',createdAt:'2025-01-15'}
     ];
     localStorage.setItem('offices', JSON.stringify(offices));
     localStorage.setItem('officeCounter', '10');
@@ -309,7 +317,7 @@ function initDemoData() {
     var accountList = [];
     Object.keys(DEMO_ACCOUNTS).forEach(function(key){
         var a = DEMO_ACCOUNTS[key];
-        if (a.role !== 'contractor') {
+        if (a.role !== 'contractor' && a.role !== 'company_admin') {
             accountList.push({id:a.id,name:a.name,role:a.role,companyCode:a.companyCode,companyName:a.companyName,officeCode:a.officeCode,officeName:a.officeName,status:'active',password:a.password});
         }
     });
@@ -330,7 +338,7 @@ function initDemoData() {
     });
     localStorage.setItem('onetouch.reports', JSON.stringify(allReports));
 
-    localStorage.setItem('demo_initialized', 'v5');
+    localStorage.setItem('demo_initialized', 'v7');
 }
 
 // ========== 業者振り分けロジック ==========

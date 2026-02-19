@@ -563,8 +563,20 @@
       document.getElementById('formTitleInput').value = itemId;
       document.getElementById('formCat').value = item.category || 'その他';
       document.getElementById('selectedItemId').value = item.itemId;
-      document.getElementById('selectedPartnerId').value = item.assignedPartnerId || '';
-      document.getElementById('selectedPartnerName').value = item.assignedPartnerName || '';
+      
+      // 管理会社割当：商品に紐付いていなければ契約テーブルから自動解決
+      var pId = item.assignedPartnerId || '';
+      var pName = item.assignedPartnerName || '';
+      if (!pId && typeof resolvePartner === 'function') {
+        var cu = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+        var resolved = resolvePartner(
+          { assignedPartnerId: '', assignedPartnerName: '', category: item.category, companyCode: cu.companyCode || '' },
+          cu.officeCode || ''
+        );
+        if (resolved.partnerId) { pId = resolved.partnerId; pName = resolved.partnerName; }
+      }
+      document.getElementById('selectedPartnerId').value = pId;
+      document.getElementById('selectedPartnerName').value = pName;
       
       // UI更新
       document.getElementById('suggestList').style.display = 'none';
@@ -648,7 +660,7 @@
       if (!partnerId && typeof resolvePartner === 'function') {
         var currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
         var resolved = resolvePartner(
-          { assignedPartnerId: partnerId, assignedPartnerName: partnerName, category: cat },
+          { assignedPartnerId: partnerId, assignedPartnerName: partnerName, category: cat, companyCode: currentUser.companyCode || '' },
           currentUser.officeCode || ''
         );
         if (resolved.partnerId) {

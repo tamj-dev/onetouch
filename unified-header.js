@@ -264,31 +264,30 @@ const UnifiedHeader = {
 
             /* 初回ログインバナー */
             .uh-first-login {
-                display: none; position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
-                background: #1e3a5f;
-                color: white; padding: 16px 24px; border-radius: 12px;
-                box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3);
-                z-index: 9999; max-width: 500px; width: 90%;
+                display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.5); z-index: 10000;
+                justify-content: center; align-items: center;
             }
-            .uh-first-login.show { display: block; }
-            .uh-fl-top { display: flex; align-items: center; gap: 16px; }
-            .uh-fl-icon { font-size: 32px; }
-            .uh-fl-text { flex: 1; }
-            .uh-fl-title { font-weight: 600; margin-bottom: 4px; }
-            .uh-fl-desc { font-size: 13px; opacity: 0.9; }
-            .uh-fl-close {
-                background: rgba(255,255,255,0.2); border: none; color: white;
-                padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 20px; line-height: 1;
+            .uh-first-login.show { display: flex; }
+            .uh-fl-card {
+                background: white; border-radius: 16px; padding: 36px 32px 28px;
+                max-width: 400px; width: 90%; text-align: center;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             }
-            .uh-fl-actions { display: flex; gap: 8px; margin-top: 12px; }
+            .uh-fl-icon { font-size: 48px; margin-bottom: 16px; }
+            .uh-fl-title { font-size: 18px; font-weight: 700; color: #1e3a5f; margin-bottom: 8px; }
+            .uh-fl-desc { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 24px; }
+            .uh-fl-actions { display: flex; flex-direction: column; gap: 10px; }
             .uh-fl-btn-now {
-                flex: 1; padding: 8px 16px; background: white; color: #2563eb;
-                border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;
+                background: #1e3a5f; color: white; border: none; padding: 14px; border-radius: 10px;
+                font-size: 15px; font-weight: 600; cursor: pointer;
             }
+            .uh-fl-btn-now:hover { background: #2a4a73; }
             .uh-fl-btn-later {
-                flex: 1; padding: 8px 16px; background: rgba(255,255,255,0.2); color: white;
-                border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;
+                background: none; border: 1px solid #ddd; color: #888; padding: 12px; border-radius: 10px;
+                font-size: 14px; cursor: pointer;
             }
+            .uh-fl-btn-later:hover { background: #f5f5f5; }
 
             /* ========== レスポンシブ ========== */
             @media (max-width: 768px) {
@@ -502,17 +501,14 @@ const UnifiedHeader = {
         banner.className = 'uh-first-login';
         banner.id = 'uhFirstLogin';
         banner.innerHTML = `
-            <div class="uh-fl-top">
-                <div class="uh-fl-icon"></div>
-                <div class="uh-fl-text">
-                    <div class="uh-fl-title">パスワードの変更をおすすめします</div>
-                    <div class="uh-fl-desc">セキュリティ向上のため、初期パスワードを変更することを推奨します。</div>
+            <div class="uh-fl-card">
+                <div class="uh-fl-icon">🔐</div>
+                <div class="uh-fl-title">パスワードを変更してください</div>
+                <div class="uh-fl-desc">セキュリティ向上のため、<br>初期パスワードの変更をお願いします。</div>
+                <div class="uh-fl-actions">
+                    <button class="uh-fl-btn-now" id="uhFlNow">パスワードを変更する</button>
+                    <button class="uh-fl-btn-later" id="uhFlLater">あとで変更する</button>
                 </div>
-                <button class="uh-fl-close" id="uhFlClose">×</button>
-            </div>
-            <div class="uh-fl-actions">
-                <button class="uh-fl-btn-now" id="uhFlNow">今すぐ変更</button>
-                <button class="uh-fl-btn-later" id="uhFlLater">後で変更</button>
             </div>
         `;
         document.body.appendChild(banner);
@@ -844,10 +840,8 @@ const UnifiedHeader = {
         if (pwSubmit) pwSubmit.addEventListener('click', function() { self._changePassword(); });
 
         // 初回ログインバナー
-        const flClose = document.getElementById('uhFlClose');
         const flLater = document.getElementById('uhFlLater');
         const flNow = document.getElementById('uhFlNow');
-        if (flClose) flClose.addEventListener('click', function() { self._dismissBanner(); });
         if (flLater) flLater.addEventListener('click', function() { self._dismissBanner(); });
         if (flNow) flNow.addEventListener('click', function() {
             self._dismissBanner();

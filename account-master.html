@@ -762,9 +762,9 @@
         function filterOfficesByScope(officeList) {
             if (currentUser.role === 'system_admin') {
                 return officeList;
-            } else if (currentUser.scope === 'company') {
+            } else if (currentUser.scope === 'company' || currentUser.role === 'company_admin') {
                 return officeList.filter(o => o.companyCode === currentUser.companyCode);
-            } else if (currentUser.scope === 'office') {
+            } else if (currentUser.scope === 'office' || currentUser.role === 'office_admin' || currentUser.role === 'staff') {
                 return officeList.filter(o => o.code === currentUser.officeCode);
             }
             return [];
