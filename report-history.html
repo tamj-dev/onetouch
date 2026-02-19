@@ -1282,7 +1282,7 @@
 
             var esc = function(v) { return '"' + String(v || '').replace(/"/g, '""').replace(/\n/g, ' ') + '"'; };
 
-            const headers = ['通報ID','通報日時','通報者','会社コード','事業所','設備名','カテゴリ','場所','状況詳細','割当管理会社','管理会社ステータス','対応時間','最新コメント','写真枚数'];
+            const headers = ['通報者名','通報日時','会社コード','事業所','設備名','カテゴリ','場所','状況詳細','割当管理会社','管理会社ステータス','対応時間','最新コメント','写真枚数'];
             const rows = allReports.map(r => {
                 const date = r.timestamp ? new Date(r.timestamp).toLocaleString('ja-JP') : '';
                 let responseTime = '';
@@ -1312,9 +1312,8 @@
                 var photoCount = (r.photos && r.photos.length) || 0;
 
                 return [
-                    esc(r.id),
-                    esc(date),
                     esc(r.reporter),
+                    esc(date),
                     esc(r.companyCode),
                     esc(r.officeName),
                     esc(r.title),

@@ -157,10 +157,16 @@
             if (currentPeriod === 'all') return true;
             var d = new Date(r.timestamp || r.createdAt);
             if (isNaN(d.getTime())) return true;
-            var diff = now - d;
-            if (currentPeriod === 'week') return diff < 7 * 24 * 60 * 60 * 1000;
-            if (currentPeriod === 'month') return diff < 30 * 24 * 60 * 60 * 1000;
-            if (currentPeriod === '3months') return diff < 90 * 24 * 60 * 60 * 1000;
+            if (currentPeriod === 'week') {
+                return (now - d) < 7 * 24 * 60 * 60 * 1000;
+            }
+            if (currentPeriod === 'month') {
+                return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+            }
+            if (currentPeriod === '3months') {
+                var threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+                return d >= threeMonthsAgo;
+            }
             return true;
         });
     }

@@ -429,7 +429,7 @@
                         <select id="stagnationDays" style="padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; width: 100px;">
                             <option value="1">1日</option>
                             <option value="2">2日</option>
-                            <option value="3" selected>3日</option>
+                            <option value="3">3日</option>
                             <option value="5">5日</option>
                             <option value="7">7日</option>
                             <option value="10">10日</option>
@@ -643,7 +643,7 @@
                 if (exportOffices) {
                     let offices = JSON.parse(localStorage.getItem('offices') || '[]');
                     offices = filterByScope(offices);
-                    exportToCSV(offices, `offices_${dateStr}.csv`, ['officeCode', 'officeName', 'companyCode', 'address', 'phone', 'status']);
+                    exportToCSV(offices, `offices_${dateStr}.csv`, ['code', 'name', 'companyCode', 'serviceType', 'address', 'phone', 'status']);
                 }
                 
                 if (exportPartners) {
@@ -667,7 +667,7 @@
                 if (exportAudit) {
                     let logs = JSON.parse(localStorage.getItem('audit.logs') || '[]');
                     logs = filterByScope(logs);
-                    exportToCSV(logs, `audit_logs_${dateStr}.csv`, ['timestamp', 'action', 'userId', 'userName', 'details']);
+                    exportToCSV(logs, `audit_logs_${dateStr}.csv`, ['timestamp', 'type', 'screen', 'user', 'userId', 'companyCode']);
                 }
                 
                 alert('エクスポートが完了しました。');
@@ -812,12 +812,8 @@
                 // 事業所管理者
                 document.getElementById('officeInfo').style.display = 'block';
                 document.getElementById('auditLogSection').style.display = 'block';
-                document.getElementById('dataExportSection').style.display = 'block';
+                // データエクスポートは非表示
                 loadOfficeInfo();
-                // 事業所管理者には見せないオプションを非表示
-                document.getElementById('exportOfficesLabel').style.display = 'none';
-                document.getElementById('exportPartnersLabel').style.display = 'none';
-                document.getElementById('exportAuditLabel').style.display = 'none';
             }
         }
 
@@ -915,10 +911,9 @@
         
         // sessionStorage/localStorage切り替え対応
         function demoGetFromSessionOrLocalStorage(key) {
-            const isDemoMode = currentUser && currentUser.companyCode === 'TAMJ';
-            if (isDemoMode) {
-                const demoKey = 'demo.' + key;
-                return sessionStorage.getItem(demoKey) || localStorage.getItem(key);
+            // items は onetouch.items キーに統一
+            if (key === 'items') {
+                return localStorage.getItem('onetouch.items');
             }
             return localStorage.getItem(key);
         }
@@ -957,10 +952,8 @@
         // 滞留アラート設定を読み込み
         function loadStagnationSetting() {
             var storageKey = 'onetouch.stagnationDays';
-            var saved = localStorage.getItem(storageKey) || sessionStorage.getItem(storageKey);
-            if (saved) {
-                document.getElementById('stagnationDays').value = saved;
-            }
+            var saved = localStorage.getItem(storageKey) || '3';
+            document.getElementById('stagnationDays').value = saved;
         }
 
         // 滞留アラート設定を保存

@@ -1490,6 +1490,7 @@
                             <th>商品名</th>
                             <th>メーカー</th>
                             <th>型番</th>
+                            <th>事業所</th>
                             <th>担当管理会社</th>
                             <th>設置場所</th>
                             <th>在庫</th>
@@ -1504,6 +1505,7 @@
                             <td class="col-name" title="${item.name || ''}">${item.name || '-'}${item.endDate ? ' <span style="font-size:11px;color:#bbb;">（終了）</span>' : ''}</td>
                             <td>${item.maker || '-'}</td>
                             <td>${item.model || '-'}</td>
+                            <td style="font-size:12px;">${item.officeName || '-'}</td>
                             <td>${item.assignedPartnerName ? `<span class="badge-partner" title="${item.assignedPartnerName}" style="${item.endDate ? 'opacity:0.5;' : ''}">${item.assignedPartnerName}</span>` : '-'}</td>
                             <td style="font-size:12px;color:#666;">${[item.floor, item.location].filter(Boolean).join(' ') || '-'}</td>
                             <td>${item.stock || 0} ${item.unit || '個'}</td>

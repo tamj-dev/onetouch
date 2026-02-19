@@ -664,13 +664,10 @@
         // スコープに応じて事業所をフィルタリング
         function filterOfficesByScope(officeList) {
             if (currentUser.role === 'system_admin') {
-                // システム管理者：全事業所
                 return officeList;
-            } else if (currentUser.scope === 'company') {
-                // 本社管理者：自社の事業所のみ
+            } else if (currentUser.scope === 'company' || currentUser.role === 'company_admin') {
                 return officeList.filter(o => o.companyCode === currentUser.companyCode);
-            } else if (currentUser.scope === 'office') {
-                // 事業所管理者：自事業所のみ
+            } else if (currentUser.scope === 'office' || currentUser.role === 'office_admin' || currentUser.role === 'staff') {
                 return officeList.filter(o => o.code === currentUser.officeCode);
             }
             return [];
@@ -945,6 +942,7 @@
             }
 
             // 初回表示
+            document.getElementById('resultsSection').classList.add('visible');
             renderOffices();
         })();
     </script>
