@@ -902,6 +902,9 @@ const UnifiedHeader = {
 
     // ========== DEMO切替 ==========
     _demoSwitch(roleOrId) {
+        // デモ切替中フラグ（beforeunloadでの復元を防止）
+        window._demoSwitching = true;
+
         // ドロップダウンを閉じる
         var dd = document.getElementById('uhDropdown');
         if (dd) dd.classList.remove('show');
@@ -938,6 +941,9 @@ const UnifiedHeader = {
         localStorage.setItem('ONE_loggedIn', '1');
         localStorage.setItem('ONE_userId', user.id);
         localStorage.setItem('ONE_userName', user.name);
+
+        // 切替先でスナップショットが正しく保持されるよう保存
+        if (typeof saveDemoSnapshot === 'function') saveDemoSnapshot();
 
         // 業者の場合はcontractor情報も保存
         if (user.role === 'contractor') {

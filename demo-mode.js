@@ -59,6 +59,8 @@ function restoreDemoSnapshot() {
 // beforeunload時にsessionStorageから読み出して復元
 window.addEventListener('beforeunload', function() {
     // DEMOユーザー（非システム管理者）の場合のみ復元
+    // デモ切替中は復元しない
+    if (window._demoSwitching) return;
     try {
         var cu = JSON.parse(sessionStorage.getItem('currentUser'));
         if (cu && cu.isDemoMode && cu.role !== 'system_admin') {
