@@ -810,6 +810,11 @@
         </div>
 
         <div class="filters">
+            <span class="filter-label" id="companyFilterLabel" style="display:none;">会社:</span>
+            <select class="filter-select" id="companyFilter" onchange="onCompanyFilterChange()" style="display:none;">
+                <option value="">全て</option>
+            </select>
+
             <span class="filter-label" id="officeFilterLabel" style="display:none;">事業所:</span>
             <select class="filter-select" id="officeFilter" onchange="applyFilters()" style="display:none;">
                 <option value="">全て</option>
@@ -1028,6 +1033,35 @@
                     offices = offices.filter(function(o) { return o.companyCode === currentUser.companyCode && o.code.indexOf('-H') === -1; });
                     ofSelect.innerHTML = '<option value="">全事業所</option>' + offices.map(function(o) {
                         return '<option value="' + o.code + '">' + o.name + '</option>';
+                    }).join('');
+                }
+            }
+
+            // システム管理者: 会社・事業所・管理会社フィルタを全て表示
+            if (currentUser.role === 'system_admin') {
+                // 会社フィルタ
+                var cLabel = document.getElementById('companyFilterLabel');
+                var cSelect = document.getElementById('companyFilter');
+                if (cLabel) cLabel.style.display = '';
+                if (cSelect) {
+                    cSelect.style.display = '';
+                    var companies = [];
+                    try { companies = JSON.parse(localStorage.getItem('companies') || '[]'); } catch(e) {}
+                    companies = companies.filter(function(c) { return c.code !== 'SYSTEM'; });
+                    cSelect.innerHTML = '<option value="">全会社</option>' + companies.map(function(c) {
+                        return '<option value="' + c.code + '">' + c.name + '</option>';
+                    }).join('');
+                }
+                // 事業所フィルタ
+                var ofLabel2 = document.getElementById('officeFilterLabel');
+                var ofSelect2 = document.getElementById('officeFilter');
+                if (ofLabel2) ofLabel2.style.display = '';
+                if (ofSelect2) {
+                    ofSelect2.style.display = '';
+                    var allOffices = [];
+                    try { allOffices = JSON.parse(localStorage.getItem('offices') || '[]'); } catch(e) {}
+                    ofSelect2.innerHTML = '<option value="">全事業所</option>' + allOffices.map(function(o) {
+                        return '<option value="' + o.code + '">' + o.name + '（' + o.companyCode + '）</option>';
                     }).join('');
                 }
             }
@@ -1380,11 +1414,30 @@
             }).replace(/[\u3000]/g, ' ').toLowerCase();
         }
 
+        // 会社フィルタ変更時：事業所プルダウンを連動
+        function onCompanyFilterChange() {
+            var companyCode = document.getElementById('companyFilter').value;
+            var ofSelect = document.getElementById('officeFilter');
+            if (ofSelect && currentUser.role === 'system_admin') {
+                var allOffices = [];
+                try { allOffices = JSON.parse(localStorage.getItem('offices') || '[]'); } catch(e) {}
+                if (companyCode) {
+                    allOffices = allOffices.filter(function(o) { return o.companyCode === companyCode; });
+                }
+                ofSelect.innerHTML = '<option value="">全事業所</option>' + allOffices.map(function(o) {
+                    return '<option value="' + o.code + '">' + o.name + (companyCode ? '' : '（' + o.companyCode + '）') + '</option>';
+                }).join('');
+            }
+            applyFilters();
+        }
+
         function applyFilters() {
             const searchQuery = normalizeSearch(document.getElementById('searchInput').value);
             const partnerFilter = document.getElementById('partnerFilter').value;
             const officeFilterEl = document.getElementById('officeFilter');
             const officeFilter = officeFilterEl ? officeFilterEl.value : '';
+            const companyFilterEl = document.getElementById('companyFilter');
+            const companyFilter = companyFilterEl ? companyFilterEl.value : '';
 
             filteredItems = allItems.filter(item => {
                 // 業者ログインの場合: 自社が担当している商品のみ表示
@@ -1405,13 +1458,16 @@
                     normalizeSearch(item.floor).includes(searchQuery) ||
                     normalizeSearch(item.location).includes(searchQuery);
 
+                // 会社フィルタ
+                const matchCompany = !companyFilter || item.companyCode === companyFilter;
+
                 // 事業所フィルタ
                 const matchOffice = !officeFilter || item.officeCode === officeFilter;
 
                 // 担当管理会社
                 const matchPartner = !partnerFilter || item.assignedPartnerName === partnerFilter;
 
-                return matchSearch && matchOffice && matchPartner;
+                return matchSearch && matchCompany && matchOffice && matchPartner;
             });
 
             // 検索・フィルタ時はページを1に戻す
@@ -1434,6 +1490,8 @@
         function clearSearch() {
             document.getElementById('searchInput').value = '';
             document.getElementById('partnerFilter').value = '';
+            var cSelect = document.getElementById('companyFilter');
+            if (cSelect) cSelect.value = '';
             var ofSelect = document.getElementById('officeFilter');
             if (ofSelect) ofSelect.value = '';
             
@@ -1469,6 +1527,7 @@
                     <thead>
                         <tr>
                             <th>商品名</th>
+                            <th>カテゴリ</th>
                             <th>メーカー</th>
                             <th>事業所</th>
                             <th>担当管理会社</th>
@@ -1480,6 +1539,7 @@
                         ${pageItems.map(item => `
                         <tr style="${item.endDate ? 'background: #f0f0f0; color: #aaa;' : ''}">
                             <td class="col-name" title="${item.name || ''}">${item.name || '-'}${item.endDate ? ' <span style="font-size:11px;color:#bbb;">（終了）</span>' : ''}</td>
+                            <td style="font-size:11px;color:#555;">${(item.category || '-').replace('・', '・<wbr>')}</td>
                             <td style="font-size:12px;">${item.maker || '-'}</td>
                             <td style="font-size:12px;">${item.officeName || '-'}</td>
                             <td>${item.assignedPartnerName ? `<span class="badge-partner" title="${item.assignedPartnerName}" style="${item.endDate ? 'opacity:0.5;' : ''}">${item.assignedPartnerName}</span>` : '-'}</td>
