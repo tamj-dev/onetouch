@@ -360,7 +360,7 @@ function generateDemoReports(companyCode, officeCodes, officeNames, accounts) {
                     companyCode: companyCode,
                     officeCode: officeCodes[oi], officeName: officeNames[oi],
                     title: tpl.t, category: tpl.c, description: tpl.d, type: 'report',
-                    timestamp: ts.toISOString(), reporter: s.name, reporterId: s.id,
+                    timestamp: ts.toISOString(), reporter: s.name, reporterId: s.id, userId: s.id,
                     status: statusMap[statuses[statusIdx]],
                     contractorStatus: statuses[statusIdx],
                     assignedPartnerId: null, assignedPartnerName: '',
@@ -374,7 +374,7 @@ function generateDemoReports(companyCode, officeCodes, officeNames, accounts) {
 
 // ========== デモマスタデータ初期化 ==========
 function initDemoData() {
-    if (localStorage.getItem('demo_initialized') === 'v11') return;
+    if (localStorage.getItem('demo_initialized') === 'v12') return;
 
     var companies = [
         {code:'TAMJ',name:'タムジ株式会社',status:'active',postalCode:'100-0001',prefecture:'東京都',address:'千代田区千代田1-1',phone:'03-1234-5678'},
@@ -418,7 +418,7 @@ function initDemoData() {
     });
     localStorage.setItem('onetouch.reports', JSON.stringify(allReports));
 
-    localStorage.setItem('demo_initialized', 'v11');
+    localStorage.setItem('demo_initialized', 'v12');
     // スナップショットを保存（デモ切替/ログアウト時の復元用）
     saveDemoSnapshot();
 }

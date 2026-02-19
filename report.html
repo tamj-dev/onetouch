@@ -863,10 +863,10 @@
       var reports=getAllReports();
       
       // 自分が送信した通報のみフィルタリング
-      const currentUserId = currentUser?.userId || '';
+      const currentUserId = currentUser?.userId || currentUser?.id || '';
       
       reports = reports.filter(function(r) {
-        return r.userId === currentUserId;
+        return r.userId === currentUserId || r.reporterId === currentUserId;
       });
 
       // カウント更新（フィルタ前）
