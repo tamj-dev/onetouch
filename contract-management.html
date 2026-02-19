@@ -67,13 +67,13 @@
                     📖 契約テーブルとは（概要）
                 </a>
                 <a href="docs.html#howto" class="link-btn" style="background:#f0fdf4; border:1px solid #bbf7d0; color:#166534;">
-                    🔧 業者の変更手順
+                    🔧 管理会社の変更手順
                 </a>
                 <a href="docs.html#faq" class="link-btn" style="background:#fefce8; border:1px solid #fde68a; color:#854d0e;">
                     ❓ よくある質問
                 </a>
                 <a href="partner-master.html" class="link-btn" style="background:#faf5ff; border:1px solid #e9d5ff; color:#7c3aed;">
-                    👤 取引先マスタを開く
+                    👤 管理会社マスタを開く
                 </a>
             </div>
         </div>
@@ -81,15 +81,15 @@
         <!-- 契約一覧テーブル -->
         <div class="section">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
-                <div class="section-title" style="margin-bottom:0;">契約一覧（業者 × 会社 × カテゴリ）</div>
-                <input type="text" id="contractFilter" placeholder="業者名で検索..." oninput="cm_currentPage=1;renderTable()" style="padding:8px 14px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; width:220px;">
+                <div class="section-title" style="margin-bottom:0;">契約一覧（管理会社 × 会社 × カテゴリ）</div>
+                <input type="text" id="contractFilter" placeholder="管理会社名で検索..." oninput="cm_currentPage=1;renderTable()" style="padding:8px 14px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; width:220px;">
             </div>
             <div style="overflow-x:auto;">
                 <table style="width:100%; min-width:700px; border-collapse:collapse; font-size:14px;">
                     <thead>
                         <tr style="background:#f8f9fa; border-bottom:2px solid #e8e8e8;">
-                            <th style="padding:10px 12px; text-align:left; font-weight:600; color:#64748b; width:90px;">業者コード</th>
-                            <th style="padding:10px 12px; text-align:left; font-weight:600; color:#64748b;">業者名</th>
+                            <th style="padding:10px 12px; text-align:left; font-weight:600; color:#64748b; width:90px;">管理会社コード</th>
+                            <th style="padding:10px 12px; text-align:left; font-weight:600; color:#64748b;">管理会社名</th>
                             <th style="padding:10px 12px; text-align:left; font-weight:600; color:#64748b; width:120px;">契約会社</th>
                             <th style="padding:10px 12px; text-align:left; font-weight:600; color:#64748b;">担当カテゴリ</th>
                             <th style="padding:10px 12px; text-align:center; font-weight:600; color:#64748b; width:60px;">状態</th>
@@ -164,7 +164,7 @@
         onBack: function() { window.location.href = 'system-admin.html'; }
     });
 
-    var ALL_CATEGORIES = ['建物インフラ','居室・生活','介護・医療','厨房・食事','IT・安全','その他'];
+    var ALL_CATEGORIES = ['建物・外まわり','部屋・共用部の家具・家電','介護医療・お風呂の道具','厨房・食事の道具','通信・呼出し・防火の機器','その他'];
     var _contracts = [];
     var _partners = [];
     var _companies = [];

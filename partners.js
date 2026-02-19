@@ -78,7 +78,7 @@ router.get('/:id', async (req, res) => {
               )) FROM partner_contacts pc WHERE pc.partner_id = p.id) as contacts
        FROM partners p WHERE p.id = $1`, [req.params.id]
     );
-    if (result.rows.length === 0) return res.status(404).json({ error: '業者が見つかりません' });
+    if (result.rows.length === 0) return res.status(404).json({ error: '管理会社が見つかりません' });
     res.json(formatPartner(result.rows[0]));
   } catch (err) {
     console.error('[PARTNERS] Get error:', err);
@@ -125,10 +125,10 @@ router.post('/', authorize('company_admin', 'system_admin'), async (req, res) =>
       [req.user.companyCode, req.user.id, req.user.name, id, JSON.stringify({ name })]
     );
 
-    res.status(201).json({ id, message: '業者を登録しました' });
+    res.status(201).json({ id, message: '管理会社を登録しました' });
   } catch (err) {
     await client.query('ROLLBACK');
-    if (err.code === '23505') return res.status(409).json({ error: '同じコードの業者が既に存在します' });
+    if (err.code === '23505') return res.status(409).json({ error: '同じコードの管理会社が既に存在します' });
     console.error('[PARTNERS] Create error:', err);
     res.status(500).json({ error: 'サーバーエラー' });
   } finally {
@@ -142,7 +142,7 @@ router.post('/', authorize('company_admin', 'system_admin'), async (req, res) =>
 router.put('/:id', authorize('company_admin', 'system_admin'), async (req, res) => {
   try {
     const current = await db.query('SELECT * FROM partners WHERE id = $1', [req.params.id]);
-    if (current.rows.length === 0) return res.status(404).json({ error: '業者が見つかりません' });
+    if (current.rows.length === 0) return res.status(404).json({ error: '管理会社が見つかりません' });
 
     const { name, phone, email, address, contactName, categories, status } = req.body;
 
@@ -156,7 +156,7 @@ router.put('/:id', authorize('company_admin', 'system_admin'), async (req, res) 
        categories ? JSON.stringify(categories) : null, status, req.params.id]
     );
 
-    res.json({ message: '業者を更新しました' });
+    res.json({ message: '管理会社を更新しました' });
   } catch (err) {
     console.error('[PARTNERS] Update error:', err);
     res.status(500).json({ error: 'サーバーエラー' });
@@ -169,7 +169,7 @@ router.put('/:id', authorize('company_admin', 'system_admin'), async (req, res) 
 router.delete('/:id', authorize('system_admin'), async (req, res) => {
   try {
     const current = await db.query('SELECT * FROM partners WHERE id = $1', [req.params.id]);
-    if (current.rows.length === 0) return res.status(404).json({ error: '業者が見つかりません' });
+    if (current.rows.length === 0) return res.status(404).json({ error: '管理会社が見つかりません' });
 
     await db.query(`UPDATE partners SET status = 'inactive' WHERE id = $1`, [req.params.id]);
 
@@ -179,7 +179,7 @@ router.delete('/:id', authorize('system_admin'), async (req, res) => {
       [req.user.companyCode, req.user.id, req.user.name, req.params.id, JSON.stringify({ name: current.rows[0].name })]
     );
 
-    res.json({ message: '業者を無効化しました' });
+    res.json({ message: '管理会社を無効化しました' });
   } catch (err) {
     console.error('[PARTNERS] Delete error:', err);
     res.status(500).json({ error: 'サーバーエラー' });

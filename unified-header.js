@@ -7,7 +7,7 @@
  *   2. <div id="unified-header-mount"></div> をbody直下に置く
  *   3. JS内で UnifiedHeader.init({ icon: '', title: 'アカウントマスタ', backButton: true }) を呼ぶ
  * 
- * 最終更新: 2026-02-11
+ * 最終更新: 2026-02-18
  */
 
 const UnifiedHeader = {
@@ -392,7 +392,7 @@ const UnifiedHeader = {
             const currentRole = user.role;
             const roles = [
                 { key: 'staff', label: 'スタッフで表示', color: '#4CAF50', active: currentRole === 'staff' },
-                { key: 'contractor', label: '業者で表示', color: '#2196F3', active: currentRole === 'contractor' },
+                { key: 'contractor', label: '管理会社で表示', color: '#2196F3', active: currentRole === 'contractor' },
                 { key: 'office_admin', label: '事業所管理者で表示', color: '#FF9800', active: currentRole === 'office_admin' },
                 { key: 'company_admin', label: '本社管理者で表示', color: '#9C27B0', active: currentRole === 'company_admin' }
             ];

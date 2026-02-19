@@ -230,7 +230,7 @@
 
         <div class="doc-tabs">
             <button class="doc-tab active" onclick="switchTab('guide')">
-                <span class="doc-tab-icon">📖</span>運用ガイド
+                <span class="doc-tab-icon">📖</span>運用マニュアル
             </button>
             <button class="doc-tab" onclick="switchTab('howto')">
                 <span class="doc-tab-icon">🔧</span>操作手順
@@ -250,23 +250,23 @@
         <div class="doc-content active" id="tab-guide">
             <div class="doc-card">
                 <h2>このシステムについて</h2>
-                <p>ワンタッチ管理システムは、介護施設の設備トラブルを「ワンタッチ」で通報し、担当業者に自動で連絡が行く仕組みです。</p>
+                <p>ワンタッチ管理システムは、介護施設の設備トラブルを「ワンタッチ」で通報し、担当管理会社に自動で連絡が行く仕組みです。</p>
                 <h3>登場人物</h3>
                 <ul>
-                    <li><strong>システム管理者（あなた）</strong> — システム全体を管理。業者登録、会社セットアップ、契約管理を行います</li>
+                    <li><strong>システム管理者（あなた）</strong> — システム全体を管理。管理会社登録、会社セットアップ、契約管理を行います</li>
                     <li><strong>施設スタッフ</strong> — 設備の故障を発見したら通報します。それだけ。簡単です</li>
                     <li><strong>事業所管理者</strong> — 自分の事業所の通報状況を確認し、対応を管理します</li>
                     <li><strong>本社管理者</strong> — 全事業所の通報を横断的に見れます</li>
-                    <li><strong>業者</strong> — 通報を受け取り、修理・対応を行います</li>
+                    <li><strong>管理会社</strong> — 通報を受け取り、修理・対応を行います</li>
                 </ul>
             </div>
 
             <div class="doc-card">
                 <h2>基本の流れ</h2>
                 <div class="flow-box">
-                    <div class="flow-item">業者が申し込み</div>
+                    <div class="flow-item">管理会社が申し込み</div>
                     <div class="flow-arrow">→</div>
-                    <div class="flow-item">業者を登録</div>
+                    <div class="flow-item">管理会社を登録</div>
                     <div class="flow-arrow">→</div>
                     <div class="flow-item">施設をセットアップ</div>
                     <div class="flow-arrow">→</div>
@@ -282,35 +282,147 @@
                 <div class="flow-box">
                     <div class="flow-item">スタッフが通報</div>
                     <div class="flow-arrow">→</div>
-                    <div class="flow-item">カテゴリから業者を自動特定</div>
+                    <div class="flow-item">カテゴリから管理会社を自動特定</div>
                     <div class="flow-arrow">→</div>
-                    <div class="flow-item">業者に通知</div>
+                    <div class="flow-item">管理会社に通知</div>
                     <div class="flow-arrow">→</div>
-                    <div class="flow-item">業者が対応</div>
+                    <div class="flow-item">管理会社が対応</div>
                     <div class="flow-arrow">→</div>
                     <div class="flow-item">完了</div>
                 </div>
-                <div class="doc-note">商品のカテゴリ（居室・生活、建物インフラなど）と契約設定に基づいて、担当業者が自動で決まります。スタッフが業者を選ぶ必要はありません。</div>
+                <div class="doc-note">商品のカテゴリ（部屋・共用部の家具・家電、建物・外まわりなど）と契約設定に基づいて、担当管理会社が自動で決まります。スタッフが管理会社を選ぶ必要はありません。</div>
             </div>
 
             <div class="doc-card">
                 <h2>契約テーブルとは</h2>
-                <p>「どの業者が、どの会社の、どのカテゴリを担当するか」を管理する仕組みです。</p>
+                <p>「どの管理会社が、どの会社の、どのカテゴリを担当するか」を管理する仕組みです。</p>
                 <h3>例</h3>
                 <ul>
-                    <li>東京設備工業 × タムジ株式会社 × 居室・生活・居室・生活・厨房・食事 → エアコンが壊れたら東京設備に通知</li>
-                    <li>関東建物インフラサービス × タムジ株式会社 × 建物インフラ・浴室・ガス → トイレの水漏れなら関東建物インフラに通知</li>
+                    <li>東京設備工業 × タムジ株式会社 × 部屋・共用部の家具・家電・厨房・食事の道具 → エアコンが壊れたら東京設備に通知</li>
+                    <li>関東水道サービス × タムジ株式会社 × 建物・外まわり → トイレの水漏れなら関東水道に通知</li>
                 </ul>
                 <div class="doc-note">契約は事業所単位でも設定できます。「全事業所」にすれば、その会社の全施設に適用されます。</div>
+            </div>
+
+            <!-- ========== 日常運用ガイド ========== -->
+            <div class="doc-card">
+                <h2>日常運用でやること</h2>
+                <h3>毎日（推奨）</h3>
+                <ul>
+                    <li><strong>通報履歴を確認</strong> — 未対応の通報がないかチェック。滞留アラートが出ていたら管理会社に連絡</li>
+                    <li><strong>管理会社のステータス確認</strong> — 「対応中」のまま止まっている案件がないか確認</li>
+                </ul>
+                <h3>週1回（推奨）</h3>
+                <ul>
+                    <li><strong>監査ログ確認</strong> — 不審な操作がないか確認（システム設定 → 監査ログ）</li>
+                    <li><strong>データバックアップ</strong> — システム設定 → データエクスポートで主要データをCSV出力</li>
+                </ul>
+                <h3>月1回（推奨）</h3>
+                <ul>
+                    <li><strong>アカウント棚卸</strong> — 退職したスタッフのアカウントを無効化</li>
+                    <li><strong>管理会社の対応実績確認</strong> — 管理会社ダッシュボードで対応件数・完了率をチェック</li>
+                </ul>
+            </div>
+
+            <div class="doc-card">
+                <h2>よくある運用シナリオ</h2>
+                
+                <h3>スタッフが退職した場合</h3>
+                <ol>
+                    <li>マスタ管理 → アカウントマスタを開く</li>
+                    <li>該当スタッフを検索して「編集」</li>
+                    <li>アカウントを削除、または初期パスワードにリセットして引き継ぎ</li>
+                </ol>
+
+                <h3>新しい事業所を追加する場合</h3>
+                <ol>
+                    <li>マスタ管理 → 事業所マスタから「新規追加」</li>
+                    <li>事業所名・住所・電話番号を入力</li>
+                    <li>契約管理画面で、その事業所のカテゴリ別担当管理会社を設定</li>
+                    <li>アカウントマスタでスタッフ・管理者アカウントを発行</li>
+                </ol>
+                <div class="doc-note">「全事業所」の契約がある場合は、新しい事業所にも自動で適用されます。個別の契約が必要な場合だけ追加設定してください。</div>
+
+                <h3>管理会社が変わった場合</h3>
+                <ol>
+                    <li>契約管理画面を開く</li>
+                    <li>旧管理会社の契約を「停止」にする</li>
+                    <li>新しい管理会社を管理会社マスタで登録（未登録の場合）</li>
+                    <li>新しい管理会社の契約を作成</li>
+                </ol>
+                <div class="doc-note">商品マスタの変更は不要です。カテゴリに基づいて自動的に新しい管理会社に通知が行きます。</div>
+
+                <h3>商品を大量に追加する場合</h3>
+                <ol>
+                    <li>Excelファイルに商品情報を入力（商品名、メーカー、型番、カテゴリ等）</li>
+                    <li>商品マスタ → インポートからファイルを取り込み</li>
+                    <li>列の割当を確認し、プレビューで内容チェック</li>
+                    <li>問題なければ「取り込み」を実行</li>
+                </ol>
+
+                <h3>パスワードを忘れたスタッフがいる場合</h3>
+                <ol>
+                    <li>マスタ管理 → アカウントマスタを開く</li>
+                    <li>該当アカウントの「編集」→「初期パスワードにリセット」</li>
+                    <li>リセット後、スタッフに初期パスワードを伝える</li>
+                    <li>次回ログイン時にパスワード変更推奨バナーが表示される</li>
+                </ol>
+            </div>
+
+            <div class="doc-card">
+                <h2>トラブルシューティング</h2>
+
+                <h3>通報したのに管理会社に通知が行かない</h3>
+                <ul>
+                    <li>契約管理画面で該当カテゴリの契約が「有効」になっているか確認</li>
+                    <li>商品のカテゴリが正しく設定されているか確認</li>
+                    <li>管理会社のアカウントが有効か確認</li>
+                </ul>
+
+                <h3>管理会社がダッシュボードにログインできない</h3>
+                <ul>
+                    <li>ログイン画面で会社コードに「管理会社コード」（例: PN001）を入力しているか確認</li>
+                    <li>管理会社マスタでログインIDとパスワードが正しいか確認</li>
+                    <li>必要に応じてパスワードを再設定</li>
+                </ul>
+
+                <h3>商品インポートでエラーが出る</h3>
+                <ul>
+                    <li>Excelファイルの1行目が列名（ヘッダー）になっているか確認</li>
+                    <li>必須項目（商品名）が空でないか確認</li>
+                    <li>CSV形式の場合、文字コードがUTF-8かShift-JISか確認</li>
+                </ul>
+
+                <h3>画面が正しく表示されない</h3>
+                <ul>
+                    <li>ブラウザのキャッシュをクリア（Ctrl+Shift+R / Cmd+Shift+R）</li>
+                    <li>別のブラウザで試す</li>
+                    <li>スマートフォンの場合、ホーム画面のアイコンを削除して再追加</li>
+                </ul>
+            </div>
+
+            <div class="doc-card">
+                <h2>画面一覧と役割</h2>
+                <table style="width:100%; border-collapse:collapse; font-size:14px;">
+                    <tr style="background:#f1f5f9;"><th style="padding:10px 12px;text-align:left;border-bottom:2px solid #e2e8f0;">画面名</th><th style="padding:10px 12px;text-align:left;border-bottom:2px solid #e2e8f0;">用途</th><th style="padding:10px 12px;text-align:left;border-bottom:2px solid #e2e8f0;">使う人</th></tr>
+                    <tr><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">通報画面</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">設備トラブルを通報+履歴確認</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">スタッフ</td></tr>
+                    <tr><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">管理会社ダッシュボード</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">対応依頼の確認・ステータス更新</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">管理会社</td></tr>
+                    <tr><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">マスタ管理</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">アカウント・事業所・管理会社・商品の管理</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">管理者全般</td></tr>
+                    <tr><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">通報履歴</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">全通報の確認・検索・CSV出力</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">管理者全般</td></tr>
+                    <tr><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">セットアップウィザード</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">新規施設の一括登録</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">システム管理者</td></tr>
+                    <tr><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">契約管理</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">管理会社×会社×カテゴリの紐づけ</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">システム管理者</td></tr>
+                    <tr><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">システム設定</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">ロゴ・カテゴリ・滞留アラート・データ管理</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">本社管理者以上</td></tr>
+                    <tr><td style="padding:8px 12px;">商品インポート</td><td style="padding:8px 12px;">Excel/CSVから商品を一括登録</td><td style="padding:8px 12px;">管理会社・管理者</td></tr>
+                </table>
             </div>
         </div>
 
         <!-- ========== 操作手順 ========== -->
         <div class="doc-content" id="tab-howto">
             <div class="doc-card">
-                <h2>新しい業者を登録する</h2>
+                <h2>新しい管理会社を登録する</h2>
                 <div class="step-guide">
-                    <span class="step-num">1</span><span class="step-title">マスタ管理 → 取引先マスタを開く</span>
+                    <span class="step-num">1</span><span class="step-title">マスタ管理 → 管理会社マスタを開く</span>
                     <div class="step-desc">システム管理画面のカード一覧から進みます</div>
                 </div>
                 <div class="step-guide">
@@ -319,19 +431,19 @@
                 </div>
                 <div class="step-guide">
                     <span class="step-num">3</span><span class="step-title">追加担当者がいれば「＋担当者を追加」</span>
-                    <div class="step-desc">1つの業者に複数の担当者を登録できます。それぞれ別のログインIDが発行されます</div>
+                    <div class="step-desc">1つの管理会社に複数の担当者を登録できます。それぞれ別のログインIDが発行されます</div>
                 </div>
                 <div class="step-guide">
                     <span class="step-num">4</span><span class="step-title">保存</span>
-                    <div class="step-desc">業者コード（PN001など）が自動発行されます</div>
+                    <div class="step-desc">管理会社コード（PN001など）が自動発行されます</div>
                 </div>
             </div>
 
             <div class="doc-card">
                 <h2>新しい施設をセットアップする</h2>
                 <div class="step-guide">
-                    <span class="step-num">1</span><span class="step-title">業者選択</span>
-                    <div class="step-desc">登録済みの業者から選ぶか、新しく登録します</div>
+                    <span class="step-num">1</span><span class="step-title">管理会社選択</span>
+                    <div class="step-desc">登録済みの管理会社から選ぶか、新しく登録します</div>
                 </div>
                 <div class="step-guide">
                     <span class="step-num">2</span><span class="step-title">会社登録</span>
@@ -343,7 +455,7 @@
                 </div>
                 <div class="step-guide">
                     <span class="step-num">4</span><span class="step-title">契約設定</span>
-                    <div class="step-desc">業者が担当するカテゴリを選択。事業所ごとに設定も可能です</div>
+                    <div class="step-desc">管理会社が担当するカテゴリを選択。事業所ごとに設定も可能です</div>
                 </div>
                 <div class="step-guide">
                     <span class="step-num">5</span><span class="step-title">アカウント登録</span>
@@ -356,17 +468,17 @@
             </div>
 
             <div class="doc-card">
-                <h2>担当業者を変更する</h2>
-                <h3>カテゴリ全体の業者を変更する場合</h3>
+                <h2>担当管理会社を変更する</h2>
+                <h3>カテゴリ全体の管理会社を変更する場合</h3>
                 <div class="step-guide">
                     <span class="step-num">1</span><span class="step-title">現在の契約を停止（suspended）にする</span>
                     <div class="step-desc">契約管理画面で該当の契約のステータスを変更</div>
                 </div>
                 <div class="step-guide">
-                    <span class="step-num">2</span><span class="step-title">新しい業者の契約を作成する</span>
-                    <div class="step-desc">同じカテゴリで新しい業者との契約を追加</div>
+                    <span class="step-num">2</span><span class="step-title">新しい管理会社の契約を作成する</span>
+                    <div class="step-desc">同じカテゴリで新しい管理会社との契約を追加</div>
                 </div>
-                <div class="doc-note">商品マスタの変更は不要です。カテゴリに基づいて自動的に新しい業者に通知が行くようになります。</div>
+                <div class="doc-note">商品マスタの変更は不要です。カテゴリに基づいて自動的に新しい管理会社に通知が行くようになります。</div>
             </div>
 
             <div class="doc-card">
@@ -412,10 +524,10 @@
                         <th>本社管理者</th>
                         <th>事業所管理者</th>
                         <th>スタッフ</th>
-                        <th>業者</th>
+                        <th>管理会社</th>
                     </tr>
                     <tr>
-                        <td>業者マスタ</td>
+                        <td>管理会社マスタ</td>
                         <td class="perm-ok">○</td>
                         <td class="perm-no">✕</td>
                         <td class="perm-no">✕</td>
@@ -509,7 +621,7 @@
                 <h2>ログインの仕組み</h2>
                 <p>全ユーザーは3つの情報でログインします。</p>
                 <ul>
-                    <li><strong>会社コード</strong> — 施設スタッフなら会社コード（例: TAMJ）、業者なら業者コード（例: PN001）</li>
+                    <li><strong>会社コード</strong> — 施設スタッフなら会社コード（例: TAMJ）、管理会社なら管理会社コード（例: PN001）</li>
                     <li><strong>ログインID</strong> — 会社コード + ログイン名が自動生成（例: TAMJ-yamada）</li>
                     <li><strong>パスワード</strong> — 初回は管理者が設定したパスワード。変更可能</li>
                 </ul>
@@ -522,13 +634,13 @@
                 <h2>よくある質問</h2>
 
                 <div class="faq-item">
-                    <div class="faq-q" onclick="toggleFaq(this)">業者が変わったらどうする？</div>
-                    <div class="faq-a">契約管理画面で旧業者の契約を「停止」にして、新しい業者の契約を作成します。商品マスタの変更は不要です。カテゴリに基づいて自動的に新しい業者に通知が行きます。</div>
+                    <div class="faq-q" onclick="toggleFaq(this)">管理会社が変わったらどうする？</div>
+                    <div class="faq-a">契約管理画面で旧管理会社の契約を「停止」にして、新しい管理会社の契約を作成します。商品マスタの変更は不要です。カテゴリに基づいて自動的に新しい管理会社に通知が行きます。</div>
                 </div>
 
                 <div class="faq-item">
                     <div class="faq-q" onclick="toggleFaq(this)">新しい事業所を追加したい</div>
-                    <div class="faq-a">マスタ管理 → 事業所マスタから追加できます。追加後、契約設定でその事業所のカテゴリ別担当業者を設定してください。「全事業所」の契約がある場合は自動的に適用されます。</div>
+                    <div class="faq-a">マスタ管理 → 事業所マスタから追加できます。追加後、契約設定でその事業所のカテゴリ別担当管理会社を設定してください。「全事業所」の契約がある場合は自動的に適用されます。</div>
                 </div>
 
                 <div class="faq-item">
@@ -537,8 +649,8 @@
                 </div>
 
                 <div class="faq-item">
-                    <div class="faq-q" onclick="toggleFaq(this)">業者に複数の担当者がいる場合は？</div>
-                    <div class="faq-a">取引先マスタの編集画面で「＋担当者を追加」から追加できます。各担当者に個別のログインIDが発行され、それぞれ業者ダッシュボードにログインできます。</div>
+                    <div class="faq-q" onclick="toggleFaq(this)">管理会社に複数の担当者がいる場合は？</div>
+                    <div class="faq-a">管理会社マスタの編集画面で「＋担当者を追加」から追加できます。各担当者に個別のログインIDが発行され、それぞれ管理会社ダッシュボードにログインできます。</div>
                 </div>
 
                 <div class="faq-item">
@@ -558,12 +670,12 @@
 
                 <div class="faq-item">
                     <div class="faq-q" onclick="toggleFaq(this)">「その他」カテゴリの通報はどうなる？</div>
-                    <div class="faq-a">「その他」カテゴリには通常、業者が割り当てられていません。事業所管理者に通知が行き、施設側で対応を判断します。購入品（洗濯機など）の故障報告などに使います。</div>
+                    <div class="faq-a">「その他」カテゴリには通常、管理会社が割り当てられていません。事業所管理者に通知が行き、施設側で対応を判断します。購入品（洗濯機など）の故障報告などに使います。</div>
                 </div>
 
                 <div class="faq-item">
                     <div class="faq-q" onclick="toggleFaq(this)">DEMOモードとは？</div>
-                    <div class="faq-a">ログイン画面下部の「体験」ボタンからアクセスできます。サンプルデータで各役割（スタッフ、業者、管理者）の画面を体験できます。DEMOのデータは本番データに影響しません。</div>
+                    <div class="faq-a">ログイン画面下部の「体験」ボタンからアクセスできます。サンプルデータで各役割（スタッフ、管理会社、管理者）の画面を体験できます。DEMOのデータは本番データに影響しません。</div>
                 </div>
 
                 <div class="faq-item">
@@ -608,14 +720,14 @@
                         <td>ログインID、ロール、所属等</td>
                     </tr>
                     <tr>
-                        <td>業者</td>
+                        <td>管理会社</td>
                         <td>partners</td>
-                        <td>業者名、担当者、ログイン情報</td>
+                        <td>管理会社名、担当者、ログイン情報</td>
                     </tr>
                     <tr>
                         <td>契約</td>
                         <td>onetouch.contracts</td>
-                        <td>業者×会社×カテゴリの紐づけ</td>
+                        <td>管理会社×会社×カテゴリの紐づけ</td>
                     </tr>
                     <tr>
                         <td>商品</td>
@@ -625,7 +737,7 @@
                     <tr>
                         <td>通報</td>
                         <td>reports</td>
-                        <td>通報内容、ステータス、担当業者</td>
+                        <td>通報内容、ステータス、担当管理会社</td>
                     </tr>
                     <tr>
                         <td>監査ログ</td>
@@ -636,8 +748,8 @@
             </div>
 
             <div class="doc-card">
-                <h2>業者割当の優先順位</h2>
-                <p>通報時に担当業者を自動で決定するロジックです。</p>
+                <h2>管理会社割当の優先順位</h2>
+                <p>通報時に担当管理会社を自動で決定するロジックです。</p>
                 <ol>
                     <li><strong>商品の直接指定</strong> — 商品マスタにassignedPartnerIdがある場合（レガシー、基本使わない）</li>
                     <li><strong>契約テーブル</strong> — 会社コード + 事業所 + カテゴリで契約を検索</li>
@@ -650,15 +762,15 @@
                 <h2>カテゴリ体系</h2>
                 <p>現在のシステムで使用している固定カテゴリ（10種類）です。</p>
                 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">
-                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">居室・生活</span>
-                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">居室・生活</span>
+                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">部屋・共用部の家具・家電</span>
+                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">部屋・共用部の家具・家電</span>
                     <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">インターネット</span>
-                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">厨房・食事</span>
+                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">厨房・食事の道具</span>
                     <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">浴室</span>
-                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">介護・医療</span>
-                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">建物インフラ</span>
+                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">介護医療・お風呂の道具</span>
+                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">建物・外まわり</span>
                     <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">ガス</span>
-                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">建物インフラ</span>
+                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">建物・外まわり</span>
                     <span style="background:#f1f5f9;color:#64748b;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">その他</span>
                 </div>
             </div>

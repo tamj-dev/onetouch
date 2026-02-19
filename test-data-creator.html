@@ -99,9 +99,9 @@
         <h1>テストデータ作成</h1>
 
         <div class="section">
-            <h2>1. 業者データ（Partners）</h2>
-            <button class="btn" onclick="createPartners()">業者データを作成</button>
-            <button class="btn-secondary btn" onclick="clearPartners()">業者データを削除</button>
+            <h2>1. 管理会社データ（Partners）</h2>
+            <button class="btn" onclick="createPartners()">管理会社データを作成</button>
+            <button class="btn-secondary btn" onclick="clearPartners()">管理会社データを削除</button>
             <div id="partnerResult" class="result"></div>
         </div>
 
@@ -146,12 +146,12 @@
                     contactPhone: '090-1234-5678',
                     fax: '03-1234-5679',
                     email: 'contact@tokyo-setubi.co.jp',
-                    notes: 'TAMJ社の主要設備業者',
+                    notes: 'TAMJ社の主要設備管理会社',
                     // 業者ログイン情報
                     partnerCode: 'P001',
                     loginId: 'p001-yamada',
                     password: 'demo',
-                    categories: ['居室・生活', '厨房・食事', '介護・医療'],
+                    categories: ['部屋・共用部の家具・家電', '厨房・食事の道具', '介護医療・お風呂の道具'],
                     assignedCompanies: ['TAMJ'],
                     status: 'active',
                     createdAt: '2026/02/09'
@@ -177,7 +177,7 @@
                     partnerCode: 'P002',
                     loginId: 'p002-sato',
                     password: 'demo',
-                    categories: ['建物インフラ'],
+                    categories: ['建物・外まわり'],
                     assignedCompanies: ['TAMJ'],
                     status: 'active',
                     createdAt: '2026/02/09'
@@ -203,7 +203,7 @@
                     partnerCode: 'P003',
                     loginId: 'p003-suzuki',
                     password: 'demo',
-                    categories: ['IT・安全'],
+                    categories: ['通信・呼出し・防火の機器'],
                     assignedCompanies: ['TAMJ'],
                     status: 'active',
                     createdAt: '2026/02/09'
@@ -216,12 +216,12 @@
             result.style.display = 'block';
             result.className = 'result';
             result.innerHTML = `
-                業者データを作成しました！<br>
-                <strong>${partners.length}件</strong> の業者を登録<br><br>
+                管理会社データを作成しました！<br>
+                <strong>${partners.length}件</strong> の管理会社を登録<br><br>
                 <small>
-                業者1: 東京設備工業 (家電/浴室/インターネット) - ログインID: p001-yamada<br>
-                業者2: 関東水道サービス (水道/浴室/ガス) - ログインID: p002-sato<br>
-                業者3: 日本電気工事 (インターネット/エレベーター/家電) - ログインID: p003-suzuki
+                管理会社1: 東京設備工業 (家電/浴室/インターネット) - ログインID: p001-yamada<br>
+                管理会社2: 関東水道サービス (水道/浴室/ガス) - ログインID: p002-sato<br>
+                管理会社3: 日本電気工事 (インターネット/エレベーター/家電) - ログインID: p003-suzuki
                 </small>
             `;
         }
@@ -231,7 +231,7 @@
             const result = document.getElementById('partnerResult');
             result.style.display = 'block';
             result.className = 'result';
-            result.innerHTML = '️ 業者データを削除しました';
+            result.innerHTML = '️ 管理会社データを削除しました';
         }
 
         // ========================================
@@ -252,7 +252,7 @@
                     officeCode: 'TAMJ-J0001',
                     officeName: '〇〇事業所',
                     title: '特浴A',
-                    category: '居室・生活',
+                    category: '部屋・共用部の家具・家電',
                     priority: '高',
                     location: '1F 浴室',
                     description: '異音がして冷房が効かない',
@@ -273,7 +273,7 @@
                     officeCode: 'TAMJ-J0001',
                     officeName: '〇〇事業所',
                     title: '給湯器①',
-                    category: '建物インフラ',
+                    category: '建物・外まわり',
                     priority: '中',
                     location: '2F 厨房',
                     description: 'お湯が出ない',
@@ -300,7 +300,7 @@
                     officeCode: 'TAMJ-J0001',
                     officeName: '〇〇事業所',
                     title: '照明器具③',
-                    category: 'IT・安全',
+                    category: '通信・呼出し・防火の機器',
                     priority: '低',
                     location: '3F 廊下',
                     description: '電球が切れている',

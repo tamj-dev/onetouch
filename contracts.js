@@ -107,7 +107,7 @@ router.get('/resolve', companyScope, async (req, res) => {
 router.post('/', authorize('company_admin', 'system_admin'), async (req, res) => {
   try {
     const { partnerId, companyCode, officeCode, categories, startDate, endDate, notes } = req.body;
-    if (!partnerId) return res.status(400).json({ error: '業者を選択してください' });
+    if (!partnerId) return res.status(400).json({ error: '管理会社を選択してください' });
     if (!categories || categories.length === 0) return res.status(400).json({ error: 'カテゴリを選択してください' });
 
     const targetCompany = req.user.role === 'system_admin' && companyCode ? companyCode : req.user.companyCode;

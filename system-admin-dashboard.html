@@ -216,7 +216,7 @@
                         <option value="offices">事業所情報</option>
                         <option value="accounts">アカウント情報</option>
                         <option value="reports">通報データ</option>
-                        <option value="partners">取引先情報</option>
+                        <option value="partners">管理会社情報</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -292,7 +292,7 @@
                     <div>✓ 会社マスタ</div>
                     <div>✓ 事業所マスタ</div>
                     <div>✓ アカウントマスタ</div>
-                    <div>✓ 業者マスタ</div>
+                    <div>✓ 管理会社マスタ</div>
                     <div>✓ 通報データ</div>
                     <div>✓ 商品マスタ</div>
                     <div>✓ 監査ログ</div>
@@ -342,7 +342,7 @@
         <div style="background: #eff6ff; border: 1px solid #93c5fd; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
             <div style="color: #1e40af; font-size: 14px; font-weight: 600; margin-bottom: 8px;">デモデータを初期状態に戻します</div>
             <div style="color: #1e40af; font-size: 13px; line-height: 1.6;">
-                会社・事業所・アカウント・業者・契約・商品（600件）・通報履歴（48件）を<br>
+                会社・事業所・アカウント・管理会社・契約・商品（600件）・通報履歴（48件）を<br>
                 初期のデモデータで上書きします。カスタマイズした内容はリセットされます。
             </div>
         </div>
@@ -362,7 +362,7 @@
         <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
             <div style="color: #991b1b; font-size: 14px; font-weight: 600; margin-bottom: 8px;">この操作は取り消せません</div>
             <div style="color: #991b1b; font-size: 13px; line-height: 1.6;">
-                全てのデータ（会社・事業所・アカウント・業者・通報・商品・監査ログ・システム設定）を削除します。<br>
+                全てのデータ（会社・事業所・アカウント・管理会社・通報・商品・監査ログ・システム設定）を削除します。<br>
                 DEMOアカウント（ハードコード）のみ残ります。<br>
                 本番運用前のテストデータクリアに使用してください。
             </div>
@@ -760,7 +760,7 @@
                         `会社: ${dataCount.companies}件\n` +
                         `事業所: ${dataCount.offices}件\n` +
                         `アカウント: ${dataCount.accounts}件\n` +
-                        `業者: ${dataCount.partners}件\n` +
+                        `管理会社: ${dataCount.partners}件\n` +
                         `通報: ${dataCount.reports}件\n` +
                         `商品: ${dataCount.items}件\n` +
                         `監査ログ: ${dataCount.auditLogs}件\n\n` +
@@ -837,12 +837,12 @@
             if (typeof initDemoData === 'function') {
                 initDemoData();
             }
-            alert('デモデータをリセットしました。\n\n会社2社・事業所8件・アカウント38名・業者6社・商品600件・通報48件が初期状態に戻りました。');
+            alert('デモデータをリセットしました。\n\n会社2社・事業所8件・アカウント38名・管理会社6社・商品600件・通報48件が初期状態に戻りました。');
             window.location.reload();
         }
 
         function clearAllData() {
-            if (!confirm('全データを初期化します。\n\n以下が全て削除されます：\n・会社/事業所/アカウント/業者マスタ\n・通報データ\n・商品マスタ\n・監査ログ\n・システム設定\n\nDEMOアカウントのみ残ります。\n\n本当に実行しますか？')) return;
+            if (!confirm('全データを初期化します。\n\n以下が全て削除されます：\n・会社/事業所/アカウント/管理会社マスタ\n・通報データ\n・商品マスタ\n・監査ログ\n・システム設定\n\nDEMOアカウントのみ残ります。\n\n本当に実行しますか？')) return;
             if (!confirm('最終確認：この操作は取り消せません。\n\n実行しますか？')) return;
 
             try {

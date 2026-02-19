@@ -7,7 +7,7 @@
  * 
  * 使い方:
  *   <script src="api-client.js"></script>
- *   const items = await API.items.list({ category: '建物インフラ', page: 1 });
+ *   const items = await API.items.list({ category: '建物・外まわり', page: 1 });
  *   const report = await API.reports.create({ title: '水漏れ', ... });
  */
 (function(window) {

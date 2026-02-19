@@ -208,7 +208,7 @@ async function notifyReportEvent(companyCode, eventType, reportData) {
     const titles = {
       new_report: '🔔 新しい通報',
       status_change: '📝 ステータス更新',
-      partner_response: '🔧 業者対応',
+      partner_response: '🔧 管理会社対応',
     };
 
     await sendLineNotification(settings.webhookUrl, {

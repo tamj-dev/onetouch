@@ -453,7 +453,7 @@
           <tbody>
             <tr><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;font-weight:600;">商品No.</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;"><span style="color:#b45309;">上書き時のみ</span></td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#666;">商品No, 商品ナンバー, 品番</td></tr>
             <tr><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;font-weight:600;">商品名</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;"><span style="color:#dc2626;font-weight:600;">必須</span></td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#666;">商品名, 品名, 名称, 摘要</td></tr>
-            <tr><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;font-weight:600;">担当業者</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;"><span style="color:#2563eb;font-weight:600;">任意（自動判定）</span></td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#666;">担当業者, 業者名, 取引先, 外注先</td></tr>
+            <tr><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;font-weight:600;">担当管理会社</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;"><span style="color:#2563eb;font-weight:600;">任意（自動判定）</span></td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#666;">担当管理会社, 管理会社名, 業者名, 取引先, 外注先</td></tr>
             <tr><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;">メーカー</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#999;">任意</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#666;">メーカー, 製造元</td></tr>
             <tr><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;">型番</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#999;">任意</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#666;">型番, 品番, 型式, 規格</td></tr>
             <tr><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;">数量</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#999;">任意</td><td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#666;">数量, 個数</td></tr>
@@ -482,7 +482,7 @@
 
       <div class="mtabs">
         <button class="mtab active" onclick="showPanel('colMap')">① 列の割当</button>
-        <button class="mtab" onclick="showPanel('vendor')">② 販売会社・業者</button>
+        <button class="mtab" onclick="showPanel('vendor')">② 販売会社・管理会社</button>
         <button class="mtab" onclick="showPanel('rules')">③ 除外ルール</button>
         <button class="mtab" onclick="showPanel('rows')">④ 行プレビュー</button>
       </div>
@@ -497,12 +497,12 @@
         <label class="msave"><input type="checkbox" id="mapSave" checked>この設定を次回も使う</label>
       </div>
 
-      <!-- パネル2: 販売会社・担当業者 -->
+      <!-- パネル2: 販売会社・担当管理会社 -->
       <div class="mpanel" id="panelVendor">
         <p style="font-size:0.82rem;color:var(--muted);margin-bottom:12px;">書類から自動検出した販売会社情報です。必要に応じて修正してください。</p>
         <div id="vendorFields"></div>
         <div id="partnerMatchSection" style="margin-top:20px;display:none;">
-          <div style="font-weight:600;font-size:14px;margin-bottom:8px;padding-top:16px;border-top:1px solid #e5e7eb;">担当業者のマッチング状況</div>
+          <div style="font-weight:600;font-size:14px;margin-bottom:8px;padding-top:16px;border-top:1px solid #e5e7eb;">担当管理会社のマッチング状況</div>
           <div id="partnerMatchResult"></div>
         </div>
       </div>
@@ -769,7 +769,7 @@
     var FIELDS=[
       {key:'itemId',label:'商品No.（上書き時必須）',req:false,p:['商品No','商品ナンバー','商品番号','商品no','itemId','item_id','品番','No','NO','no']},
       {key:'name',label:'商品名 必須',req:true,p:['商品名','品名','名称','item','name','品目','product','摘要','内容','明細']},
-      {key:'assignedPartnerName',label:'担当業者（任意・自動判定）',req:false,p:['担当業者','業者','業者名','取引先','外注先','販売会社','partner','vendor','supplier']},
+      {key:'assignedPartnerName',label:'担当管理会社（任意・自動判定）',req:false,p:['担当管理会社','管理会社','担当業者','業者','業者名','取引先','外注先','販売会社','partner','vendor','supplier']},
       {key:'qty',label:'数量',req:false,p:['数量','個数','qty','quantity','入数','本数','数']},
       {key:'unitPrice',label:'単価',req:false,p:['単価','定価','unit','price','unitprice']},
       {key:'amount',label:'金額',req:false,p:['金額','合計','amount','total','小計','税込','税抜']},
@@ -2033,7 +2033,7 @@
         h+='</div>';
       });
       document.getElementById('vendorFields').innerHTML=h;
-      // 担当業者マッチング状況を表示
+      // 担当管理会社マッチング状況を表示
       buildPartnerMatchPanel();
     }
 
@@ -2047,13 +2047,13 @@
       };
     }
 
-    // 担当業者マッチング状況パネル
+    // 担当管理会社マッチング状況パネル
     function buildPartnerMatchPanel(){
       var section=document.getElementById('partnerMatchSection');
       var result=document.getElementById('partnerMatchResult');
       if(!section||!result)return;
 
-      // 列マッピングで担当業者が割り当てられているか確認
+      // 列マッピングで担当管理会社が割り当てられているか確認
       var hasPartnerCol=false;
       if(currentFile&&currentFile.colMap){
         for(var k in currentFile.colMap){
@@ -2068,7 +2068,7 @@
       try{partners=JSON.parse(sessionStorage.getItem('partners')||'[]');}catch(e){}
       try{var pl=JSON.parse(localStorage.getItem('partners')||'[]');pl.forEach(function(p){if(!partners.find(function(m){return m.id===p.id;}))partners.push(p);});}catch(e){}
 
-      // プレビューの行データから担当業者名を抽出
+      // プレビューの行データから担当管理会社名を抽出
       var partnerNames={};
       if(currentFile&&currentFile.dataRows&&currentFile.colMap){
         var colIdx=-1;
@@ -2085,7 +2085,7 @@
 
       var names=Object.keys(partnerNames);
       if(names.length===0){
-        result.innerHTML='<div style="font-size:13px;color:#888;">担当業者のデータがありません</div>';
+        result.innerHTML='<div style="font-size:13px;color:#888;">担当管理会社のデータがありません</div>';
         return;
       }
 
@@ -2124,7 +2124,7 @@
 
       if(unmatchCount>0){
         summary+='<div style="font-size:12px;color:#ef4444;margin-bottom:12px;padding:8px;background:#fef2f2;border-radius:6px;">';
-        summary+='未登録の業者は取引先マスタに先に登録するか、取り込み後に商品マスタで紐づけてください';
+        summary+='未登録の管理会社は管理会社マスタに先に登録するか、取り込み後に商品マスタで紐づけてください';
         summary+='</div>';
       }
 
@@ -2211,7 +2211,7 @@
       //  警告（商品名は必須）
       var missingReq=[];
       if(missingReq.length>0){
-        var ok=confirm('以下の項目が未設定です:\n・'+missingReq.join('\n・')+'\n\n担当業者が未設定の商品は通報時に自動割当できません。\nこのまま取り込みますか？');
+        var ok=confirm('以下の項目が未設定です:\n・'+missingReq.join('\n・')+'\n\n担当管理会社が未設定の商品は通報時に自動割当できません。\nこのまま取り込みますか？');
         if(!ok)return;
       }
 
@@ -2266,7 +2266,7 @@
           var maker=map.maker!==undefined?String(row[map.maker]||'').trim():'';
           if(!maker)maker=extractMakerName(name);
 
-          // 担当業者のマッチング
+          // 担当管理会社のマッチング
           var partnerName=map.assignedPartnerName!==undefined?String(row[map.assignedPartnerName]||'').trim():'';
           var partnerId='';
           if(partnerName){
@@ -2279,7 +2279,7 @@
             if(matched)partnerId=matched.id;
           }
 
-          // 担当業者が空の場合: カテゴリ＋会社コードで契約テーブルから自動判定
+          // 担当管理会社が空の場合: カテゴリ＋会社コードで契約テーブルから自動判定
           var itemCategory=map.category!==undefined?String(row[map.category]||'').trim():'';
           if(!partnerId && itemCategory){
             var companyCode=currentUser.companyCode||'';
@@ -2454,7 +2454,7 @@
 
     var PK_ROLES=[
       {key:'name',    label:'商品名 ',color:'#1e3a5f',req:true},
-      {key:'assignedPartnerName',label:'担当業者 ',color:'#ea580c',req:true},
+      {key:'assignedPartnerName',label:'担当管理会社 ',color:'#ea580c',req:true},
       {key:'model',   label:'型番',    color:'#7c3aed',req:false},
       {key:'unitPrice',label:'単価',   color:'#dc2626',req:false},
       {key:'qty',     label:'数量',    color:'#2563eb',req:false},

@@ -243,7 +243,7 @@
             <div class="step-indicator">
                 <div class="step-item" id="item1">
                     <div class="step-dot" id="dot1">1</div>
-                    <div class="step-label">業者登録</div>
+                    <div class="step-label">管理会社登録</div>
                 </div>
                 <div class="step-connector" id="conn1"></div>
                 <div class="step-item" id="item2">
@@ -391,18 +391,18 @@
             }
         }
 
-        // ========== ステップ1: 業者登録 ==========
+        // ========== ステップ1: 管理会社登録 ==========
         function renderStepPartner() {
             var content = document.getElementById('wizardContent');
 
             var np = setupData.newPartner || {};
             var html = '<div class="wizard-card">'
-                + '<div class="wizard-card-title">ステップ 1：業者登録</div>'
-                + '<div class="wizard-card-sub">この案件の業者情報を入力してください</div>'
+                + '<div class="wizard-card-title">ステップ 1：管理会社登録</div>'
+                + '<div class="wizard-card-sub">この案件の管理会社情報を入力してください</div>'
                 + '<div class="form-group">'
-                + '  <label class="form-label">業者名（会社名）<span class="required">*</span></label>'
+                + '  <label class="form-label">管理会社名（会社名）<span class="required">*</span></label>'
                 + '  <input type="text" class="form-input" id="npName" placeholder="例：東京設備工業株式会社" value="' + esc(np.name || '') + '">'
-                + '  <div class="form-error" id="npNameError">業者名を入力してください</div>'
+                + '  <div class="form-error" id="npNameError">管理会社名を入力してください</div>'
                 + '</div>'
                 + '<div class="form-group">'
                 + '  <label class="form-label">担当者名<span class="required">*</span></label>'
@@ -478,7 +478,7 @@
             setupData.currentStep = 2;
             saveCurrentSetup();
             renderCurrentStep();
-            showToast('業者「' + setupData.partnerName + '」を登録しました');
+            showToast('管理会社「' + setupData.partnerName + '」を登録しました');
         }
 
         // ========== ステップ2: 会社登録（旧ステップ1） ==========
@@ -870,7 +870,7 @@
                 + '<div style="font-size:20px;font-weight:700;color:#166534;margin-bottom:8px;">セットアップ完了</div>'
                 + '<div style="font-size:16px;color:#555;margin-bottom:8px;">' + esc(setupData.companyName) + ' の初期設定が完了しました</div>'
                 + '<div style="font-size:14px;color:#888;margin-bottom:24px;">'
-                + '業者：' + esc(setupData.partnerName) + ' / 事業所 ' + setupData.offices.length + '件 / 契約 ' + setupData.contracts.length + '件 / アカウント ' + setupData.accounts.length + '件 / 商品 ' + setupData.items.length + '件'
+                + '管理会社：' + esc(setupData.partnerName) + ' / 事業所 ' + setupData.offices.length + '件 / 契約 ' + setupData.contracts.length + '件 / アカウント ' + setupData.accounts.length + '件 / 商品 ' + setupData.items.length + '件'
                 + '</div>'
                 + '<a href="system-admin.html" class="btn btn-primary" style="display:inline-block;text-decoration:none;padding:14px 32px;">管理画面に戻る</a>'
                 + '</div>';
@@ -880,7 +880,7 @@
         function doneSummary() {
             var html = '';
             if (setupData.currentStep > 1) {
-                html += '<div class="step-done-summary"><div class="title">✓ 業者登録</div><div class="detail">' + esc(setupData.partnerName) + '（' + esc(setupData.partnerId) + '）</div></div>';
+                html += '<div class="step-done-summary"><div class="title">✓ 管理会社登録</div><div class="detail">' + esc(setupData.partnerName) + '（' + esc(setupData.partnerId) + '）</div></div>';
             }
             if (setupData.currentStep > 2) {
                 html += '<div class="step-done-summary"><div class="title">✓ 会社登録</div><div class="detail">' + esc(setupData.companyName) + '（' + esc(setupData.companyCode) + '）</div></div>';
@@ -1160,7 +1160,7 @@
             // カテゴリチェックボックスを生成
             var catDiv = document.getElementById('contractCatChecks');
             if (catDiv) {
-                var cats = ['建物インフラ','居室・生活','介護・医療','厨房・食事','IT・安全','その他'];
+                var cats = ['建物・外まわり','部屋・共用部の家具・家電','介護医療・お風呂の道具','厨房・食事の道具','通信・呼出し・防火の機器','その他'];
                 catDiv.innerHTML = cats.map(function(c) {
                     return '<label style="display:flex;align-items:center;gap:4px;padding:6px 10px;background:#f5f5f5;border-radius:8px;font-size:14px;cursor:pointer;white-space:nowrap;">'
                         + '<input type="checkbox" value="' + c + '" class="contract-cat-check"> ' + c + '</label>';
@@ -1248,7 +1248,7 @@
             if (romaji) {
                 var num = setupData.partners.length + 1;
                 preview.style.display = 'block';
-                preview.textContent = '業者コード：PN' + String(num).padStart(3, '0') + '　ログインID：' + romaji;
+                preview.textContent = '管理会社コード：PN' + String(num).padStart(3, '0') + '　ログインID：' + romaji;
             } else {
                 preview.style.display = 'none';
             }
@@ -1319,7 +1319,7 @@
 
             saveCurrentSetup();
             renderStep4();
-            showToast('業者「' + name + '」を追加しました');
+            showToast('管理会社「' + name + '」を追加しました');
         }
 
         function removePartner(index) {
@@ -1337,7 +1337,7 @@
 
         function completeStep4() {
             if (setupData.partners.length === 0) {
-                showToast('業者を1件以上追加してください');
+                showToast('管理会社を1件以上追加してください');
                 return;
             }
 
@@ -1396,7 +1396,7 @@
             setupData.currentStep = 5;
             saveCurrentSetup();
             renderCurrentStep();
-            showToast('業者を' + setupData.partners.length + '件登録しました');
+            showToast('管理会社を' + setupData.partners.length + '件登録しました');
         }
         // ========== ステップ6: 商品登録（旧ステップ5を再利用） ==========
         function renderStepItems() { renderStep5(); }
@@ -1413,7 +1413,7 @@
                     html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#f8f9fa;border-radius:8px;margin-bottom:6px;">'
                         + '<div>'
                         + '<div style="font-size:15px;font-weight:600;color:#1e293b;">' + esc(item.name) + '</div>'
-                        + '<div style="font-size:13px;color:#888;">' + esc(item.category || '') + '　' + esc(item.partnerName || '業者未設定') + '</div>'
+                        + '<div style="font-size:13px;color:#888;">' + esc(item.category || '') + '　' + esc(item.partnerName || '管理会社未設定') + '</div>'
                         + '</div>'
                         + '<button onclick="removeItem(' + i + ')" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:13px;padding:4px 8px;">削除</button>'
                         + '</div>';
@@ -1422,7 +1422,7 @@
             }
 
             // カテゴリ選択肢
-            var categories = ['建物インフラ','居室・生活','介護・医療','厨房・食事','IT・安全','その他'];
+            var categories = ['建物・外まわり','部屋・共用部の家具・家電','介護医療・お風呂の道具','厨房・食事の道具','通信・呼出し・防火の機器','その他'];
             var catOpts = '<option value="">選択してください</option>';
             categories.forEach(function(c) { catOpts += '<option value="' + c + '">' + c + '</option>'; });
 
@@ -1461,7 +1461,7 @@
                 + '  <div class="form-error" id="itemOfficeError">事業所を選択してください</div>'
                 + '</div>'
                 + '<div class="form-group">'
-                + '  <label class="form-label">担当業者</label>'
+                + '  <label class="form-label">担当管理会社</label>'
                 + '  <select class="form-input" id="itemPartner">' + partnerOpts + '</select>'
                 + '</div>'
                 + '<div class="form-group">'

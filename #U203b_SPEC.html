@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ワンタッチ管理システム - システム仕様書 v2.0</title>
+    <title>ワンタッチ管理システム - システム仕様書 v2.1</title>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; line-height:1.8; color:#333; background:#f5f5f5; }
@@ -42,7 +42,7 @@
 <body>
     <div class="header">
         <h1>ワンタッチ管理システム</h1>
-        <p>システム仕様書 v2.0 — 最終更新: 2026年2月13日</p>
+        <p>システム仕様書 v2.1 — 最終更新: 2026年2月19日</p>
     </div>
 
     <div class="container">
@@ -54,13 +54,14 @@
                 <li><a href="#sec3">3. データ構造</a></li>
                 <li><a href="#sec4">4. 認証・権限</a></li>
                 <li><a href="#sec5">5. DEMOモード</a></li>
-                <li><a href="#sec6">6. 通報・業者連携</a></li>
+                <li><a href="#sec6">6. 通報・管理会社連携</a></li>
                 <li><a href="#sec7">7. 商品管理</a></li>
                 <li><a href="#sec8">8. UI/UXシステム</a></li>
                 <li><a href="#sec9">9. ファイル構成</a></li>
                 <li><a href="#sec10">10. カテゴリ体系</a></li>
                 <li><a href="#sec11">11. 設計判断の記録（14件）</a></li>
                 <li><a href="#sec12">12. 今後の課題</a></li>
+                <li><a href="#sec13">13. 変更履歴</a></li>
             </ul>
         </nav>
 
@@ -71,24 +72,24 @@
                 <h2>1. システム概要</h2>
 
                 <h3>1.1 目的</h3>
-                <p>ワンタッチ管理システムは、介護施設・福祉施設における設備トラブルの通報と備品管理を効率化するWebアプリケーションです。スタッフが簡単に通報でき、外注先（業者）と連携して迅速な対応を実現します。</p>
+                <p>ワンタッチ管理システムは、介護施設・福祉施設における設備トラブルの通報と備品管理を効率化するWebアプリケーションです。スタッフが簡単に通報でき、外注先（管理会社）と連携して迅速な対応を実現します。</p>
 
                 <h3>1.2 主要機能</h3>
                 <ul>
                     <li><strong>通報管理:</strong> 設備トラブルの通報・追跡・履歴管理（設備名/商品名から選択、カテゴリ自動判定）</li>
-                    <li><strong>業者連携:</strong> 通報の自動振り分け・ステータス管理・対応実績ダッシュボード</li>
+                    <li><strong>管理会社連携:</strong> 通報の自動振り分け・ステータス管理・対応実績ダッシュボード</li>
                     <li><strong>商品管理:</strong> 設備・備品のマスタ管理、CSV/Excel/PDF/画像インポート、エクスポート</li>
                     <li><strong>アカウント管理:</strong> ロール別アクセス制御、パスワード管理</li>
-                    <li><strong>マスタ管理:</strong> 会社・事業所・業者の階層管理</li>
+                    <li><strong>マスタ管理:</strong> 会社・事業所・管理会社の階層管理</li>
                 </ul>
 
                 <h3>1.3 対象ユーザー</h3>
                 <table>
                     <tr><th>ロール</th><th>画面</th><th>主な操作</th></tr>
                     <tr><td><strong>スタッフ</strong></td><td>report.html</td><td>設備トラブルの通報、履歴確認</td></tr>
-                    <tr><td><strong>事業所管理者</strong></td><td>master-top.html</td><td>商品マスタ管理、通報確認、業者管理</td></tr>
+                    <tr><td><strong>事業所管理者</strong></td><td>master-top.html</td><td>商品マスタ管理、通報確認、管理会社管理</td></tr>
                     <tr><td><strong>本社管理者</strong></td><td>master-top.html</td><td>事業所管理、アカウント管理、全社横断管理</td></tr>
-                    <tr><td><strong>業者（外注先）</strong></td><td>contractor-dashboard.html</td><td>対応依頼確認、ステータス更新、対応実績確認、商品マスタ登録</td></tr>
+                    <tr><td><strong>管理会社（外注先）</strong></td><td>contractor-dashboard.html</td><td>対応依頼確認、ステータス更新、対応実績確認、商品マスタ登録</td></tr>
                     <tr><td><strong>システム管理者</strong></td><td>system-admin.html</td><td>会社マスタ管理</td></tr>
                 </table>
             </div>
@@ -114,7 +115,7 @@
                     <tr><td>本番モード</td><td>localStorage</td><td><code>onetouch.*</code></td><td>明示的に消すまで永続</td></tr>
                 </table>
                 <div class="info">
-                    <strong>DEMOモード判定（isDemoMode）:</strong> <code>currentUser.companyCode === 'TAMJ'</code> または <code>currentUser.isDemoMode === true</code>（業者ログイン対応）
+                    <strong>DEMOモード判定（isDemoMode）:</strong> <code>currentUser.companyCode === 'TAMJ'</code> または <code>currentUser.isDemoMode === true</code>（管理会社ログイン対応）
                 </div>
             </div>
 
@@ -135,7 +136,7 @@
   "officeName": "東京事業所",
   "status": "active",
   "isFirstLogin": false,
-  "isDemoMode": true           // 業者ログイン時にセット
+  "isDemoMode": true           // 管理会社ログイン時にセット
 }</pre>
 
                 <h3>3.2 通報データ</h3>
@@ -156,7 +157,7 @@
   ]
 }</pre>
 
-                <h3>3.3 業者データ</h3>
+                <h3>3.3 管理会社データ</h3>
 <pre>{
   "id": "PN001",
   "name": "東京設備工業株式会社",
@@ -169,7 +170,7 @@
   "password": "demo"
 }</pre>
                 <div class="info">
-                    <strong>業者コード体系:</strong> <code>PN</code> + 3桁連番（例: PN001, PN002）。業者ログイン時は会社コード欄に業者コードを入力。
+                    <strong>管理会社コード体系:</strong> <code>PN</code> + 3桁連番（例: PN001, PN002）。管理会社ログイン時は会社コード欄に管理会社コードを入力。
                 </div>
 
                 <h3>3.4 商品データ</h3>
@@ -192,7 +193,7 @@
   "endDate": "",
   "createdBy": "demo-office",
   "createdAt": "2026-02-13T00:00:00Z",
-  "partnerHistory": []             // 業者変更履歴
+  "partnerHistory": []             // 管理会社変更履歴
 }</pre>
 
                 <h3>3.5 ドキュメント/LineItemsデータ（インポート用）</h3>
@@ -224,7 +225,7 @@
                     <li>login.htmlで会社コード・ID・パスワードを入力</li>
                     <li>DEMOアカウント → sessionStorageのcurrentUserにセット</li>
                     <li>本番アカウント → localStorageのaccountsを検索</li>
-                    <li>業者アカウント → 会社コード欄に業者コード（PN001等）を入力。currentContractorもセット</li>
+                    <li>管理会社アカウント → 会社コード欄に管理会社コード（PN001等）を入力。currentContractorもセット</li>
                     <li>ロール別ホーム画面にリダイレクト</li>
                 </ol>
                 <div class="warning">
@@ -251,7 +252,7 @@
                     <tr><td>商品マスタ編集</td><td>—</td><td>✅</td><td>✅</td><td>✅</td><td>—</td></tr>
                     <tr><td>商品インポート</td><td>—</td><td>✅</td><td>✅</td><td>✅</td><td>—</td></tr>
                     <tr><td>アカウント管理</td><td>—</td><td>✅ 事業所内</td><td>✅ 全社</td><td>—</td><td>—</td></tr>
-                    <tr><td>業者マスタ管理</td><td>—</td><td>✅</td><td>✅</td><td>—</td><td>—</td></tr>
+                    <tr><td>管理会社マスタ管理</td><td>—</td><td>✅</td><td>✅</td><td>—</td><td>—</td></tr>
                     <tr><td>会社マスタ管理</td><td>—</td><td>—</td><td>—</td><td>—</td><td>✅</td></tr>
                     <tr><td>パスワード変更</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
                 </table>
@@ -262,7 +263,7 @@
                     <li>現在のパスワード確認 → 新パスワード（6文字以上）→ 確認入力</li>
                     <li>各入力欄に「表示/隠す」トグルボタン付き</li>
                     <li>DEMOモード: sessionStorageのみ更新（ログアウト後に元に戻る）</li>
-                    <li>本番モード: accounts（管理者・スタッフ）またはpartners（業者）を更新</li>
+                    <li>本番モード: accounts（管理者・スタッフ）またはpartners（管理会社）を更新</li>
                     <li>初回ログイン時: パスワード変更推奨バナーを表示</li>
                 </ul>
             </div>
@@ -279,11 +280,11 @@
   const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
   if (!currentUser) return false;
   if (currentUser.companyCode === 'TAMJ') return true;
-  if (currentUser.isDemoMode) return true;  // 業者ログイン対応
+  if (currentUser.isDemoMode) return true;  // 管理会社ログイン対応
   return false;
 }</pre>
                 <div class="info">
-                    <strong>業者ログイン対応:</strong> 業者のcompanyCodeはPN001等（TAMJではない）。login.htmlで<code>assignedCompanies.includes('TAMJ')</code>を判定し、<code>isDemoMode: true</code>フラグをcurrentUserにセット。
+                    <strong>管理会社ログイン対応:</strong> 管理会社のcompanyCodeはPN001等（TAMJではない）。login.htmlで<code>assignedCompanies.includes('TAMJ')</code>を判定し、<code>isDemoMode: true</code>フラグをcurrentUserにセット。
                 </div>
 
                 <h3>5.3 DEMOアカウント一覧</h3>
@@ -292,16 +293,16 @@
                     <tr><td>スタッフ</td><td>TAMJ</td><td>demo-staff</td><td>demo</td><td>デモスタッフ</td></tr>
                     <tr><td>事業所管理者</td><td>TAMJ</td><td>demo-office</td><td>demo</td><td>デモ事業所管理者</td></tr>
                     <tr><td>本社管理者</td><td>TAMJ</td><td>TAMJ-H001</td><td>demo</td><td>デモ本社管理者</td></tr>
-                    <tr><td>業者</td><td>PN001</td><td>pn001-yamada</td><td>demo</td><td>山田 太郎</td></tr>
+                    <tr><td>管理会社</td><td>PN001</td><td>pn001-yamada</td><td>demo</td><td>山田 太郎</td></tr>
                 </table>
 
                 <h3>5.4 DEMO切替機能</h3>
-                <p>統一ヘッダーのメニューに「DEMO切替」セクションがあり、スタッフ・業者・事業所管理者の表示を切り替えてテストできます。ログアウト時にDEMOデータはsessionStorageに退避・復元されるため、切替後もデータが維持されます。</p>
+                <p>統一ヘッダーのメニューに「DEMO切替」セクションがあり、スタッフ・管理会社・事業所管理者の表示を切り替えてテストできます。ログアウト時にDEMOデータはsessionStorageに退避・復元されるため、切替後もデータが維持されます。</p>
 
                 <h3>5.5 DEMOデータ</h3>
                 <ul>
                     <li><strong>商品:</strong> 18件（全9カテゴリ + その他をカバー）</li>
-                    <li><strong>業者:</strong> 3社（PN001東京設備工業、PN002関東水道サービス、PN003日本電気工事）</li>
+                    <li><strong>管理会社:</strong> 3社（PN001東京設備工業、PN002関東水道サービス、PN003日本電気工事）</li>
                     <li><strong>通報:</strong> セッション中に作成したものが蓄積</li>
                 </ul>
 
@@ -311,22 +312,22 @@
                     <tr><td>ストレージ</td><td>sessionStorage</td><td>localStorage</td></tr>
                     <tr><td>通報キー</td><td><code>onetouch.reports</code>（session）</td><td><code>onetouch.reports</code>（local）</td></tr>
                     <tr><td>商品キー</td><td><code>demo.items</code>（session）</td><td><code>onetouch.items</code>（local）</td></tr>
-                    <tr><td>業者キー</td><td><code>demo.partners</code>（session）</td><td><code>partners</code>（local）</td></tr>
+                    <tr><td>管理会社キー</td><td><code>demo.partners</code>（session）</td><td><code>partners</code>（local）</td></tr>
                     <tr><td>データ永続性</td><td>❌ ブラウザを閉じると消える</td><td>✅ 永続的</td></tr>
                     <tr><td>ログアウト時</td><td>✅ データ保持（demo.*/onetouch.*キーを退避・復元）</td><td>✅ データ保持</td></tr>
                     <tr><td>商品自動生成</td><td>✅ 18件（items.html + report.html）</td><td>手動登録</td></tr>
-                    <tr><td>業者自動生成</td><td>✅ 3社</td><td>手動登録</td></tr>
+                    <tr><td>管理会社自動生成</td><td>✅ 3社</td><td>手動登録</td></tr>
                     <tr><td>削除機能</td><td>❌ 無効</td><td>✅ 有効</td></tr>
                     <tr><td>インポート</td><td>✅ 有効</td><td>✅ 有効</td></tr>
                 </table>
                 <div class="warning">
-                    <strong>通報データの読み取り:</strong> 業者画面（contractor-dashboard.html）と通報履歴（report-history.html）は、sessionStorageとlocalStorage<strong>両方</strong>からデータを読み取りマージします。DEMOスタッフ（TAMJ）の通報がsessionStorageに保存される一方、業者はisDemoModeフラグで判定されるため、両方を参照する必要があるためです。
+                    <strong>通報データの読み取り:</strong> 管理会社画面（contractor-dashboard.html）と通報履歴（report-history.html）は、sessionStorageとlocalStorage<strong>両方</strong>からデータを読み取りマージします。DEMOスタッフ（TAMJ）の通報がsessionStorageに保存される一方、管理会社はisDemoModeフラグで判定されるため、両方を参照する必要があるためです。
                 </div>
             </div>
 
             <!-- ============================================ -->
             <div class="section" id="sec6">
-                <h2>6. 通報・業者連携</h2>
+                <h2>6. 通報・管理会社連携</h2>
 
                 <h3>6.1 通報フロー</h3>
                 <ol>
@@ -345,21 +346,21 @@
                     <span class="badge badge-removed">削除</span> よく通報する設備クイックアクセス
                 </div>
 
-                <h3>6.2 業者自動割り当て</h3>
-                <p>商品マスタの<code>assignedPartnerId</code>で商品→業者を直接紐づけ。通報時に選択された商品の担当業者が自動的に割り当てられます。</p>
+                <h3>6.2 管理会社自動割り当て</h3>
+                <p>商品マスタの<code>assignedPartnerId</code>で商品→管理会社を直接紐づけ。通報時に選択された商品の担当管理会社が自動的に割り当てられます。</p>
 
                 <h3>6.3 ステータス遷移</h3>
                 <table>
                     <tr><th>遷移元</th><th>遷移先</th><th>操作者</th></tr>
-                    <tr><td>未対応</td><td>対応中</td><td>業者 / 管理者</td></tr>
-                    <tr><td>対応中</td><td>完了</td><td>業者 / 管理者</td></tr>
-                    <tr><td>未対応 / 対応中</td><td>対応不可</td><td>業者 / 管理者</td></tr>
+                    <tr><td>未対応</td><td>対応中</td><td>管理会社 / 管理者</td></tr>
+                    <tr><td>対応中</td><td>完了</td><td>管理会社 / 管理者</td></tr>
+                    <tr><td>未対応 / 対応中</td><td>対応不可</td><td>管理会社 / 管理者</td></tr>
                     <tr><td>対応不可</td><td>未対応</td><td>管理者のみ（差し戻し）</td></tr>
                 </table>
                 <p>ステータス変更時にメモを入力可能。変更履歴はstatusHistoryに記録。</p>
 
-                <h3>6.4 業者コメント</h3>
-                <p>業者は通報に対してコメントを追加できます。コメント送信後は詳細画面が自動で閉じ、カード一覧に最新コメントが💬で表示されます。コメントはスタッフ側の通報履歴にも表示されます。</p>
+                <h3>6.4 管理会社コメント</h3>
+                <p>管理会社は通報に対してコメントを追加できます。コメント送信後は詳細画面が自動で閉じ、カード一覧に最新コメントが💬で表示されます。コメントはスタッフ側の通報履歴にも表示されます。</p>
 
                 <h3>6.5 対応時間計算</h3>
                 <p>通報日時（<code>timestamp</code>）から完了日時（<code>resolvedAt</code> / <code>completedAt</code>）までの時間を計算して表示します。24時間以上は「◯日」、それ未満は「◯時間◯分」で表示。</p>
@@ -373,7 +374,7 @@
                     <tr><td>contractor</td><td>自分担当分のみ</td><td>assignedPartnerIdでフィルタ</td></tr>
                 </table>
 
-                <h3>6.7 業者ダッシュボード（contractor-dashboard.html）</h3>
+                <h3>6.7 管理会社ダッシュボード（contractor-dashboard.html）</h3>
                 <ul>
                     <li>ページ切替プルダウン: 対応依頼一覧 / 対応実績 / 商品マスタ / 商品インポート</li>
                     <li>ステータス別タブ: 未対応・対応中・対応不可・完了</li>
@@ -397,9 +398,9 @@
 
                 <h3>7.1 商品マスタ（items.html）</h3>
                 <ul>
-                    <li>Excel風テーブル表示（商品No.・商品名・メーカー・型番・担当業者・設置場所・在庫・単価）</li>
+                    <li>Excel風テーブル表示（商品No.・商品名・メーカー・型番・担当管理会社・設置場所・在庫・単価）</li>
                     <li>検索: 商品名・型番・メーカーで検索（大文字小文字・全角半角対応）</li>
-                    <li>フィルタ: 担当業者プルダウン</li>
+                    <li>フィルタ: 担当管理会社プルダウン</li>
                     <li>ページネーション: 50件/ページ</li>
                     <li>エクスポート: CSVダウンロード</li>
                 </ul>
@@ -408,15 +409,15 @@
                 <table>
                     <tr><th>項目</th><th>必須/推奨</th><th>備考</th></tr>
                     <tr><td>商品名</td><td><strong>必須</strong></td><td></td></tr>
-                    <tr><td>担当業者</td><td><strong>必須</strong></td><td>業者ログイン時は自社名が自動セット（companyName）</td></tr>
+                    <tr><td>担当管理会社</td><td><strong>必須</strong></td><td>管理会社ログイン時は自社名が自動セット（companyName）</td></tr>
                     <tr><td>カテゴリー</td><td><strong>推奨</strong></td><td>未入力で保存時に警告ダイアログ</td></tr>
                     <tr><td>設置場所（フロア）</td><td><strong>推奨</strong></td><td>未入力で保存時に警告ダイアログ</td></tr>
                     <tr><td>メーカー / 型番 / 単価 / 在庫 / 単位 / 備考 / 終了日</td><td>任意</td><td></td></tr>
                 </table>
                 <div class="info">
-                    <strong>業者ログイン時の特殊動作:</strong>
+                    <strong>管理会社ログイン時の特殊動作:</strong>
                     <ul>
-                        <li>担当業者 → 自社名が自動セット（変更不可）</li>
+                        <li>担当管理会社 → 自社名が自動セット（変更不可）</li>
                         <li>納品先会社 → 1社のみなら自動選択＋非表示、複数社なら選択プルダウン表示</li>
                         <li>戻るボタン → contractor-dashboard.htmlに遷移</li>
                     </ul>
@@ -429,7 +430,7 @@
                 <ol>
                     <li>ファイル選択（ドラッグ&ドロップまたはクリック）</li>
                     <li>自動解析 → 列マッピング推定</li>
-                    <li>プレビュー&設定（列の割当・除外ルール・業者マッチング確認）</li>
+                    <li>プレビュー&設定（列の割当・除外ルール・管理会社マッチング確認）</li>
                     <li>取り込み実行</li>
                     <li>確認画面（confirm-items.html）でカテゴリ推定・全角→半角変換</li>
                     <li>確定して商品マスタに登録</li>
@@ -451,7 +452,7 @@
                     <tr><th>項目</th><th>認識されるヘッダー名（例）</th></tr>
                     <tr><td>商品No.（上書き時必須）</td><td>商品No, 商品ナンバー, 品番</td></tr>
                     <tr><td>商品名（必須）</td><td>商品名, 品名, 名称, 摘要</td></tr>
-                    <tr><td>担当業者（必須）</td><td>担当業者, 業者名, 取引先, 外注先</td></tr>
+                    <tr><td>担当管理会社（必須）</td><td>担当管理会社, 管理会社名, 管理会社, 外注先</td></tr>
                     <tr><td>メーカー</td><td>メーカー, 製造元</td></tr>
                     <tr><td>型番</td><td>型番, 品番, 型式, 規格</td></tr>
                     <tr><td>数量</td><td>数量, 個数</td></tr>
@@ -489,12 +490,12 @@
 │    東京事業所          │
 │    タムジ株式会社      │
 │ ───────────────────── │
-│ 📦 商品マスタ     ← 業者メニュー（業者ログイン時のみ）
-│ 📥 商品インポート  ← 業者メニュー（業者ログイン時のみ）
+│ 📦 商品マスタ     ← 管理会社メニュー（管理会社ログイン時のみ）
+│ 📥 商品インポート  ← 管理会社メニュー（管理会社ログイン時のみ）
 │ ───────────────────── │
 │ DEMO切替              │  ← DEMOモード時のみ
 │  ● スタッフで表示      │
-│  ● 業者で表示     ✓   │
+│  ● 管理会社で表示     ✓   │
 │  ● 事業所管理者で表示  │
 │ ───────────────────── │
 │ 🔑 パスワード変更      │
@@ -506,7 +507,7 @@
                     <li>モーダル形式（最大幅400px、z-index: 10000）</li>
                     <li>各入力欄に「表示/隠す」トグルボタン付き</li>
                     <li>DEMOモード: sessionStorageのみ更新、currentContractorも同期更新</li>
-                    <li>本番モード: accounts（管理者・スタッフ）またはpartners（業者）を更新</li>
+                    <li>本番モード: accounts（管理者・スタッフ）またはpartners（管理会社）を更新</li>
                 </ul>
 
                 <h4>初回ログイン推奨バナー</h4>
@@ -524,7 +525,7 @@
                     <li>×ボタン解除時: カテゴリフィルタも「全て」にリセット</li>
                 </ul>
 
-                <h3>8.3 業者ダッシュボードのページ切替</h3>
+                <h3>8.3 管理会社ダッシュボードのページ切替</h3>
                 <span class="badge badge-new">NEW</span>
                 <p>ヘッダー下にプルダウンを配置。以下の4画面を遷移:</p>
                 <ul>
@@ -552,7 +553,7 @@
                     <tr><td>contractor-performance.html</td><td>対応実績 <span class="badge badge-new">NEW</span></td><td>contractor</td></tr>
                     <tr><td>master-top.html</td><td>管理トップ</td><td>office_admin, company_admin</td></tr>
                     <tr><td>account-master.html</td><td>アカウントマスタ</td><td>office_admin, company_admin</td></tr>
-                    <tr><td>partner-master.html</td><td>業者マスタ</td><td>office_admin, company_admin</td></tr>
+                    <tr><td>partner-master.html</td><td>管理会社マスタ</td><td>office_admin, company_admin</td></tr>
                     <tr><td>company-master.html</td><td>会社マスタ</td><td>system_admin</td></tr>
                     <tr><td>office-master.html</td><td>事業所マスタ</td><td>company_admin</td></tr>
                     <tr><td>system-admin.html</td><td>システム管理</td><td>system_admin</td></tr>
@@ -579,7 +580,7 @@
                     <li><code>※SPEC.html</code> — システム仕様書（本ファイル）</li>
                     <li><code>TODO.md</code> — タスク管理</li>
                     <li><code>※CHECK_LIST.md</code> — 動作確認チェックリスト</li>
-                    <li><code>※TEST-GUIDE.md</code> — テスト手順書（業者連携フロー）</li>
+                    <li><code>※TEST-GUIDE.md</code> — テスト手順書（管理会社連携フロー）</li>
                     <li><code>contract-design.pdf</code> — 契約テーブル設計検討資料</li>
                     <li><code>contract-scenes.pdf</code> — カテゴリ管理が必要な業務シーン</li>
                 </ul>
@@ -590,30 +591,26 @@
                 <h2>10. カテゴリ体系</h2>
                 <span class="badge badge-changed">CHANGED</span>
 
-                <h3>10.1 現行カテゴリ（9 + その他）</h3>
+                <h3>10.1 現行カテゴリ（5 + その他）</h3>
                 <table>
                     <tr><th>#</th><th>カテゴリ名</th><th>具体例</th></tr>
-                    <tr><td>1</td><td>家具/什器</td><td>ベッド、テーブル、椅子、棚、ロッカー、カーテン</td></tr>
-                    <tr><td>2</td><td>家電</td><td>エアコン、照明、洗濯機、乾燥機、掃除機、テレビ</td></tr>
-                    <tr><td>3</td><td>インターネット</td><td>Wi-Fi、ルーター、LAN、ナースコール、インターホン</td></tr>
-                    <tr><td>4</td><td>厨房/食器</td><td>冷蔵庫、食洗機、調理器具、コンロ、食器</td></tr>
-                    <tr><td>5</td><td>浴室</td><td>給湯器、ボイラー、浴槽、シャワー</td></tr>
-                    <tr><td>6</td><td>介護医療用品</td><td>車椅子、歩行器、手すり、血圧計、AED</td></tr>
-                    <tr><td>7</td><td>水道</td><td>トイレ、蛇口、配管、排水、浄化槽</td></tr>
-                    <tr><td>8</td><td>ガス</td><td>ガスコンロ、ガス給湯、ガス管</td></tr>
-                    <tr><td>9</td><td>エレベーター/昇降機</td><td>エレベーター、昇降機</td></tr>
-                    <tr><td>10</td><td>その他</td><td>上記に該当しないもの</td></tr>
+                    <tr><td>1</td><td>建物・外まわり</td><td>建築、内装、外装、エアコン、空調、換気、照明、LED、エレベーター、配管、排水、給湯器、トイレ、外壁、屋上</td></tr>
+                    <tr><td>2</td><td>部屋・共用部の家具・家電</td><td>ベッド、テーブル、椅子、ソファ、カーテン、冷蔵庫、洗濯機、テレビ、掃除機、食器棚、ゴミ箱</td></tr>
+                    <tr><td>3</td><td>介護医療・お風呂の道具</td><td>浴槽、機械浴、シャワーチェア、車椅子、歩行器、吸引器、血圧計、AED、介護用ベッド</td></tr>
+                    <tr><td>4</td><td>厨房・食事の道具</td><td>業務用冷蔵庫、ガスレンジ、IH、食洗機、製氷機、シンク、食器、調理器具</td></tr>
+                    <tr><td>5</td><td>通信・呼出し・防火の機器</td><td>防犯カメラ、ナースコール、Wi-Fi、ルーター、消火設備、スプリンクラー、複合機、パソコン</td></tr>
+                    <tr><td>6</td><td>その他</td><td>上記に該当しないもの</td></tr>
                 </table>
                 <div class="warning">
-                    <strong>旧カテゴリからの変更:</strong> 空調・給湯・電気・水道・ガス・設備・福祉用具・医療機器・消耗品・什器 → 上記の10カテゴリに統合。介護施設の実務に合わせた分類に変更。
+                    <strong>v2.2変更:</strong> 旧5+1カテゴリ（建物インフラ、居室・生活、介護・医療、厨房・食事、IT・安全）→ 上記の新5+1カテゴリに名称変更・再分類。浴室系設備を「介護医療・お風呂の道具」に集約。
                 </div>
 
-                <h3>10.2 DEMO業者×カテゴリ割当</h3>
+                <h3>10.2 DEMO管理会社×カテゴリ割当</h3>
                 <table>
-                    <tr><th>業者</th><th>担当カテゴリ</th></tr>
-                    <tr><td>PN001 東京設備工業株式会社</td><td>家具/什器、家電、厨房/食器、介護医療用品</td></tr>
-                    <tr><td>PN002 関東水道サービス</td><td>浴室、水道、ガス</td></tr>
-                    <tr><td>PN003 日本電気工事</td><td>家電、インターネット、エレベーター/昇降機</td></tr>
+                    <tr><th>管理会社</th><th>担当カテゴリ</th></tr>
+                    <tr><td>PN001 東京設備工業株式会社</td><td>部屋・共用部の家具・家電、厨房・食事の道具、介護医療・お風呂の道具</td></tr>
+                    <tr><td>PN002 関東水道サービス</td><td>建物・外まわり</td></tr>
+                    <tr><td>PN003 日本電気工事</td><td>通信・呼出し・防火の機器</td></tr>
                 </table>
             </div>
 
@@ -630,11 +627,11 @@
                 </ul>
 
                 <h3>11.2 カテゴリーを介護施設向けに再設計した理由</h3>
-                <div class="success"><strong>決定:</strong> 旧7カテゴリ → 新9+1カテゴリに変更</div>
+                <div class="success"><strong>決定:</strong> 新5+1カテゴリ体系（v2.2）</div>
                 <ul>
-                    <li>旧カテゴリは「設備の種類」で分類していたが、施設スタッフには馴染みにくい</li>
-                    <li>新カテゴリは「場所・用途」ベースで、スタッフが直感的に選べる</li>
-                    <li>業者の専門分野とも一致しやすい</li>
+                    <li>カテゴリ名を施設スタッフが直感的に理解できる表現に変更</li>
+                    <li>浴室系設備を「介護医療・お風呂の道具」に集約し、介護施設の実務に合致</li>
+                    <li>管理会社の専門分野と一致しやすい分類</li>
                 </ul>
 
                 <h3>11.3 通報画面から場所欄を削除した理由</h3>
@@ -653,10 +650,10 @@
                     <li>本システムは設備トラブル通報に特化</li>
                 </ul>
 
-                <h3>11.5 業者ログインにisDemoModeフラグを導入した理由</h3>
+                <h3>11.5 管理会社ログインにisDemoModeフラグを導入した理由</h3>
                 <div class="success"><strong>決定:</strong> currentUserにisDemoModeフラグを追加</div>
                 <ul>
-                    <li>業者のcompanyCodeはPN001等で、TAMJ判定ではfalseになる</li>
+                    <li>管理会社のcompanyCodeはPN001等で、TAMJ判定ではfalseになる</li>
                     <li>assignedCompaniesにTAMJが含まれていればisDemoMode=trueをセット</li>
                     <li>全画面のisDemoMode判定を統一修正（7ファイル）</li>
                 </ul>
@@ -685,20 +682,20 @@
                     <li>スクロールが重くならない</li>
                 </ul>
 
-                <h3>11.9 業者を自動割り当てにした理由</h3>
-                <div class="success"><strong>決定:</strong> 商品→業者の直接紐づけで自動割り当て</div>
+                <h3>11.9 管理会社を自動割り当てにした理由</h3>
+                <div class="success"><strong>決定:</strong> 商品→管理会社の直接紐づけで自動割り当て</div>
                 <ul>
-                    <li>スタッフが業者を選ぶ手間を省く</li>
+                    <li>スタッフが管理会社を選ぶ手間を省く</li>
                     <li>ヒューマンエラーを防ぐ</li>
-                    <li>該当業者がいない場合は未割当で通報</li>
+                    <li>該当管理会社がいない場合は未割当で通報</li>
                 </ul>
 
-                <h3>11.10 業者ログインを統一ログイン画面にした理由</h3>
+                <h3>11.10 管理会社ログインを統一ログイン画面にした理由</h3>
                 <div class="success"><strong>決定:</strong> contractor-login.htmlを削除し、login.htmlに統合</div>
                 <ul>
                     <li>ログイン画面が分かれていると混乱する</li>
                     <li>メンテナンスが楽</li>
-                    <li>会社コード欄に業者コード（PN001等）を入力する運用</li>
+                    <li>会社コード欄に管理会社コード（PN001等）を入力する運用</li>
                 </ul>
 
                 <h3>11.11 商品検索をリアルタイムにしなかった理由</h3>
@@ -720,7 +717,7 @@
                 <h3>11.13 ログアウト時にDEMOデータを保持する理由</h3>
                 <div class="success"><strong>決定:</strong> ログアウト時にdemo.*/onetouch.*キーをsessionStorageから退避・復元</div>
                 <ul>
-                    <li>スタッフ→業者→管理者と切り替えてテストするため</li>
+                    <li>スタッフ→管理会社→管理者と切り替えてテストするため</li>
                     <li>ログアウトするたびにデータが消えるとテスト不可能</li>
                     <li>ブラウザを閉じた時だけ消えれば十分</li>
                 </ul>
@@ -730,7 +727,7 @@
                 <ul>
                     <li>account-master.htmlと表示方式を統一</li>
                     <li>多項目を一覧で比較しやすい</li>
-                    <li>ヘッダー固定（sticky）、カテゴリバッジ、業者バッジ、スマホ横スクロール対応</li>
+                    <li>ヘッダー固定（sticky）、カテゴリバッジ、管理会社バッジ、スマホ横スクロール対応</li>
                 </ul>
             </div>
 
@@ -738,14 +735,8 @@
             <div class="section" id="sec12">
                 <h2>12. 今後の課題</h2>
 
-                <h3>12.1 契約テーブルの導入 <span class="badge badge-new">優先度：高</span></h3>
-                <p>業者と施設の間に「契約」の概念を導入。以下の3課題を一括解決:</p>
-                <ul>
-                    <li>施設ごとに担当カテゴリ・契約期間・ステータスを管理</li>
-                    <li>事業所レベルの業者紐づけ（A施設とB施設で異なる業者を設定）</li>
-                    <li>company_adminが自社の契約を管理できるUI</li>
-                </ul>
-                <p>詳細は <strong>contract-design.pdf</strong>（設計検討資料）を参照。</p>
+                <h3>12.1 契約テーブルの導入 <span class="badge badge-new">対応済み（v2.1）</span></h3>
+                <p>管理会社と施設の間に「契約」の概念を導入済み。<code>DEMO_CONTRACTS</code>テーブルで一元管理。事業所マスタの<code>categoryPartners</code>は削除し、契約テーブルに一本化。</p>
 
                 <h3>12.2 商品マスタの入力ルール強化</h3>
                 <p>商品名を必須化、カテゴリ・フロアを推奨化 → <strong>対応済み</strong>。今後はインポート時の警告表示を検討。</p>
@@ -753,17 +744,69 @@
                 <h3>12.3 カスタムカテゴリ機能の整理</h3>
                 <p>system-settings.htmlでカスタムカテゴリを追加するUIがあるが、他画面に反映されない。削除 or 動的反映の方針決定が必要。</p>
 
-                <h3>12.4 通報の自動業者割当をカテゴリベースに</h3>
-                <p>現在は商品→業者の直接紐づけのみ。契約テーブル導入後、カテゴリベースの自動割当を実装予定。</p>
+                <h3>12.4 通報の自動管理会社割当をカテゴリベースに <span class="badge badge-new">対応済み（v2.1）</span></h3>
+                <p>契約テーブル導入により、カテゴリベースの自動割当を実装済み。<code>resolvePartner()</code>関数で契約テーブルを参照して担当管理会社を自動判定。</p>
 
                 <h3>12.5 インポートのAI機能</h3>
                 <p>import.htmlにGCP Vision API（画像OCR）とVertex AI Gemini（AI整形）の枠組みは用意済みだが未実装。<code>SERVER_AVAILABLE</code>/<code>AI_AVAILABLE</code>フラグ、<code>confidence</code>（信頼度）フィールド等のコードが存在する。サーバ側の構築が必要。</p>
             </div>
 
+            <div class="section" id="sec13">
+                <h2>13. 変更履歴</h2>
+
+                <h3>v2.1 — 2026年2月18日</h3>
+                <table>
+                    <tr><th>ファイル</th><th>変更内容</th><th>種別</th></tr>
+                    <tr>
+                        <td><code>unified-header.js</code></td>
+                        <td>DEMO切替メニューに<code>company_admin</code>（本社管理者）を追加。切替後の遷移先を<code>master-top.html</code>に設定。DEMOモード判定に<code>companyCode === 'PN001'</code>を追加。</td>
+                        <td><span class="badge badge-changed">変更</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>contractor-performance.html</code></td>
+                        <td>履歴表示のステータス判定で英語キー（<code>completed</code>/<code>rejected</code>）と日本語（完了/対応不可）の両方に対応。</td>
+                        <td><span class="badge badge-changed">変更</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>items.html</code></td>
+                        <td>本社管理者（<code>company_admin</code>）向けUI調整: 事業所フィルタ追加、インポート/新規登録ボタン非表示。商品フィルタリングで自社のみ表示。</td>
+                        <td><span class="badge badge-changed">変更</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>system-admin-dashboard.html</code></td>
+                        <td>デモデータリセット機能を追加。<code>localStorage</code>の<code>demo_initialized</code>をクリアして<code>initDemoData()</code>を再実行。</td>
+                        <td><span class="badge badge-new">追加</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>login.html</code></td>
+                        <td>システム管理者のログイン後遷移先を<code>system-admin.html</code>に修正（全ルートで統一）。</td>
+                        <td><span class="badge badge-changed">変更</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>import.html</code></td>
+                        <td>担当管理会社フィールドを任意化し、自動判定オプション（<code>resolvePartner()</code>）を追加。契約テーブルからカテゴリベースで担当管理会社を自動マッチング。</td>
+                        <td><span class="badge badge-changed">変更</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>office-master.html</code></td>
+                        <td>カテゴリ別管理会社設定UI（<code>categoryPartners</code>）を削除。契約テーブル（<code>contract-management.html</code>）に一本化。</td>
+                        <td><span class="badge badge-removed">削除</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>demo-mode.js</code></td>
+                        <td><code>categoryPartners</code>関連コードを削除。<code>DEMO_CONTRACTS</code>テーブルで契約管理を一元化。<code>resolvePartner()</code>/<code>getPartnerCompanies()</code>を追加。</td>
+                        <td><span class="badge badge-changed">変更</span></td>
+                    </tr>
+                </table>
+
+                <h3>v2.0 — 2026年2月13日</h3>
+                <p>初版。GitHub Pages公開、全画面統一ヘッダー適用、DEMOモード切替、管理会社ID統一、絵文字除去。</p>
+            </div>
+
             <div class="section">
                 <p style="text-align:center; color:#999; margin-top:60px;">
-                    ワンタッチ管理システム v2.0<br>
-                    最終更新: 2026年2月13日
+                    ワンタッチ管理システム v2.1<br>
+                    最終更新: 2026年2月19日
                 </p>
             </div>
 

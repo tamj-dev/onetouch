@@ -255,9 +255,9 @@
             'add_account': 'アカウント登録',
             'update_account': 'アカウント更新',
             'delete_account': 'アカウント削除',
-            'add_partner': '取引先登録',
-            'update_partner': '取引先更新',
-            'delete_partner': '取引先削除',
+            'add_partner': '管理会社登録',
+            'update_partner': '管理会社更新',
+            'delete_partner': '管理会社削除',
             'add_item': '商品登録',
             'update_item': '商品更新',
             'delete_item': '商品削除',
@@ -276,10 +276,10 @@
         var screenNames = {
             'login': 'ログイン', 'login.html': 'ログイン',
             'report': '通報', 'report.html': '通報',
-            'contractor-dashboard': '業者画面', 'contractor-dashboard.html': '業者画面',
+            'contractor-dashboard': '管理会社画面', 'contractor-dashboard.html': '管理会社画面',
             'master-top': '管理メニュー', 'master-top.html': '管理メニュー',
             'account-master': 'ユーザー管理', 'account-master.html': 'ユーザー管理',
-            'partner-master': '取引先マスタ', 'partner-master.html': '取引先マスタ',
+            'partner-master': '管理会社マスタ', 'partner-master.html': '管理会社マスタ',
             'office-master': '事業所マスタ', 'office-master.html': '事業所マスタ',
             'company-master': '会社マスタ', 'company-master.html': '会社マスタ',
             'items': '商品マスタ', 'items.html': '商品マスタ',
@@ -339,7 +339,7 @@
             if (detail && typeof detail === 'object') {
                 var parts = [];
                 if (log.type === 'login' && detail.role) {
-                    var rn = {'staff':'スタッフ','office_admin':'事業所管理者','company_admin':'本社管理者','system_admin':'システム管理者','contractor':'業者'};
+                    var rn = {'staff':'スタッフ','office_admin':'事業所管理者','company_admin':'本社管理者','system_admin':'システム管理者','contractor':'管理会社'};
                     parts.push(rn[detail.role] || detail.role);
                 }
                 if (detail.reportType) parts.push(detail.reportType);

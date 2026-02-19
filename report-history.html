@@ -360,12 +360,12 @@
                 </div>
             </div>
 
-            <!-- システム管理者のみ: 業者フィルタ -->
+            <!-- システム管理者のみ: 管理会社フィルタ -->
             <div class="filter-row" id="partnerFilterRow" style="display: none;">
-                <div class="filter-label">業者</div>
+                <div class="filter-label">管理会社</div>
                 <div>
                     <select id="partnerFilter" class="filter-input">
-                        <option value="">-- 全業者 --</option>
+                        <option value="">-- 全管理会社 --</option>
                     </select>
                 </div>
             </div>
@@ -443,7 +443,7 @@
                         <th>カテゴリ</th>
                         <th>事業所</th>
                         <th>通報者</th>
-                        <th>担当業者</th>
+                        <th>担当管理会社</th>
                         <th>ステータス</th>
                         <th>対応時間</th>
                     </tr>
@@ -520,9 +520,9 @@
                            datetime.toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
             
             const typeLabels = {
-                wholesale: '居室・生活',
-                building: '居室・生活',
-                welfare: '介護・医療',
+                wholesale: '部屋・共用部の家具・家電',
+                building: '部屋・共用部の家具・家電',
+                welfare: '介護医療・お風呂の道具',
                 emergency: '緊急'
             };
 
@@ -571,9 +571,9 @@
                 content += '</div>';
             }
 
-            // 対象業者
+            // 対象管理会社
             content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
-            content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">対象業者</div>';
+            content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">対象管理会社</div>';
             content += '<div style="font-size: 15px; color: #333;">' + (typeLabels[report.type] || report.category || '-') + '</div>';
             content += '</div>';
 
@@ -591,11 +591,11 @@
             content += '<div style="background: #f9fafb; padding: 16px; border-radius: 8px; font-size: 14px; line-height: 1.8; white-space: pre-wrap;">' + (report.description || '-') + '</div>';
             content += '</div>';
             
-            // 割当業者（追加）
+            // 割当管理会社（追加）
             if (report.assignedPartnerName || report.assignedPartnerId) {
                 content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
-                content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">割当業者</div>';
-                const partnerName = report.assignedPartnerName || '業者ID: ' + report.assignedPartnerId;
+                content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">割当管理会社</div>';
+                const partnerName = report.assignedPartnerName || '管理会社ID: ' + report.assignedPartnerId;
                 content += '<div style="font-size: 15px; color: #333;">' + partnerName + '</div>';
                 content += '</div>';
             }
@@ -703,7 +703,7 @@
                 
                 // 会社フィルタ初期化
                 initCompanyFilter();
-                // 業者フィルタ初期化
+                // 管理会社フィルタ初期化
                 initPartnerFilter();
                 
                 // 事業所：全事業所を表示（会社選択で絞り込み）
@@ -809,7 +809,7 @@
             });
         }
 
-        // 業者フィルタ初期化
+        // 管理会社フィルタ初期化
         function initPartnerFilter() {
             const partnerFilter = document.getElementById('partnerFilter');
             let partners = [];
@@ -886,7 +886,7 @@
                 reports = reports.filter(r => r.officeCode === selectedOfficeCode);
             }
 
-            // 業者フィルタ（システム管理者のみ）
+            // 管理会社フィルタ（システム管理者のみ）
             if (currentUser.role === 'system_admin') {
                 const partnerId = document.getElementById('partnerFilter') ? document.getElementById('partnerFilter').value : '';
                 if (partnerId) {
@@ -1156,9 +1156,9 @@
             var pageReports = reports.slice(start, start + rh_pageSize);
 
             const typeLabels = {
-                wholesale: '居室・生活',
-                building: '居室・生活',
-                welfare: '介護・医療',
+                wholesale: '部屋・共用部の家具・家電',
+                building: '部屋・共用部の家具・家電',
+                welfare: '介護医療・お風呂の道具',
                 emergency: '緊急'
             };
             
@@ -1282,7 +1282,7 @@
 
             var esc = function(v) { return '"' + String(v || '').replace(/"/g, '""').replace(/\n/g, ' ') + '"'; };
 
-            const headers = ['通報ID','通報日時','通報者','会社コード','事業所','設備名','カテゴリ','場所','状況詳細','割当業者','業者ステータス','対応時間','最新コメント','写真枚数'];
+            const headers = ['通報ID','通報日時','通報者','会社コード','事業所','設備名','カテゴリ','場所','状況詳細','割当管理会社','管理会社ステータス','対応時間','最新コメント','写真枚数'];
             const rows = allReports.map(r => {
                 const date = r.timestamp ? new Date(r.timestamp).toLocaleString('ja-JP') : '';
                 let responseTime = '';
@@ -1292,7 +1292,7 @@
                     const m = Math.floor((diffMs % 3600000) / 60000);
                     responseTime = h > 0 ? h + '時間' + m + '分' : m + '分';
                 }
-                // 割当業者名
+                // 割当管理会社名
                 var partnerName = r.assignedPartnerName || '';
                 if (!partnerName && r.assignedPartnerId) {
                     var p = partners.find(function(x) { return x.id === r.assignedPartnerId; });

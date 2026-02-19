@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>テストチェックリスト v2 | ワンタッチ管理</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif; background:#f5f7fa; padding:16px; }
+.container { max-width:800px; margin:0 auto; }
+h1 { font-size:20px; color:#1e293b; margin-bottom:4px; }
+.subtitle { font-size:13px; color:#64748b; margin-bottom:20px; }
+.progress-bar { background:#e2e8f0; border-radius:8px; height:10px; margin-bottom:20px; overflow:hidden; }
+.progress-fill { background:linear-gradient(90deg,#2563eb,#3b82f6); height:100%; border-radius:8px; transition:width 0.3s; }
+.progress-text { font-size:13px; color:#64748b; margin-bottom:16px; text-align:right; }
+.section { background:white; border-radius:12px; margin-bottom:12px; border:1px solid #e2e8f0; overflow:hidden; }
+.section-header { padding:14px 16px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none; }
+.section-header:hover { background:#f8fafc; }
+.section-title { font-size:15px; font-weight:700; color:#1e293b; }
+.section-badge { font-size:12px; padding:2px 10px; border-radius:10px; font-weight:600; }
+.badge-done { background:#dcfce7; color:#16a34a; }
+.badge-pending { background:#fef3c7; color:#d97706; }
+.section-body { padding:0 16px 12px; }
+.check-item { padding:10px 0; border-bottom:1px solid #f1f5f9; display:flex; align-items:flex-start; gap:10px; }
+.check-item:last-child { border-bottom:none; }
+.check-item input[type=checkbox] { width:18px; height:18px; margin-top:2px; accent-color:#2563eb; flex-shrink:0; cursor:pointer; }
+.check-label { font-size:14px; color:#334155; line-height:1.5; cursor:pointer; }
+.check-label .tag { display:inline-block; font-size:11px; padding:1px 6px; border-radius:4px; margin-left:4px; font-weight:600; }
+.tag-new { background:#dbeafe; color:#2563eb; }
+.tag-changed { background:#fef3c7; color:#d97706; }
+.tag-critical { background:#fee2e2; color:#dc2626; }
+.reset-btn { display:block; margin:20px auto 0; padding:10px 24px; background:white; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; color:#64748b; cursor:pointer; }
+.reset-btn:hover { background:#f8fafc; }
+.legend { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+.legend-item { font-size:12px; color:#64748b; display:flex; align-items:center; gap:4px; }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>テストチェックリスト v2</h1>
+    <div class="subtitle">最終更新: 2026-02-19 ― 2/14以降の全変更を反映</div>
+    
+    <div class="legend">
+        <div class="legend-item"><span class="tag tag-new">NEW</span> 新規追加項目</div>
+        <div class="legend-item"><span class="tag tag-changed">変更</span> 仕様変更あり</div>
+        <div class="legend-item"><span class="tag tag-critical">重要</span> 重点テスト</div>
+    </div>
+
+    <div class="progress-text" id="progressText">0 / 0 完了</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+    <!-- Section 1: ログイン・DEMO -->
+    <div class="section">
+        <div class="section-header" onclick="toggleSection(this)">
+            <span class="section-title">1. ログイン・DEMOモード（7項目）</span>
+            <span class="section-badge" id="badge-s1"></span>
+        </div>
+        <div class="section-body">
+            <div class="check-item"><input type="checkbox" id="c01" onchange="save()"><label class="check-label" for="c01">DEMOスタッフでログインできる（TAMJ / demo-staff / demo）</label></div>
+            <div class="check-item"><input type="checkbox" id="c02" onchange="save()"><label class="check-label" for="c02">DEMO管理会社でログインできる（PN001 / p001-yamada / demo）<span class="tag tag-changed">変更</span></label></div>
+            <div class="check-item"><input type="checkbox" id="c03" onchange="save()"><label class="check-label" for="c03">DEMO事業所管理者でログインできる（TAMJ / demo-office / demo）</label></div>
+            <div class="check-item"><input type="checkbox" id="c04" onchange="save()"><label class="check-label" for="c04">DEMO本社管理者でログインできる（TAMJ / TAMJ-H001 / demo）</label></div>
+            <div class="check-item"><input type="checkbox" id="c05" onchange="save()"><label class="check-label" for="c05">システム管理者でログインできる（admin / admin）→ system-admin.htmlに遷移 <span class="tag tag-changed">変更</span></label></div>
+            <div class="check-item"><input type="checkbox" id="c06" onchange="save()"><label class="check-label" for="c06">DEMOモードバッジ（🔥）がヘッダーに表示される</label></div>
+            <div class="check-item"><input type="checkbox" id="c07" onchange="save()"><label class="check-label" for="c07">DEMO切替で全ロール（スタッフ/管理会社/事業所管理者/本社管理者）に切替可能 <span class="tag tag-new">NEW</span></label></div>
+        </div>
+    </div>
+
+    <!-- Section 2: 表記変更 -->
+    <div class="section">
+        <div class="section-header" onclick="toggleSection(this)">
+            <span class="section-title">2. 「管理会社」表記確認（6項目）<span class="tag tag-critical">重要</span></span>
+            <span class="section-badge" id="badge-s2"></span>
+        </div>
+        <div class="section-body">
+            <div class="check-item"><input type="checkbox" id="c08" onchange="save()"><label class="check-label" for="c08">ログイン画面の体験ボタンが「管理会社で体験」になっている <span class="tag tag-new">NEW</span></label></div>
+            <div class="check-item"><input type="checkbox" id="c09" onchange="save()"><label class="check-label" for="c09">マスタ管理のカード名が「管理会社マスタ」になっている <span class="tag tag-new">NEW</span></label></div>
+            <div class="check-item"><input type="checkbox" id="c10" onchange="save()"><label class="check-label" for="c10">管理会社マスタのタイトル・モーダル・ラベルが全て「管理会社」表記 <span class="tag tag-new">NEW</span></label></div>
+            <div class="check-item"><input type="checkbox" id="c11" onchange="save()"><label class="check-label" for="c11">通報画面・通報履歴で「割当管理会社」「管理会社未割当」と表示 <span class="tag tag-new">NEW</span></label></div>
+            <div class="check-item"><input type="checkbox" id="c12" onchange="save()"><label class="check-label" for="c12">商品マスタの「担当管理会社」列・フィルタが正しい表記 <span class="tag tag-new">NEW</span></label></div>
+            <div class="check-item"><input type="checkbox" id="c13" onchange="save()"><label class="check-label" for="c13">セットアップウィザードのステップ名・ラベルが「管理会社」表記 <span class="tag tag-new">NEW</span></label></div>
+        </div>
+    </div>
+
+    <!-- Section 3: スタッフ通報 -->
+    <div class="section">
+        <div class="section-header" onclick="toggleSection(this)">
+            <span class="section-title">3. スタッフ — 通報フロー（6項目）</span>
+            <span class="section-badge" id="badge-s3"></span>
+        </div>
+        <div class="section-body">
+            <div class="check-item"><input type="checkbox" id="c14" onchange="save()"><label class="check-label" for="c14">設備リストから商品を選択できる</label></div>
+            <div class="check-item"><input type="checkbox" id="c15" onchange="save()"><label class="check-label" for="c15">状況入力（テキスト200文字）と写真添付ができる</label></div>
+            <div class="check-item"><input type="checkbox" id="c16" onchange="save()"><label class="check-label" for="c16">通報送信後に完了モーダルが表示される</label></div>
+            <div class="check-item"><input type="checkbox" id="c17" onchange="save()"><label class="check-label" for="c17">通報履歴に送信した通報が表示される</label></div>
+            <div class="check-item"><input type="checkbox" id="c18" onchange="save()"><label class="check-label" for="c18">通報詳細で管理会社のコメント・ステータスが確認できる <span class="tag tag-changed">変更</span></label></div>
+            <div class="check-item"><input type="checkbox" id="c19" onchange="save()"><label class="check-label" for="c19">パスワード変更（ヘッダーメニュー）が正常動作する</label></div>
+        </div>
+    </div>
+
+    <!-- Section 4: 管理会社 -->
+    <div class="section">
+        <div class="section-header" onclick="toggleSection(this)">
+            <span class="section-title">4. 管理会社 — ダッシュボード（8項目）</span>
+            <span class="section-badge" id="badge-s4"></span>
+        </div>
+        <div class="section-body">
+            <div class="check-item"><input type="checkbox" id="c20" onchange="save()"><label class="check-label" for="c20">対応依頼一覧に自社宛ての通報が表示される</label></div>
+            <div class="check-item"><input type="checkbox" id="c21" onchange="save()"><label class="check-label" for="c21">通報のステータスを「対応中」「完了」「対応不可」に変更できる</label></div>
+            <div class="check-item"><input type="checkbox" id="c22" onchange="save()"><label class="check-label" for="c22">コメントを追加できる</label></div>
+            <div class="check-item"><input type="checkbox" id="c23" onchange="save()"><label class="check-label" for="c23">対応実績画面で完了/対応不可の履歴が表示される <span class="tag tag-changed">変更</span></label></div>
+            <div class="check-item"><input type="checkbox" id="c24" onchange="save()"><label class="check-label" for="c24">商品マスタで自社担当商品のみ表示される</label></div>
+            <div class="check-item"><input type="checkbox" id="c25" onchange="save()"><label class="check-label" for="c25">商品インポートが正常動作する</label></div>
+            <div class="check-item"><input type="checkbox" id="c26" onchange="save()"><label class="check-label" for="c26">管理会社ヘルプ画面が「管理会社ヘルプ」タイトルで表示 <span class="tag tag-new">NEW</span></label></div>
+            <div class="check-item"><input type="checkbox" id="c27" onchange="save()"><label class="check-label" for="c27">DEMOバナーが重複なく1つだけ表示される</label></div>
+        </div>
+    </div>
+
+    <!-- Section 5: 本社管理者 -->
+    <div class="section">
+        <div class="section-header" onclick="toggleSection(this)">
+            <span class="section-title">5. 本社管理者 — 管理機能（7項目）</span>
+            <span class="section-badge" id="badge-s5"></span>
+        </div>
+        <div class="section-body">
+            <div class="check-item"><input type="checkbox" id="c28" onchange="save()"><label class="check-label" for="c28">商品マスタで事業所フィルタが表示される（自社のみ）<span class="tag tag-new">NEW</span></label></div>
+            <div class="check-item"><input type="checkbox" id="c29" onchange="save()"><label class="check-label" for="c29">商品マスタでインポート/新規登録ボタンが非表示 <span class="tag tag-new">NEW</span></label></div>
+            <div class="check-item"><input type="checkbox" id="c30" onchange="save()"><label class="check-label" for="c30">通報履歴で全事業所の通報が見える</label></div>
+            <div class="check-item"><input type="checkbox" id="c31" onchange="save()"><label class="check-label" for="c31">システム設定でロゴをアップロードできる <span class="tag tag-critical">重要</span><span class="tag tag-changed">変更</span></label></div>
+            <div class="check-item"><input type="checkbox" id="c32" onchange="save()"><label class="check-label" for="c32">ロゴアップロード後にヘッダーアバターが即時更新される <span class="tag tag-new">NEW</span></label></div>
+            <div class="check-item"><input type="checkbox" id="c33" onchange="save()"><label class="check-label" for="c33">滞留アラート日数を変更できる（デフォルト3日）</label></div>
+            <div class="check-item"><input type="checkbox" id="c34" onchange="save()"><label class="check-label" for="c34">監査ログへのリンクが表示される</label></div>
+        </div>
+    </div>
+
+    <!-- Section 6: システム管理者 -->
+    <div class="section">
+        <div class="section-header" onclick="toggleSection(this)">
+            <span class="section-title">6. システム管理者 — セットアップ・契約（8項目）</span>
+            <span class="section-badge" id="badge-s6"></span>
+        </div>
+        <div class="section-body">
+            <div class="check-item"><input type="checkbox" id="c35" onchange="save()"><label class="check-label" for="c35">セットアップウィザードで6ステップ完走できる（管理会社→会社→事業所→契約→アカウント→商品）<span class="tag tag-changed">変更</span></label></div>
+            <div class="check-item"><input type="checkbox" id="c36" onchange="save()"><label class="check-label" for="c36">契約管理画面で契約一覧（管理会社×会社×カテゴリ）が表示される</label></div>
+            <div class="check-item"><input type="checkbox" id="c37" onchange="save()"><label class="check-label" for="c37">ダッシュボードで全社統計が表示される</label></div>
+            <div class="check-item"><input type="checkbox" id="c38" onchange="save()"><label class="check-label" for="c38">DEMOデータリセットが正常動作する <span class="tag tag-new">NEW</span></label></div>
+            <div class="check-item"><input type="checkbox" id="c39" onchange="save()"><label class="check-label" for="c39">DEMO切替で管理会社/スタッフ/管理者に切替後、元に戻れる <span class="tag tag-new">NEW</span></label></div>
+            <div class="check-item"><input type="checkbox" id="c40" onchange="save()"><label class="check-label" for="c40">マスタ管理にアクセスできる（管理会社マスタはsystem_adminのみ）</label></div>
+            <div class="check-item"><input type="checkbox" id="c41" onchange="save()"><label class="check-label" for="c41">データエクスポート（CSV）が動作する</label></div>
+            <div class="check-item"><input type="checkbox" id="c42" onchange="save()"><label class="check-label" for="c42">ドキュメントカードから運用マニュアルにアクセスできる <span class="tag tag-new">NEW</span></label></div>
+        </div>
+    </div>
+
+    <!-- Section 7: 自動割当フロー -->
+    <div class="section">
+        <div class="section-header" onclick="toggleSection(this)">
+            <span class="section-title">7. 通報→管理会社自動割当フロー（6項目）<span class="tag tag-critical">重要</span></span>
+            <span class="section-badge" id="badge-s7"></span>
+        </div>
+        <div class="section-body">
+            <div class="check-item"><input type="checkbox" id="c43" onchange="save()"><label class="check-label" for="c43">通報時に商品カテゴリから契約テーブル経由で管理会社が自動割当される <span class="tag tag-changed">変更</span></label></div>
+            <div class="check-item"><input type="checkbox" id="c44" onchange="save()"><label class="check-label" for="c44">割当された管理会社のダッシュボードに通報が表示される</label></div>
+            <div class="check-item"><input type="checkbox" id="c45" onchange="save()"><label class="check-label" for="c45">管理会社が「対応中」にすると、スタッフ側ステータスが更新される</label></div>
+            <div class="check-item"><input type="checkbox" id="c46" onchange="save()"><label class="check-label" for="c46">管理会社が「完了」にすると、通報履歴で完了と表示される</label></div>
+            <div class="check-item"><input type="checkbox" id="c47" onchange="save()"><label class="check-label" for="c47">インポート画面で担当管理会社の自動判定が動作する（契約テーブルベース）<span class="tag tag-new">NEW</span></label></div>
+            <div class="check-item"><input type="checkbox" id="c48" onchange="save()"><label class="check-label" for="c48">滞留アラート（未対応X日以上）がreport-history.htmlに表示される</label></div>
+        </div>
+    </div>
+
+    <!-- Section 8: ドキュメント・UI -->
+    <div class="section">
+        <div class="section-header" onclick="toggleSection(this)">
+            <span class="section-title">8. ドキュメント・UI全般（7項目）</span>
+            <span class="section-badge" id="badge-s8"></span>
+        </div>
+        <div class="section-body">
+            <div class="check-item"><input type="checkbox" id="c49" onchange="save()"><label class="check-label" for="c49">docs.htmlの「運用マニュアル」タブに日常運用・トラブルシューティングがある <span class="tag tag-new">NEW</span></label></div>
+            <div class="check-item"><input type="checkbox" id="c50" onchange="save()"><label class="check-label" for="c50">docs.htmlの「操作手順」タブが正しく表示される</label></div>
+            <div class="check-item"><input type="checkbox" id="c51" onchange="save()"><label class="check-label" for="c51">ヘルプ画面（help.html, report-help.html）が「管理会社」表記 <span class="tag tag-new">NEW</span></label></div>
+            <div class="check-item"><input type="checkbox" id="c52" onchange="save()"><label class="check-label" for="c52">全画面で青系（#2563eb）のデザイン統一</label></div>
+            <div class="check-item"><input type="checkbox" id="c53" onchange="save()"><label class="check-label" for="c53">report-history.htmlのカードUI・KPIカードが正常表示</label></div>
+            <div class="check-item"><input type="checkbox" id="c54" onchange="save()"><label class="check-label" for="c54">SPEC仕様書（v2.1）に変更履歴セクションがある <span class="tag tag-new">NEW</span></label></div>
+            <div class="check-item"><input type="checkbox" id="c55" onchange="save()"><label class="check-label" for="c55">事業所マスタにcategoryPartners関連のUIが残っていない <span class="tag tag-new">NEW</span></label></div>
+        </div>
+    </div>
+
+    <button class="reset-btn" onclick="resetAll()">全てのチェックをリセット</button>
+</div>
+
+<script>
+var KEY = 'test-checklist-v2';
+var TOTAL = 55;
+
+function save() {
+    var data = {};
+    for (var i = 1; i <= TOTAL; i++) {
+        var el = document.getElementById('c' + String(i).padStart(2, '0'));
+        if (el) data['c' + String(i).padStart(2, '0')] = el.checked;
+    }
+    localStorage.setItem(KEY, JSON.stringify(data));
+    updateProgress();
+}
+
+function load() {
+    try {
+        var data = JSON.parse(localStorage.getItem(KEY) || '{}');
+        for (var k in data) {
+            var el = document.getElementById(k);
+            if (el) el.checked = data[k];
+        }
+    } catch(e) {}
+    updateProgress();
+}
+
+function updateProgress() {
+    var done = 0;
+    for (var i = 1; i <= TOTAL; i++) {
+        var el = document.getElementById('c' + String(i).padStart(2, '0'));
+        if (el && el.checked) done++;
+    }
+    document.getElementById('progressText').textContent = done + ' / ' + TOTAL + ' 完了 (' + Math.round(done/TOTAL*100) + '%)';
+    document.getElementById('progressFill').style.width = (done/TOTAL*100) + '%';
+
+    // Update section badges
+    var sections = [
+        {id:'s1', start:1, end:7},
+        {id:'s2', start:8, end:13},
+        {id:'s3', start:14, end:19},
+        {id:'s4', start:20, end:27},
+        {id:'s5', start:28, end:34},
+        {id:'s6', start:35, end:42},
+        {id:'s7', start:43, end:48},
+        {id:'s8', start:49, end:55}
+    ];
+    sections.forEach(function(s) {
+        var sDone = 0, sTotal = s.end - s.start + 1;
+        for (var i = s.start; i <= s.end; i++) {
+            var el = document.getElementById('c' + String(i).padStart(2, '0'));
+            if (el && el.checked) sDone++;
+        }
+        var badge = document.getElementById('badge-' + s.id);
+        if (badge) {
+            badge.textContent = sDone + '/' + sTotal;
+            badge.className = 'section-badge ' + (sDone === sTotal ? 'badge-done' : 'badge-pending');
+        }
+    });
+}
+
+function toggleSection(header) {
+    var body = header.nextElementSibling;
+    body.style.display = body.style.display === 'none' ? '' : 'none';
+}
+
+function resetAll() {
+    if (!confirm('全てのチェックをリセットしますか？')) return;
+    for (var i = 1; i <= TOTAL; i++) {
+        var el = document.getElementById('c' + String(i).padStart(2, '0'));
+        if (el) el.checked = false;
+    }
+    save();
+}
+
+load();
+</script>
+</body>
+</html>

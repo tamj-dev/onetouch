@@ -513,7 +513,7 @@
 
         // 初期化
         function init() {
-            const contractorName = currentContractor.companyName || '業者';
+            const contractorName = currentContractor.companyName || '管理会社';
             
             // 旧ヘッダー要素はオプショナルに参照（統一ヘッダーが担当）
             const userInfoEl = document.getElementById('userInfo');
@@ -778,7 +778,7 @@
             if (!report.statusHistory) report.statusHistory = [];
             report.statusHistory.push({
                 status: newStatus,
-                author: currentContractor.companyName || '業者',
+                author: currentContractor.companyName || '管理会社',
                 timestamp: now
             });
             
@@ -793,7 +793,7 @@
             }
             
             // 対応者を記録
-            report.handler = currentContractor.companyName || '業者';
+            report.handler = currentContractor.companyName || '管理会社';
             
             saveReports();
             updateStatusCounts();
@@ -804,9 +804,9 @@
             // スタッフ向け通知
             if (typeof sendNotification === 'function' && report.userId) {
                 var statusMsg = {
-                    '対応中': '業者が対応を開始しました',
+                    '対応中': '管理会社が対応を開始しました',
                     '完了': '対応が完了しました',
-                    '対応不可': '業者が対応不可としました'
+                    '対応不可': '管理会社が対応不可としました'
                 };
                 var msg = (statusMsg[newStatus] || 'ステータスが変更されました') + '：' + (report.title || report.category || '');
                 sendNotification({
@@ -838,7 +838,7 @@
             }
             
             report.contractorComments.push({
-                author: currentContractor.companyName || '業者',
+                author: currentContractor.companyName || '管理会社',
                 text: commentText,
                 timestamp: new Date().toISOString()
             });
@@ -848,7 +848,7 @@
             report.statusHistory.push({
                 type: 'comment',
                 status: report.contractorStatus || '未対応',
-                author: currentContractor.companyName || '業者',
+                author: currentContractor.companyName || '管理会社',
                 comment: commentText,
                 timestamp: new Date().toISOString()
             });
@@ -864,7 +864,7 @@
                     toRole: 'staff',
                     type: 'contractor_comment',
                     reportId: currentReportId,
-                    message: '業者からコメント：' + (commentText.length > 30 ? commentText.substring(0, 30) + '...' : commentText)
+                    message: '管理会社からコメント：' + (commentText.length > 30 ? commentText.substring(0, 30) + '...' : commentText)
                 });
             }
 
