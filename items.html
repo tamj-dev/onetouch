@@ -42,17 +42,14 @@
         }
 
         async function initDemoItems() {
-          if (!isDemoMode() || sessionStorage.getItem('demo.items')) return;
-          sessionStorage.setItem('demo.items', JSON.stringify([]));
+          // demo-mode.jsのinitDemoData()がlocalStorage['onetouch.items']に300件生成済み
+          return;
         }
 
         async function getItems() {
           const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
           if (!currentUser) return [];
-          if (isDemoMode()) {
-            return JSON.parse(sessionStorage.getItem('demo.items') || '[]');
-          }
-          // 本番モード: localStorageから取得（scope別フィルタ）
+          // DEMO・本番ともlocalStorage['onetouch.items']から取得
           const allItems = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
           if (currentUser.role === 'system_admin') return allItems;
           if (currentUser.role === 'company_admin') return allItems.filter(i => i.companyCode === currentUser.companyCode);
@@ -104,9 +101,9 @@
           item.officeCode = item.officeCode || currentUser.officeCode;
           
           if (isDemoMode()) {
-            const items = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
+            const items = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
             items.push(item);
-            sessionStorage.setItem('demo.items', JSON.stringify(items));
+            localStorage.setItem('onetouch.items', JSON.stringify(items));
             return item;
           }
           const items = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
@@ -118,11 +115,11 @@
         async function updateItem(item) {
           item.updatedAt = new Date().toISOString();
           if (isDemoMode()) {
-            const items = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
+            const items = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
             const index = items.findIndex(i => i.itemId === item.itemId);
             if (index !== -1) {
               items[index] = item;
-              sessionStorage.setItem('demo.items', JSON.stringify(items));
+              localStorage.setItem('onetouch.items', JSON.stringify(items));
             }
             return item;
           }
@@ -138,9 +135,9 @@
 
         async function deleteItem(itemId) {
           if (isDemoMode()) {
-            const items = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
+            const items = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
             const filtered = items.filter(i => i.itemId !== itemId);
-            sessionStorage.setItem('demo.items', JSON.stringify(filtered));
+            localStorage.setItem('onetouch.items', JSON.stringify(filtered));
             return true;
           }
           // 本番モード
@@ -1349,10 +1346,8 @@
                         { itemId:'ITEM-DEMO-028', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'送迎車 車載備品', maker:'—', model:'—', category:'その他', assignedPartnerId:'', assignedPartnerName:'', unit:'式', price:0, stock:1, description:'ジャッキ・三角表示板等', floor:'—', location:'駐車場', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() }
                     ];
                     
-                    // sessionStorageに保存
-                    const storageKey = isDemoMode() ? 'demo.items' : 'items';
-                    const storage = isDemoMode() ? sessionStorage : localStorage;
-                    storage.setItem(storageKey, JSON.stringify(demoItems));
+                    // localStorageに保存
+                    localStorage.setItem('onetouch.items', JSON.stringify(demoItems));
                     
                     allItems = demoItems;
                 }

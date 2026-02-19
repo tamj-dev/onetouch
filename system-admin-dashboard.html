@@ -694,7 +694,7 @@
                         accounts: JSON.parse(localStorage.getItem('accounts') || '[]'),
                         partners: JSON.parse(localStorage.getItem('partners') || '[]'),
                         reports: JSON.parse(localStorage.getItem('onetouch.reports') || '[]'),
-                        items: JSON.parse(sessionStorage.getItem('demo.items') || localStorage.getItem('items') || '[]'),
+                        items: JSON.parse(localStorage.getItem('onetouch.items') || localStorage.getItem('items') || '[]'),
                         auditLogs: JSON.parse(localStorage.getItem('audit.logs') || '[]'),
                         maintenanceMode: localStorage.getItem('maintenanceMode'),
                         maintenanceMessage: localStorage.getItem('maintenanceMessage')

@@ -115,7 +115,7 @@ async function confirmLineItems(docId) {
   if (validItems.length === 0) throw new Error('登録する商品がありません');
 
   // LineItems → Items（商品マスタ）に変換
-  const itemsKey = _docStorageIsDemoMode() ? 'demo.items' : 'onetouch.items';
+  const itemsKey = 'onetouch.items';
   const storage = _docStorageIsDemoMode() ? sessionStorage : localStorage;
   const existingItems = JSON.parse(storage.getItem(itemsKey) || '[]');
 

@@ -116,12 +116,12 @@ async function initDemoItems() {
   if (!isDemoMode()) return;
   
   // 既にデータがある場合はスキップ
-  const existing = sessionStorage.getItem('demo.items');
+  const existing = localStorage.getItem('onetouch.items');
   if (existing) return;
   
   // サンプル100件を生成
   const demoItems = generateDemoItems();
-  sessionStorage.setItem('demo.items', JSON.stringify(demoItems));
+  localStorage.setItem('onetouch.items', JSON.stringify(demoItems));
   
 }
 
@@ -136,7 +136,7 @@ async function getItems() {
   
   // DEMOモード
   if (isDemoMode()) {
-    const items = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
+    const items = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
     return items;
   }
   
@@ -202,9 +202,9 @@ async function addItem(item) {
   
   // DEMOモード
   if (isDemoMode()) {
-    const items = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
+    const items = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
     items.push(item);
-    sessionStorage.setItem('demo.items', JSON.stringify(items));
+    localStorage.setItem('onetouch.items', JSON.stringify(items));
     return item;
   }
   
@@ -238,11 +238,11 @@ async function updateItem(item) {
   
   // DEMOモード
   if (isDemoMode()) {
-    const items = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
+    const items = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
     const index = items.findIndex(i => i.itemId === item.itemId);
     if (index !== -1) {
       items[index] = item;
-      sessionStorage.setItem('demo.items', JSON.stringify(items));
+      localStorage.setItem('onetouch.items', JSON.stringify(items));
     }
     return item;
   }
@@ -270,9 +270,9 @@ async function updateItem(item) {
 async function deleteItem(itemId) {
   // DEMOモード
   if (isDemoMode()) {
-    const items = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
+    const items = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
     const filtered = items.filter(i => i.itemId !== itemId);
-    sessionStorage.setItem('demo.items', JSON.stringify(filtered));
+    localStorage.setItem('onetouch.items', JSON.stringify(filtered));
     return true;
   }
   

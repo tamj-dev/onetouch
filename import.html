@@ -43,15 +43,15 @@
     }
 
     async function initDemoItems() {
-      if (!isDemoMode() || sessionStorage.getItem('demo.items')) return;
-      sessionStorage.setItem('demo.items', JSON.stringify([]));
+      if (!isDemoMode() || localStorage.getItem('onetouch.items')) return;
+      localStorage.setItem('onetouch.items', JSON.stringify([]));
     }
 
     async function getItems() {
       const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
       if (!currentUser) return [];
       if (isDemoMode()) {
-        return JSON.parse(sessionStorage.getItem('demo.items') || '[]');
+        return JSON.parse(localStorage.getItem('onetouch.items') || '[]');
       }
       // 本番モード: localStorageから取得（scope別フィルタ）
       const allItems = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
@@ -73,9 +73,9 @@
       item.officeCode = item.officeCode || currentUser.officeCode;
       
       if (isDemoMode()) {
-        const items = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
+        const items = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
         items.push(item);
-        sessionStorage.setItem('demo.items', JSON.stringify(items));
+        localStorage.setItem('onetouch.items', JSON.stringify(items));
         return item;
       }
       // 本番モード: localStorageに保存
@@ -88,11 +88,11 @@
     async function updateItem(item) {
       item.updatedAt = new Date().toISOString();
       if (isDemoMode()) {
-        const items = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
+        const items = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
         const index = items.findIndex(i => i.itemId === item.itemId);
         if (index !== -1) {
           items[index] = item;
-          sessionStorage.setItem('demo.items', JSON.stringify(items));
+          localStorage.setItem('onetouch.items', JSON.stringify(items));
         }
         return item;
       }
@@ -105,9 +105,9 @@
 
     async function deleteItem(itemId) {
       if (isDemoMode()) {
-        const items = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
+        const items = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
         const filtered = items.filter(i => i.itemId !== itemId);
-        sessionStorage.setItem('demo.items', JSON.stringify(filtered));
+        localStorage.setItem('onetouch.items', JSON.stringify(filtered));
         return true;
       }
       // 本番モード: localStorageから削除
@@ -2327,7 +2327,7 @@
         // ========================================================================
         var existingItems = [];
         // DEMOモード・本番モード両方のキーから読み込み
-        try { existingItems = JSON.parse(sessionStorage.getItem('demo.items') || '[]'); } catch(e) {}
+        try { existingItems = JSON.parse(localStorage.getItem('onetouch.items') || '[]'); } catch(e) {}
         try { var il2 = JSON.parse(localStorage.getItem('onetouch.items') || '[]'); il2.forEach(function(i){ if(!existingItems.find(function(m){return m.itemId===i.itemId;})) existingItems.push(i); }); } catch(e) {}
         try { var il3 = JSON.parse(sessionStorage.getItem('items') || '[]'); il3.forEach(function(i){ if(!existingItems.find(function(m){return m.itemId===i.itemId;})) existingItems.push(i); }); } catch(e) {}
         try { var il4 = JSON.parse(localStorage.getItem('items') || '[]'); il4.forEach(function(i){ if(!existingItems.find(function(m){return m.itemId===i.itemId;})) existingItems.push(i); }); } catch(e) {}
@@ -2386,7 +2386,7 @@
           var cu = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
           var isDemo = cu.companyCode === 'TAMJ' || !!cu.isDemoMode || sessionStorage.getItem('demo.mode') === 'true';
           if (isDemo) {
-            sessionStorage.setItem('demo.items', JSON.stringify(existingItems));
+            localStorage.setItem('onetouch.items', JSON.stringify(existingItems));
           } else {
             localStorage.setItem('onetouch.items', JSON.stringify(existingItems));
           }
