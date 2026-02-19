@@ -306,42 +306,73 @@ function generateDemoItems(companyCode, officeCodes, officeNames) {
 // ========== 通報履歴ダミー ==========
 function generateDemoReports(companyCode, officeCodes, officeNames, accounts) {
     var reports = [];
-    var data = [
-        ['2F居室のエアコンが冷えない','建物・外まわり','完了'],['共用廊下の蛍光灯が切れている','建物・外まわり','完了'],
-        ['浴室の排水が詰まり気味','建物・外まわり','対応中'],['車いすのブレーキが効きにくい','介護医療・お風呂の道具','未対応'],
-        ['業務用冷蔵庫から異音','厨房・食事の道具','完了'],['ナースコール応答遅延','通信・呼出し・防火の機器','対応中'],
-        ['玄関の自動ドアの動作が遅い','建物・外まわり','完了'],['給湯器のお湯が出にくい','建物・外まわり','未対応'],
-        ['3F共用スペースのTV映らない','部屋・共用部の家具・家電','完了'],['歩行器のゴム摩耗','介護医療・お風呂の道具','完了'],
-        ['食洗機のエラー表示','厨房・食事の道具','対応中'],['Wi-Fiが途切れる','通信・呼出し・防火の機器','完了'],
-        ['電動ベッドのリモコン故障','部屋・共用部の家具・家電','未対応'],['防犯カメラの映像乱れ','通信・呼出し・防火の機器','完了'],
-        ['スチコンの温度上がらない','厨房・食事の道具','対応中'],['消火器の期限切れ確認','建物・外まわり','完了'],
-        ['洗濯機の脱水異音','部屋・共用部の家具・家電','完了'],['吸引器の吸引力低下','介護医療・お風呂の道具','未対応'],
-        ['AEDバッテリー警告表示','介護医療・お風呂の道具','対応中'],['配膳車のキャスター不具合','厨房・食事の道具','完了'],
-        ['複合機の紙詰まり頻発','通信・呼出し・防火の機器','完了'],['分電盤から焦げ臭い','建物・外まわり','対応中'],
-        ['パルスオキシメーター電池切れ','介護医療・お風呂の道具','完了'],['製氷機が氷を作らない','厨房・食事の道具','未対応']
+    // 通報テンプレート（カテゴリ別）
+    var templates = [
+        {t:'エアコンの効きが悪い',c:'建物・外まわり',d:'冷房運転しても室温が下がらない'},
+        {t:'蛍光灯が点滅している',c:'建物・外まわり',d:'共用廊下の蛍光灯がチカチカする'},
+        {t:'排水が流れにくい',c:'建物・外まわり',d:'水を流すとゴボゴボ音がする'},
+        {t:'自動ドアの反応が悪い',c:'建物・外まわり',d:'センサーの感度が落ちている'},
+        {t:'給湯器からお湯が出ない',c:'建物・外まわり',d:'エラーコード点滅中'},
+        {t:'テレビが映らない',c:'部屋・共用部の家具・家電',d:'電源は入るが画面が真っ暗'},
+        {t:'洗濯機から異音がする',c:'部屋・共用部の家具・家電',d:'脱水時にガタガタ振動する'},
+        {t:'電動ベッドのリモコン故障',c:'部屋・共用部の家具・家電',d:'ボタンを押しても反応しない'},
+        {t:'冷蔵庫の温度が上がる',c:'部屋・共用部の家具・家電',d:'設定温度まで冷えない'},
+        {t:'掃除機の吸引力低下',c:'部屋・共用部の家具・家電',d:'フィルター清掃しても改善しない'},
+        {t:'車いすのブレーキ不良',c:'介護医療・お風呂の道具',d:'ブレーキを掛けても滑る'},
+        {t:'歩行器のゴム摩耗',c:'介護医療・お風呂の道具',d:'接地面のゴムがすり減っている'},
+        {t:'吸引器の吸引力低下',c:'介護医療・お風呂の道具',d:'パッキン劣化の可能性'},
+        {t:'シャワーチェアのぐらつき',c:'介護医療・お風呂の道具',d:'座面がぐらつく'},
+        {t:'AEDバッテリー警告',c:'介護医療・お風呂の道具',d:'バッテリー交換ランプ点灯'},
+        {t:'業務用冷蔵庫から異音',c:'厨房・食事の道具',d:'コンプレッサー音が大きい'},
+        {t:'食洗機のエラー表示',c:'厨房・食事の道具',d:'E03エラーで動かない'},
+        {t:'製氷機が氷を作らない',c:'厨房・食事の道具',d:'水は入るが製氷しない'},
+        {t:'スチコンの温度異常',c:'厨房・食事の道具',d:'設定温度まで上がらない'},
+        {t:'配膳車のキャスター不具合',c:'厨房・食事の道具',d:'車輪が回りにくい'},
+        {t:'Wi-Fiが途切れる',c:'通信・呼出し・防火の機器',d:'特定のフロアで頻繁に切断'},
+        {t:'ナースコール応答遅延',c:'通信・呼出し・防火の機器',d:'呼出してから3秒以上かかる'},
+        {t:'防犯カメラの映像乱れ',c:'通信・呼出し・防火の機器',d:'夜間映像にノイズが入る'},
+        {t:'複合機の紙詰まり頻発',c:'通信・呼出し・防火の機器',d:'両面印刷時に詰まる'},
+        {t:'消火器の期限切れ',c:'通信・呼出し・防火の機器',d:'使用期限超過の消火器あり'},
     ];
-    var staffs = accounts.filter(function(a){return a.companyCode===companyCode&&(a.role==='staff'||a.role==='office_admin');});
-    for (var i = 0; i < data.length; i++) {
-        var oi = i % officeCodes.length; var si = i % staffs.length;
-        var s = staffs[si]||{name:'スタッフ',id:'unknown'};
-        var ts = new Date(); ts.setDate(ts.getDate()-(30-i)); ts.setHours(8+(i%10),(i*17)%60,0,0);
-        var statusMap = {'未対応':'pending','対応中':'in_progress','完了':'completed'};
-        reports.push({
-            id:'RPT-'+companyCode+'-'+String(i+1).padStart(4,'0'),
-            companyCode:companyCode, officeCode:officeCodes[oi], officeName:officeNames[oi],
-            title:data[i][0], category:data[i][1], description:data[i][0], type:'report',
-            timestamp:ts.toISOString(), reporter:s.name, reporterId:s.id,
-            status:statusMap[data[i][2]], contractorStatus:data[i][2],
-            assignedPartnerId:null, assignedPartnerName:'',
-            createdAt:ts.toISOString(), updatedAt:ts.toISOString()
+    var statuses = ['未対応','対応中','完了'];
+    var statusMap = {'未対応':'pending','対応中':'in_progress','完了':'completed'};
+
+    // 各事業所のスタッフを取得
+    for (var oi = 0; oi < officeCodes.length; oi++) {
+        var officeStaffs = accounts.filter(function(a) {
+            return a.companyCode === companyCode && a.officeCode === officeCodes[oi] &&
+                   (a.role === 'staff' || a.role === 'office_admin');
         });
+        // 各スタッフに3件ずつ通報を生成
+        for (var si = 0; si < officeStaffs.length; si++) {
+            var s = officeStaffs[si];
+            for (var ri = 0; ri < 3; ri++) {
+                var tplIdx = (si * 3 + ri) % templates.length;
+                var tpl = templates[tplIdx];
+                var statusIdx = (si + ri) % 3;
+                var ts = new Date();
+                ts.setDate(ts.getDate() - (60 - oi * 15 - si * 3 - ri));
+                ts.setHours(7 + (si + ri) % 12, (si * 13 + ri * 29) % 60, 0, 0);
+                reports.push({
+                    id: 'RPT-' + companyCode + '-' + String(reports.length + 1).padStart(4, '0'),
+                    companyCode: companyCode,
+                    officeCode: officeCodes[oi], officeName: officeNames[oi],
+                    title: tpl.t, category: tpl.c, description: tpl.d, type: 'report',
+                    timestamp: ts.toISOString(), reporter: s.name, reporterId: s.id,
+                    status: statusMap[statuses[statusIdx]],
+                    contractorStatus: statuses[statusIdx],
+                    assignedPartnerId: null, assignedPartnerName: '',
+                    createdAt: ts.toISOString(), updatedAt: ts.toISOString()
+                });
+            }
+        }
     }
     return reports;
 }
 
 // ========== デモマスタデータ初期化 ==========
 function initDemoData() {
-    if (localStorage.getItem('demo_initialized') === 'v10') return;
+    if (localStorage.getItem('demo_initialized') === 'v11') return;
 
     var companies = [
         {code:'TAMJ',name:'タムジ株式会社',status:'active',postalCode:'100-0001',prefecture:'東京都',address:'千代田区千代田1-1',phone:'03-1234-5678'},
@@ -385,7 +416,7 @@ function initDemoData() {
     });
     localStorage.setItem('onetouch.reports', JSON.stringify(allReports));
 
-    localStorage.setItem('demo_initialized', 'v10');
+    localStorage.setItem('demo_initialized', 'v11');
     // スナップショットを保存（デモ切替/ログアウト時の復元用）
     saveDemoSnapshot();
 }
