@@ -868,6 +868,16 @@
             let reportsFromLocal = [];
             try { reportsFromSession = JSON.parse(sessionStorage.getItem('onetouch.reports') || '[]'); } catch(e) {}
             try { reportsFromLocal = JSON.parse(localStorage.getItem('onetouch.reports') || '[]'); } catch(e) {}
+
+            // DEMOモードで通報データが空の場合、initDemoDataで再生成
+            if (reportsFromSession.length === 0 && reportsFromLocal.length === 0 && currentUser.isDemoMode) {
+                if (typeof initDemoData === 'function') {
+                    localStorage.removeItem('demo_initialized');
+                    initDemoData();
+                    try { reportsFromLocal = JSON.parse(localStorage.getItem('onetouch.reports') || '[]'); } catch(e) {}
+                }
+            }
+
             let reports = [...reportsFromSession];
             reportsFromLocal.forEach(r => { if (!reports.find(m => m.id === r.id)) reports.push(r); });
             

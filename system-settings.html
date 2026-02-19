@@ -806,7 +806,7 @@
                 loadCompanySettings();
                 loadCustomCategories();
                 loadStagnationSetting();
-                // 事業所管理者には見せないオプションを非表示
+                // 管理会社エクスポートはシステム管理者のみ
                 document.getElementById('exportPartnersLabel').style.display = 'none';
             } else if (currentUser.role === 'office_admin') {
                 // 事業所管理者
