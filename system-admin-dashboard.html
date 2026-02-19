@@ -837,7 +837,7 @@
             if (typeof initDemoData === 'function') {
                 initDemoData();
             }
-            alert('デモデータをリセットしました。\n\n会社2社・事業所8件・アカウント38名・管理会社6社・商品600件・通報48件が初期状態に戻りました。');
+            alert('デモデータをリセットしました。\n\n会社2社・事業所8件・アカウント38名・管理会社15社・商品600件・通報48件が初期状態に戻りました。');
             window.location.reload();
         }
 
@@ -849,9 +849,11 @@
                 // localStorageから業務データ + 設定を削除
                 const keysToRemove = [
                     'companies', 'offices', 'accounts', 'partners',
-                    'onetouch.reports', 'items', 'audit.logs',
+                    'onetouch.reports', 'onetouch.items', 'onetouch.contracts',
+                    'items', 'audit.logs',
                     'lastBackupDate', 'maintenanceMode', 'maintenanceMessage',
-                    'error.logs', 'upload.limits'
+                    'error.logs', 'upload.limits', 'demo_initialized',
+                    'onetouch.stagnationDays'
                 ];
                 keysToRemove.forEach(key => localStorage.removeItem(key));
 
