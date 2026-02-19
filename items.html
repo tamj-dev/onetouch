@@ -1354,6 +1354,17 @@
                 
                 allItems.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
+                // officeNameが空の商品にofficesマスタから補完
+                try {
+                    var _offices = JSON.parse(localStorage.getItem('offices') || '[]');
+                    allItems.forEach(function(item) {
+                        if (!item.officeName && item.officeCode) {
+                            var of = _offices.find(function(o) { return o.code === item.officeCode; });
+                            if (of) item.officeName = of.name;
+                        }
+                    });
+                } catch(e) {}
+
                 // 業者ログインの場合: 自分の担当商品だけに絞る
                 if (currentUser.role === 'contractor') {
                     const currentContractor = JSON.parse(sessionStorage.getItem('currentContractor') || '{}');
@@ -1486,30 +1497,22 @@
                 <table class="items-table">
                     <thead>
                         <tr>
-                            <th>商品No.</th>
                             <th>商品名</th>
                             <th>メーカー</th>
-                            <th>型番</th>
                             <th>事業所</th>
                             <th>担当管理会社</th>
                             <th>設置場所</th>
-                            <th>在庫</th>
-                            <th>単価</th>
                             <th>編集</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${pageItems.map(item => `
                         <tr style="${item.endDate ? 'background: #f0f0f0; color: #aaa;' : ''}">
-                            <td style="font-family: monospace; font-size: 12px; color: ${item.endDate ? '#ccc' : '#888'};">${item.itemId || '-'}</td>
                             <td class="col-name" title="${item.name || ''}">${item.name || '-'}${item.endDate ? ' <span style="font-size:11px;color:#bbb;">（終了）</span>' : ''}</td>
-                            <td>${item.maker || '-'}</td>
-                            <td>${item.model || '-'}</td>
+                            <td style="font-size:12px;">${item.maker || '-'}</td>
                             <td style="font-size:12px;">${item.officeName || '-'}</td>
                             <td>${item.assignedPartnerName ? `<span class="badge-partner" title="${item.assignedPartnerName}" style="${item.endDate ? 'opacity:0.5;' : ''}">${item.assignedPartnerName}</span>` : '-'}</td>
                             <td style="font-size:12px;color:#666;">${[item.floor, item.location].filter(Boolean).join(' ') || '-'}</td>
-                            <td>${item.stock || 0} ${item.unit || '個'}</td>
-                            <td class="col-price">¥${(item.price || 0).toLocaleString()}</td>
                             <td class="col-actions">
                                 <button onclick="editItem('${item.itemId}')" title="編集">編集</button>
                             </td>
