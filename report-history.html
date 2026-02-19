@@ -734,6 +734,7 @@
             let companiesLocal = [];
             try { companiesLocal = JSON.parse(localStorage.getItem('companies') || '[]'); } catch(e) {}
             companiesLocal.forEach(c => { if (!companies.find(m => m.code === c.code)) companies.push(c); });
+            companies = companies.filter(c => c.code !== 'SYSTEM');
             
             companies.forEach(c => {
                 const opt = document.createElement('option');

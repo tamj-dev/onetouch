@@ -410,7 +410,7 @@
         function loadGlobalStats() {
             try {
                 // 会社数
-                const companies = getMergedData('companies');
+                const companies = getMergedData('companies').filter(c => c.code !== 'SYSTEM');
                 document.getElementById('totalCompanies').textContent = companies.length;
 
                 // ユーザー数
@@ -444,7 +444,7 @@
         // 会社別アクティビティランキング
         function loadActivityRanking() {
             try {
-                const companies = getMergedData('companies');
+                const companies = getMergedData('companies').filter(c => c.code !== 'SYSTEM');
                 const reports = getMergedData('onetouch.reports');
                 const companyReportCounts = {};
                 companies.forEach(company => {
@@ -485,7 +485,7 @@
         // 全会社テーブル読み込み
         function loadCompaniesTable() {
             try {
-                const companies = getMergedData('companies');
+                const companies = getMergedData('companies').filter(c => c.code !== 'SYSTEM');
                 const offices = getMergedData('offices');
                 const accounts = getMergedData('accounts');
                 const reports = getMergedData('onetouch.reports');

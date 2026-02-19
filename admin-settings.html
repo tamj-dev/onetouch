@@ -305,7 +305,7 @@ h1 {
         // 全システム統計を計算
         function calculateGlobalStats() {
             try {
-                const companies = JSON.parse(localStorage.getItem('companies') || '[]');
+                const companies = JSON.parse(localStorage.getItem('companies') || '[]').filter(c => c.code !== 'SYSTEM');
                 const accounts = JSON.parse(localStorage.getItem('accounts') || '[]');
                 const offices = JSON.parse(localStorage.getItem('offices') || '[]');
                 const reports = JSON.parse(localStorage.getItem('onetouch.reports') || '[]');
@@ -338,7 +338,7 @@ h1 {
         // 会社別アクティビティランキング
         function renderActivityRanking() {
             try {
-                const companies = JSON.parse(localStorage.getItem('companies') || '[]');
+                const companies = JSON.parse(localStorage.getItem('companies') || '[]').filter(c => c.code !== 'SYSTEM');
                 const reports = JSON.parse(localStorage.getItem('onetouch.reports') || '[]');
                 const accounts = JSON.parse(localStorage.getItem('accounts') || '[]');
                 const offices = JSON.parse(localStorage.getItem('offices') || '[]');
@@ -384,7 +384,7 @@ h1 {
         // 全会社一覧を表示
         function renderCompanyTable() {
             try {
-                const companies = JSON.parse(localStorage.getItem('companies') || '[]');
+                const companies = JSON.parse(localStorage.getItem('companies') || '[]').filter(c => c.code !== 'SYSTEM');
                 const accounts = JSON.parse(localStorage.getItem('accounts') || '[]');
                 const offices = JSON.parse(localStorage.getItem('offices') || '[]');
                 const reports = JSON.parse(localStorage.getItem('onetouch.reports') || '[]');

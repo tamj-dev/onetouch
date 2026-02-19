@@ -558,7 +558,7 @@
         // 会社一覧を読み込み
         function loadCompanies() {
             try {
-                companies = JSON.parse(demoGetFromLocalStorage('companies') || '[]');
+                companies = JSON.parse(demoGetFromLocalStorage('companies') || '[]').filter(c => c.code !== 'SYSTEM');
                 renderCompanies(companies);
             } catch (e) {
                 console.error('会社データの読み込みに失敗:', e);

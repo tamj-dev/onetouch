@@ -684,6 +684,7 @@
             var companies = [];
             try { companies = JSON.parse(sessionStorage.getItem('companies') || '[]'); } catch(e) {}
             try { var cl = JSON.parse(localStorage.getItem('companies') || '[]'); cl.forEach(function(c){ if(!companies.find(function(m){return m.companyCode===c.companyCode;})) companies.push(c); }); } catch(e) {}
+            companies = companies.filter(function(c) { return (c.companyCode || c.code) !== 'SYSTEM'; });
             // デモ用
             if (companies.length === 0) {
                 companies = [

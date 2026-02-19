@@ -593,7 +593,7 @@
         function loadStats() {
             try {
                 // 会社数
-                const companies = JSON.parse(localStorage.getItem('companies') || '[]');
+                const companies = JSON.parse(localStorage.getItem('companies') || '[]').filter(c => c.code !== 'SYSTEM');
                 document.getElementById('companyCount').innerHTML = companies.length + '<span class="stat-unit">件</span>';
 
                 // アカウント数
@@ -825,7 +825,7 @@
             try {
                 if (currentUser.role === 'system_admin') {
                     // システム管理者: 全体の統計
-                    const companies = JSON.parse(localStorage.getItem('companies') || '[]');
+                    const companies = JSON.parse(localStorage.getItem('companies') || '[]').filter(c => c.code !== 'SYSTEM');
                     const offices = JSON.parse(localStorage.getItem('offices') || '[]');
                     const accounts = JSON.parse(demoGetFromLocalStorage('accounts') || '[]');
                     const partners = JSON.parse(demoGetFromLocalStorage('partners') || '[]');
