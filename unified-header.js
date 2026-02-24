@@ -1038,6 +1038,7 @@ const UnifiedHeader = {
                 user: user?.name || '',
                 userId: user?.id || user?.userId || '',
                 companyCode: user?.companyCode || '',
+                officeCode: user?.officeCode || '',
                 details: typeof detail === 'string' ? detail : JSON.stringify(detail)
             });
             sessionStorage.setItem(storageKey, JSON.stringify(logs));

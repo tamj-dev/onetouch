@@ -341,8 +341,26 @@
             if (log.details && typeof log.details === 'string') {
                 try { var p = JSON.parse(log.details); if (p.officeCode) return p.officeCode; } catch(e) {}
             }
+            // フォールバック: ユーザーIDからアカウントマスタで事業所を補完
+            var uid = log.userId || log.user || '';
+            if (uid && !_officeCodeCache) {
+                _officeCodeCache = {};
+                try {
+                    var accs = JSON.parse(localStorage.getItem('accounts') || '[]');
+                    accs.forEach(function(a) { if (a.id && a.officeCode) _officeCodeCache[a.id] = a.officeCode; });
+                } catch(e) {}
+                // DEMOアカウントからも補完
+                if (typeof DEMO_ACCOUNTS !== 'undefined') {
+                    Object.keys(DEMO_ACCOUNTS).forEach(function(k) {
+                        var a = DEMO_ACCOUNTS[k];
+                        if (a.id && a.officeCode) _officeCodeCache[a.id] = a.officeCode;
+                    });
+                }
+            }
+            if (uid && _officeCodeCache && _officeCodeCache[uid]) return _officeCodeCache[uid];
             return '';
         }
+        var _officeCodeCache = null;
 
         // ========== 画面名を取得 ==========
         function getScreenName(log) {
@@ -432,14 +450,14 @@
                     if (!allLogs.find(function(m) { return m.timestamp === r.timestamp && (m.userId === r.userId || m.user === r.user) && m.type === r.type; }))
                         allLogs.push(r);
                 });
-                allLogs.sort(function(a, b) { return b.timestamp.localeCompare(a.timestamp); });
+                allLogs.sort(function(a, b) { return (b.timestamp||'').localeCompare(a.timestamp||''); });
                 if (currentUser.role === 'company_admin') {
                     allLogs = allLogs.filter(function(l) { return getCompanyCode(l) === currentUser.companyCode; });
                 } else if (currentUser.role === 'office_admin') {
-                    // 事業所管理者は自事業所のログのみ
+                    // 事業所管理者は自事業所のログのみ（officeCode未設定のログは除外）
                     allLogs = allLogs.filter(function(l) {
                         var oc = getOfficeCode(l);
-                        return getCompanyCode(l) === currentUser.companyCode && (!oc || oc === currentUser.officeCode);
+                        return getCompanyCode(l) === currentUser.companyCode && oc === currentUser.officeCode;
                     });
                 }
                 filteredLogs = allLogs;
@@ -489,7 +507,21 @@
                 var offSel = document.getElementById('officeFilter');
                 var offices = [];
                 try { offices = JSON.parse(localStorage.getItem('offices') || '[]'); } catch(e) {}
-                offices.filter(function(o) { return o.companyCode === currentUser.companyCode; }).forEach(function(o) {
+                var myOffices = offices.filter(function(o) { return o.companyCode === currentUser.companyCode; });
+                // DEMOフォールバック: officesが空の場合、商品データからユニークな事業所を抽出
+                if (myOffices.length === 0) {
+                    try {
+                        var items = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
+                        var seen = {};
+                        items.filter(function(i) { return i.companyCode === currentUser.companyCode; }).forEach(function(i) {
+                            if (i.officeCode && !seen[i.officeCode]) {
+                                seen[i.officeCode] = true;
+                                myOffices.push({code: i.officeCode, name: i.officeName || i.officeCode});
+                            }
+                        });
+                    } catch(e) {}
+                }
+                myOffices.forEach(function(o) {
                     var opt = document.createElement('option');
                     opt.value = o.code; opt.textContent = o.name;
                     offSel.appendChild(opt);

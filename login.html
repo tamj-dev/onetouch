@@ -467,11 +467,15 @@
                 const logEntry = {
                     timestamp: new Date().toISOString(),
                     type: type,
+                    user: detail.userName || detail.userId || '',
+                    userId: detail.userId || '',
+                    companyCode: detail.companyCode || '',
+                    officeCode: detail.officeCode || '',
                     detail: detail,
                     page: 'login.html'
                 };
                 logs.unshift(logEntry);
-                if (logs.length > 500) logs.length = 500; // 最大500件
+                if (logs.length > 500) logs.length = 500;
                 localStorage.setItem('audit.logs', JSON.stringify(logs));
             } catch (e) {
                 console.warn('監査ログの記録に失敗:', e);
@@ -715,6 +719,7 @@
                         userId: user.id, 
                         userName: user.name, 
                         companyCode: user.companyCode,
+                        officeCode: user.officeCode || '',
                         role: user.role 
                     });
                     
