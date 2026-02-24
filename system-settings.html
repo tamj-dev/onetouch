@@ -339,33 +339,7 @@
                          監査ログを見る
                     </a>
                     <div style="font-size: 12px; color: #666; margin-top: 8px;">
-                        アカウント作成・編集・削除などの操作履歴を確認できます
-                    </div>
-                </div>
-            </div>
-            
-            <div class="info-row" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #eee;">
-                <div class="info-label">CSV出力</div>
-                <div class="info-value">
-                    <!-- システム管理者: 会社+事業所 -->
-                    <div id="auditCsvCompanyFilter" style="display:none; margin-bottom: 10px;">
-                        <label style="font-size: 13px; color: #555; margin-bottom: 4px; display: block;">会社</label>
-                        <select id="auditCsvCompany" onchange="onAuditCsvCompanyChange()" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; width: 100%;">
-                            <option value="">全会社</option>
-                        </select>
-                    </div>
-                    <!-- 本社管理者+システム管理者: 事業所 -->
-                    <div id="auditCsvOfficeFilter" style="display:none; margin-bottom: 10px;">
-                        <label style="font-size: 13px; color: #555; margin-bottom: 4px; display: block;">事業所</label>
-                        <select id="auditCsvOffice" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; width: 100%;">
-                            <option value="">全事業所</option>
-                        </select>
-                    </div>
-                    <button class="btn btn-secondary" onclick="exportAuditCSV()" style="display: inline-block;">
-                         CSV出力
-                    </button>
-                    <div style="font-size: 12px; color: #666; margin-top: 6px;">
-                        フィルタ条件に合った監査ログをダウンロードします
+                        操作履歴の確認・フィルタ・CSV出力ができます
                     </div>
                 </div>
             </div>

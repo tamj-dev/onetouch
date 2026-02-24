@@ -407,13 +407,13 @@
                 <thead>
                     <tr>
                         <th class="th-check"></th>
-                        <th>日時</th>
+                        <th style="cursor:pointer;user-select:none;" onclick="toggleSort('timestamp')" id="thTimestamp">日時 <span style="color:#2563eb;font-size:10px;">▼</span></th>
                         <th>内容</th>
-                        <th>カテゴリ</th>
-                        <th>事業所</th>
+                        <th style="cursor:pointer;user-select:none;" onclick="toggleSort('category')" id="thCategory">カテゴリ <span style="color:#ccc;font-size:10px;">▼</span></th>
+                        <th style="cursor:pointer;user-select:none;" onclick="toggleSort('officeName')" id="thOffice">事業所 <span style="color:#ccc;font-size:10px;">▼</span></th>
                         <th>通報者</th>
-                        <th>担当管理会社</th>
-                        <th>ステータス</th>
+                        <th style="cursor:pointer;user-select:none;" onclick="toggleSort('assignedPartnerName')" id="thPartner">担当管理会社 <span style="color:#ccc;font-size:10px;">▼</span></th>
+                        <th style="cursor:pointer;user-select:none;" onclick="toggleSort('contractorStatus')" id="thStatus">ステータス <span style="color:#ccc;font-size:10px;">▼</span></th>
                         <th>対応時間</th>
                     </tr>
                 </thead>
@@ -877,7 +877,50 @@
                 showUnassignedFlag = false;
             }
             
+            // ソート適用
+            reports = sortReports(reports);
+            
             renderReports(reports);
+        }
+
+        // ========== ソート機能 ==========
+        var currentSortKey = 'timestamp';
+        var currentSortDir = 'desc'; // 新しい順がデフォルト
+
+        function sortReports(reports) {
+            var key = currentSortKey;
+            var dir = currentSortDir === 'asc' ? 1 : -1;
+            return reports.slice().sort(function(a, b) {
+                var va = a[key] || '';
+                var vb = b[key] || '';
+                if (key === 'timestamp') {
+                    va = new Date(va).getTime() || 0;
+                    vb = new Date(vb).getTime() || 0;
+                    return (va - vb) * dir;
+                }
+                if (typeof va === 'string') va = va.toLowerCase();
+                if (typeof vb === 'string') vb = vb.toLowerCase();
+                if (va < vb) return -1 * dir;
+                if (va > vb) return 1 * dir;
+                return 0;
+            });
+        }
+
+        function toggleSort(key) {
+            if (currentSortKey === key) {
+                currentSortDir = currentSortDir === 'desc' ? 'asc' : 'desc';
+            } else {
+                currentSortKey = key;
+                currentSortDir = key === 'timestamp' ? 'desc' : 'asc';
+            }
+            filterReports();
+        }
+
+        function sortIcon(key) {
+            if (currentSortKey !== key) return '<span style="color:#ccc;font-size:10px;">▼</span>';
+            return currentSortDir === 'desc' 
+                ? '<span style="color:#2563eb;font-size:10px;">▼</span>' 
+                : '<span style="color:#2563eb;font-size:10px;">▲</span>';
         }
 
         var currentContractorStatusFilter = '';
@@ -1072,6 +1115,14 @@
             const reportCards = document.getElementById('reportCards');
             const reportTableBody = document.getElementById('reportTableBody');
             
+            // ソートアイコン更新
+            var sortHeaders = {timestamp:'thTimestamp',category:'thCategory',officeName:'thOffice',assignedPartnerName:'thPartner',contractorStatus:'thStatus'};
+            var labels = {timestamp:'日時',category:'カテゴリ',officeName:'事業所',assignedPartnerName:'担当管理会社',contractorStatus:'ステータス'};
+            Object.keys(sortHeaders).forEach(function(key) {
+                var el = document.getElementById(sortHeaders[key]);
+                if (el) el.innerHTML = labels[key] + ' ' + sortIcon(key);
+            });
+
             // フィルタリング後の通報をグローバル変数に保存
             allReports = reports;
 

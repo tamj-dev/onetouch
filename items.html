@@ -850,9 +850,14 @@
         </div>
 
         <div class="filters">
+            <span class="filter-label" id="companyFilterLabel" style="display:none;">会社:</span>
+            <select class="filter-select" id="companyFilter" onchange="onCompanyFilterChange();applyFilters();" style="display:none;">
+                <option value="">全会社</option>
+            </select>
+
             <span class="filter-label" id="officeFilterLabel" style="display:none;">事業所:</span>
             <select class="filter-select" id="officeFilter" onchange="applyFilters()" style="display:none;">
-                <option value="">全て</option>
+                <option value="">全事業所</option>
             </select>
 
             <span class="filter-label" id="partnerFilterLabel">担当管理会社:</span>
@@ -1400,6 +1405,22 @@
                     var pf = document.getElementById('partnerFilter');
                     if (pfl) pfl.style.display = 'none';
                     if (pf) pf.style.display = 'none';
+                    // 管理会社用: 会社フィルタ・事業所フィルタを表示
+                    var cfl = document.getElementById('companyFilterLabel');
+                    var cf = document.getElementById('companyFilter');
+                    if (cfl) cfl.style.display = '';
+                    if (cf) cf.style.display = '';
+                    var ofl = document.getElementById('officeFilterLabel');
+                    var of2 = document.getElementById('officeFilter');
+                    if (ofl) ofl.style.display = '';
+                    if (of2) of2.style.display = '';
+                    // 会社リストを生成（担当会社から）
+                    var companies = [...new Set(allItems.map(i => i.companyCode).filter(Boolean))];
+                    cf.innerHTML = '<option value="">全会社</option>' + companies.map(function(code) {
+                        var name = allItems.find(i => i.companyCode === code);
+                        return '<option value="' + code + '">' + code + '</option>';
+                    }).join('');
+                    onCompanyFilterChange();
                 }
                 
                 updateFilters();
@@ -1421,6 +1442,20 @@
                 partners.map(p => `<option value="${p}">${p}</option>`).join('');
         }
 
+        // 会社フィルタ変更時に事業所リストを連動
+        function onCompanyFilterChange() {
+            var compVal = document.getElementById('companyFilter').value;
+            var offSel = document.getElementById('officeFilter');
+            var offices = [...new Set(allItems.filter(function(i) {
+                return !compVal || i.companyCode === compVal;
+            }).map(function(i) {
+                return JSON.stringify({code: i.officeCode, name: i.officeName});
+            }))].map(function(s) { return JSON.parse(s); });
+            offSel.innerHTML = '<option value="">全事業所</option>' + offices.map(function(o) {
+                return '<option value="' + o.code + '">' + (o.name || o.code) + '</option>';
+            }).join('');
+        }
+
         // フィルター適用
         // 全角→半角変換＋小文字化
         function normalizeSearch(str) {
@@ -1435,6 +1470,8 @@
             const partnerFilter = document.getElementById('partnerFilter').value;
             const officeFilterEl = document.getElementById('officeFilter');
             const officeFilter = officeFilterEl ? officeFilterEl.value : '';
+            const companyFilterEl = document.getElementById('companyFilter');
+            const companyFilter = companyFilterEl ? companyFilterEl.value : '';
 
             filteredItems = allItems.filter(item => {
                 // 業者ログインの場合: 自社が担当している商品のみ表示
@@ -1455,13 +1492,16 @@
                     normalizeSearch(item.floor).includes(searchQuery) ||
                     normalizeSearch(item.location).includes(searchQuery);
 
+                // 会社フィルタ
+                const matchCompany = !companyFilter || item.companyCode === companyFilter;
+
                 // 事業所フィルタ
                 const matchOffice = !officeFilter || item.officeCode === officeFilter;
 
                 // 担当管理会社
                 const matchPartner = !partnerFilter || item.assignedPartnerName === partnerFilter;
 
-                return matchSearch && matchOffice && matchPartner;
+                return matchSearch && matchCompany && matchOffice && matchPartner;
             });
 
             // 検索・フィルタ時はページを1に戻す
@@ -1476,7 +1516,9 @@
         function showAllItems() {
             document.getElementById('searchInput').value = '';
             document.getElementById('partnerFilter').value = '';
-            
+            var cf = document.getElementById('companyFilter'); if (cf) cf.value = '';
+            var of2 = document.getElementById('officeFilter'); if (of2) of2.value = '';
+            if (typeof onCompanyFilterChange === 'function') onCompanyFilterChange();
             applyFilters();
         }
 
@@ -1484,8 +1526,10 @@
         function clearSearch() {
             document.getElementById('searchInput').value = '';
             document.getElementById('partnerFilter').value = '';
+            var cf = document.getElementById('companyFilter'); if (cf) cf.value = '';
             var ofSelect = document.getElementById('officeFilter');
             if (ofSelect) ofSelect.value = '';
+            if (typeof onCompanyFilterChange === 'function') onCompanyFilterChange();
             
             document.getElementById('resultsSection').style.display = 'none';
             document.getElementById('searchGuide').style.display = 'block';
@@ -1520,9 +1564,8 @@
                         <tr>
                             <th>商品No.</th>
                             <th>商品名</th>
-                            <th>メーカー</th>
-                            <th>型番</th>
                             <th>担当管理会社</th>
+                            <th>カテゴリー</th>
                             <th>設置場所</th>
                             <th>在庫</th>
                             <th>単価</th>
@@ -1534,9 +1577,8 @@
                         <tr style="${item.endDate ? 'background: #f0f0f0; color: #aaa;' : ''}">
                             <td style="font-family: monospace; font-size: 12px; color: ${item.endDate ? '#ccc' : '#888'};">${item.itemId || '-'}</td>
                             <td class="col-name" title="${item.name || ''}">${item.name || '-'}${item.endDate ? ' <span style="font-size:11px;color:#bbb;">（終了）</span>' : ''}</td>
-                            <td>${item.maker || '-'}</td>
-                            <td>${item.model || '-'}</td>
                             <td>${item.assignedPartnerName ? `<span class="badge-partner" title="${item.assignedPartnerName}" style="${item.endDate ? 'opacity:0.5;' : ''}">${item.assignedPartnerName}</span>` : '-'}</td>
+                            <td style="font-size:12px;color:#666;">${item.category || '-'}</td>
                             <td style="font-size:12px;color:#666;">${[item.floor, item.location].filter(Boolean).join(' ') || '-'}</td>
                             <td>${item.stock || 0} ${item.unit || '個'}</td>
                             <td class="col-price">¥${(item.price || 0).toLocaleString()}</td>

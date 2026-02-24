@@ -505,7 +505,7 @@ function generateDemoReports(companyCode, officeCodes, officeNames, accounts) {
 
 // ========== デモマスタデータ初期化 ==========
 function initDemoData() {
-    if (localStorage.getItem('demo_initialized') === 'v10') return;
+    if (localStorage.getItem('demo_initialized') === 'v11') return;
 
     var companies = [
         {code:'TAMJ',name:'タムジ株式会社',status:'active',postalCode:'100-0001',prefecture:'東京都',address:'千代田区千代田1-1',phone:'03-1234-5678'},
@@ -541,23 +541,43 @@ function initDemoData() {
     var tamjItems = generateDemoItems('TAMJ',['TAMJ-J0001','TAMJ-J0002','TAMJ-J0003'],['さくら苑','ひまわり荘','あおぞらの家']);
     var jmatItems = generateDemoItems('JMAT',['JMAT-J0001','JMAT-J0002','JMAT-J0003'],['グリーンヒル','コスモス園','やすらぎの丘']);
     var allItems = tamjItems.concat(jmatItems);
-    // 契約テーブルからカテゴリに基づいて管理会社を自動割当
+    // 契約テーブルからカテゴリに基づいて管理会社を自動割当（ラウンドロビンで分散）
+    var partnerCounters = {};
     allItems.forEach(function(item){
         var cts = DEMO_CONTRACTS.filter(function(c){return c.companyCode===item.companyCode&&c.status==='active'&&c.categories.indexOf(item.category)>=0;});
-        if(cts.length>0){var p=DEMO_PARTNERS.find(function(pp){return pp.id===cts[0].partnerId;});item.assignedPartnerId=cts[0].partnerId;item.assignedPartnerName=p?p.name:'';}
+        if(cts.length>0){
+            var key = item.companyCode + ':' + item.category;
+            if (!partnerCounters[key]) partnerCounters[key] = 0;
+            var idx = partnerCounters[key] % cts.length;
+            partnerCounters[key]++;
+            var ct = cts[idx];
+            var p=DEMO_PARTNERS.find(function(pp){return pp.id===ct.partnerId;});
+            item.assignedPartnerId=ct.partnerId;
+            item.assignedPartnerName=p?p.name:'';
+        }
     });
     localStorage.setItem('onetouch.items', JSON.stringify(allItems));
 
     var tamjReports = generateDemoReports('TAMJ',['TAMJ-J0001','TAMJ-J0002','TAMJ-J0003'],['さくら苑','ひまわり荘','あおぞらの家'],accountList);
     var jmatReports = generateDemoReports('JMAT',['JMAT-J0001','JMAT-J0002','JMAT-J0003'],['グリーンヒル','コスモス園','やすらぎの丘'],accountList);
     var allReports = tamjReports.concat(jmatReports);
+    var reportCounters = {};
     allReports.forEach(function(rpt){
         var cts = DEMO_CONTRACTS.filter(function(c){return c.companyCode===rpt.companyCode&&c.status==='active'&&c.categories.indexOf(rpt.category)>=0;});
-        if(cts.length>0){var p=DEMO_PARTNERS.find(function(pp){return pp.id===cts[0].partnerId;});rpt.assignedPartnerId=cts[0].partnerId;rpt.assignedPartnerName=p?p.name:'';}
+        if(cts.length>0){
+            var key = rpt.companyCode + ':' + rpt.category;
+            if (!reportCounters[key]) reportCounters[key] = 0;
+            var idx = reportCounters[key] % cts.length;
+            reportCounters[key]++;
+            var ct = cts[idx];
+            var p=DEMO_PARTNERS.find(function(pp){return pp.id===ct.partnerId;});
+            rpt.assignedPartnerId=ct.partnerId;
+            rpt.assignedPartnerName=p?p.name:'';
+        }
     });
     localStorage.setItem('onetouch.reports', JSON.stringify(allReports));
 
-    localStorage.setItem('demo_initialized', 'v10');
+    localStorage.setItem('demo_initialized', 'v11');
 }
 
 // ========== 業者振り分けロジック ==========
