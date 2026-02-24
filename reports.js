@@ -217,7 +217,24 @@ router.get('/:id', async (req, res) => {
       }
     }
 
-    res.json(formatReport(report));
+    // コメント取得
+    const comments = await db.query(
+      `SELECT id, author_id, author_name, author_role, comment_text, created_at
+       FROM report_comments WHERE report_id = $1 ORDER BY created_at ASC`,
+      [req.params.id]
+    );
+
+    const formatted = formatReport(report);
+    formatted.comments = comments.rows.map(c => ({
+      id: c.id,
+      authorId: c.author_id,
+      authorName: c.author_name,
+      authorRole: c.author_role,
+      text: c.comment_text,
+      timestamp: c.created_at,
+    }));
+
+    res.json(formatted);
 
   } catch (err) {
     console.error('[REPORTS] Detail error:', err);
@@ -340,5 +357,110 @@ function formatReport(row) {
     updatedAt: row.updated_at,
   };
 }
+
+// =============================================
+// コメント API
+// =============================================
+
+/**
+ * GET /api/reports/:id/comments
+ * 通報のコメント一覧取得
+ */
+router.get('/:id/comments', async (req, res) => {
+  try {
+    const report = await db.query('SELECT * FROM reports WHERE id = $1', [req.params.id]);
+    if (report.rows.length === 0) {
+      return res.status(404).json({ error: '通報が見つかりません' });
+    }
+
+    // アクセス権チェック（同じ会社 or 担当管理会社）
+    const r = report.rows[0];
+    if (req.user.role !== 'system_admin' &&
+        r.company_code !== req.user.companyCode &&
+        r.assigned_partner_id !== req.user.companyCode) {
+      return res.status(403).json({ error: 'アクセス権限がありません' });
+    }
+
+    const result = await db.query(
+      `SELECT id, report_id, author_id, author_name, author_role, comment_text, created_at
+       FROM report_comments
+       WHERE report_id = $1
+       ORDER BY created_at ASC`,
+      [req.params.id]
+    );
+
+    res.json(result.rows.map(row => ({
+      id: row.id,
+      reportId: row.report_id,
+      authorId: row.author_id,
+      authorName: row.author_name,
+      authorRole: row.author_role,
+      text: row.comment_text,
+      timestamp: row.created_at,
+    })));
+
+  } catch (err) {
+    console.error('[REPORTS] Get comments error:', err);
+    res.status(500).json({ error: 'サーバーエラー' });
+  }
+});
+
+/**
+ * POST /api/reports/:id/comments
+ * コメント追加
+ */
+router.post('/:id/comments', async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text || !text.trim()) {
+      return res.status(400).json({ error: 'コメントを入力してください' });
+    }
+
+    const report = await db.query('SELECT * FROM reports WHERE id = $1', [req.params.id]);
+    if (report.rows.length === 0) {
+      return res.status(404).json({ error: '通報が見つかりません' });
+    }
+
+    // アクセス権チェック
+    const r = report.rows[0];
+    if (req.user.role !== 'system_admin' &&
+        r.company_code !== req.user.companyCode &&
+        r.assigned_partner_id !== req.user.companyCode) {
+      return res.status(403).json({ error: 'コメントを追加する権限がありません' });
+    }
+
+    const result = await db.query(
+      `INSERT INTO report_comments (report_id, author_id, author_name, author_role, comment_text)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, created_at`,
+      [req.params.id, req.user.id, req.user.name, req.user.role, text.trim()]
+    );
+
+    // reportsのupdated_atを更新
+    await db.query('UPDATE reports SET updated_at = NOW() WHERE id = $1', [req.params.id]);
+
+    // 監査ログ
+    await db.query(
+      `INSERT INTO audit_logs (company_code, office_code, user_id, user_name, action, target_type, target_id, details)
+       VALUES ($1,$2,$3,$4,'report_comment','report',$5,$6)`,
+      [r.company_code, r.office_code, req.user.id, req.user.name, req.params.id,
+       JSON.stringify({ commentId: result.rows[0].id, text: text.trim().substring(0, 100) })]
+    );
+
+    res.status(201).json({
+      id: result.rows[0].id,
+      reportId: req.params.id,
+      authorId: req.user.id,
+      authorName: req.user.name,
+      authorRole: req.user.role,
+      text: text.trim(),
+      timestamp: result.rows[0].created_at,
+    });
+
+  } catch (err) {
+    console.error('[REPORTS] Add comment error:', err);
+    res.status(500).json({ error: 'サーバーエラー' });
+  }
+});
 
 module.exports = router;

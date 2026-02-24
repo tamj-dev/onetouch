@@ -200,6 +200,21 @@ CREATE TABLE report_photos (
 CREATE INDEX idx_report_photos_report ON report_photos(report_id);
 
 -- =============================================
+-- 9.5. 通報コメントテーブル
+-- =============================================
+CREATE TABLE report_comments (
+    id              SERIAL PRIMARY KEY,
+    report_id       VARCHAR(50) NOT NULL REFERENCES reports(id) ON DELETE CASCADE,
+    author_id       VARCHAR(100) NOT NULL,
+    author_name     VARCHAR(100) NOT NULL,
+    author_role     VARCHAR(30) NOT NULL CHECK (author_role IN ('staff', 'office_admin', 'company_admin', 'system_admin', 'contractor')),
+    comment_text    TEXT NOT NULL,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_report_comments_report ON report_comments(report_id, created_at);
+
+-- =============================================
 -- 10. 監査ログテーブル
 -- =============================================
 CREATE TABLE audit_logs (
