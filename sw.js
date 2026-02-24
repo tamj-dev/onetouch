@@ -1,5 +1,5 @@
 // Service Worker - ワンタッチ管理 PWA
-const CACHE_NAME = 'onetouch-v1';
+const CACHE_NAME = 'onetouch-v20260224';
 
 // キャッシュするファイル（主要画面とアセット）
 const CACHE_FILES = [

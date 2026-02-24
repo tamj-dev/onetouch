@@ -48,6 +48,11 @@ if (config.NODE_ENV === 'development') {
   });
 }
 
+// ========== ヘルスチェック ==========
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // ========== APIルート ==========
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/categories', require('./routes/categories'));

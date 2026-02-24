@@ -18,7 +18,7 @@ COPY public/ ./public/
 
 # ヘルスチェック
 HEALTHCHECK --interval=30s --timeout=3s \
-  CMD wget -qO- http://localhost:3000/api/auth/me || exit 1
+  CMD wget -qO- http://localhost:3000/api/health || exit 1
 
 EXPOSE 3000
 
