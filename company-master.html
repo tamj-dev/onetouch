@@ -320,20 +320,21 @@
             <button class="btn-search" onclick="performSearch()">検索</button>
         </div>
 
-        <div class="result-info" id="resultInfo">
-            検索結果: 0件 / 全 0件
+        <div class="result-info" id="resultInfo" style="display:flex;align-items:center;justify-content:space-between;">
+            <span>検索結果: 0件 / 全 0件</span>
+            <button onclick="downloadCSV()" style="padding: 8px 20px; background: #1e3a5f; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">CSVエクスポート</button>
         </div>
 
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th>会社コード</th>
-                        <th>会社名</th>
-                        <th>代表者</th>
-                        <th>電話番号</th>
-                        <th>ステータス</th>
-                        <th>操作</th>
+                        <th style="width:16%;">会社コード</th>
+                        <th style="width:25%;">会社名</th>
+                        <th style="width:16%;">代表者</th>
+                        <th style="width:16%;">電話番号</th>
+                        <th style="width:13%;">ステータス</th>
+                        <th style="width:14%;">操作</th>
                     </tr>
                 </thead>
                 <tbody id="companyList">
@@ -567,11 +568,14 @@
         }
 
         // 会社一覧を表示
+        var cm_lastFiltered = null;
+
         function renderCompanies(filteredCompanies) {
+            cm_lastFiltered = filteredCompanies;
             const tbody = document.getElementById('companyList');
             const resultInfo = document.getElementById('resultInfo');
 
-            resultInfo.textContent = `検索結果: ${filteredCompanies.length}件 / 全 ${companies.length}件`;
+            resultInfo.querySelector('span').textContent = `検索結果: ${filteredCompanies.length}件 / 全 ${companies.length}件`;
 
             if (filteredCompanies.length === 0) {
                 tbody.innerHTML = `
@@ -614,6 +618,34 @@
             renderCompanies(filtered);
         });
         
+        // CSVエクスポート
+        function downloadCSV() {
+            const data = cm_lastFiltered || companies;
+            if (data.length === 0) { alert('ダウンロードするデータがありません'); return; }
+
+            const bom = '\uFEFF';
+            const headers = ['会社コード','会社名','代表者','電話番号','住所','ステータス'];
+            const rows = data.map(function(c) {
+                return [
+                    c.code || '',
+                    c.name || '',
+                    c.representative || '',
+                    c.phone || '',
+                    (c.prefecture || '') + (c.address || ''),
+                    c.status === 'active' ? '有効' : '無効'
+                ].map(function(v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(',');
+            });
+
+            var csv = bom + headers.join(',') + '\n' + rows.join('\n');
+            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            var d = new Date();
+            link.download = '会社一覧_' + d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0') + '.csv';
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
         // 検索ボタン押下時
         function performSearch() {
             const keyword = document.getElementById('searchInput').value.toLowerCase();

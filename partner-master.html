@@ -154,14 +154,13 @@
             border: 1px solid #e8e8e8;
             border-radius: 0 0 8px 8px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
+            overflow-x: hidden;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 800px;
+            table-layout: fixed;
         }
 
         thead {
@@ -176,6 +175,8 @@
             color: #555;
             border-bottom: 2px solid #e0e0e0;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         td {
@@ -397,17 +398,18 @@
         </div>
 
         <div class="results-section" id="resultsSection">
-            <div class="result-header">
-                検索結果: <span id="displayCount">0</span>件 / 全 <span id="totalCount">0</span>件
+            <div class="result-header" style="display:flex;align-items:center;justify-content:space-between;">
+                <span>検索結果: <span id="displayCount">0</span>件 / 全 <span id="totalCount">0</span>件</span>
+                <button onclick="downloadCSV()" style="padding: 8px 20px; background: #1e3a5f; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">CSVエクスポート</button>
             </div>
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
-                            <th>管理会社コード</th>
-                            <th>会社名</th>
-                            <th>担当者名</th>
-                            <th>操作</th>
+                            <th style="width:25%;">管理会社コード</th>
+                            <th style="width:30%;">会社名</th>
+                            <th style="width:25%;">担当者名</th>
+                            <th style="width:20%;">操作</th>
                         </tr>
                     </thead>
                     <tbody id="partnerList"></tbody>
@@ -653,7 +655,7 @@
             }
         }
 
-        // 業者コード自動生成（PN001, PN002, ...）
+        // 管理会社コード自動生成（PN001, PN002, ...）
         function generatePartnerCode() {
             const existingCodes = allPartners
                 .map(p => p.partnerCode || '')
@@ -770,7 +772,7 @@
             document.getElementById('partnerForm').reset();
             document.getElementById('editIndex').value = '';
             document.getElementById('partnerId').value = '';
-            // 業者コードを自動発行
+            // 管理会社コードを自動発行
             document.getElementById('partnerCode').value = generatePartnerCode();
             // 追加担当者をリセット
             additionalContacts = [];
@@ -802,7 +804,7 @@
             document.getElementById('email').value = partner.email || '';
             document.getElementById('notes').value = partner.notes || '';
             
-            // 業者ログイン情報を設定
+            // 管理会社ログイン情報を設定
             document.getElementById('partnerCode').value = partner.partnerCode || '';
             document.getElementById('loginId').value = partner.loginId || '';
             document.getElementById('password').value = partner.password || '';
@@ -1006,6 +1008,33 @@
 
             document.getElementById('resultsSection').classList.add('visible');
             renderPartners(filtered);
+        }
+
+        // CSVエクスポート
+        function downloadCSV() {
+            const data = pm_lastFiltered || partners;
+            if (data.length === 0) { alert('ダウンロードするデータがありません'); return; }
+
+            const bom = '\uFEFF';
+            const headers = ['管理会社コード','会社名','担当者名','電話番号','メール'];
+            const rows = data.map(function(p) {
+                return [
+                    p.id || p.code || '',
+                    p.name || '',
+                    p.contactName || '',
+                    p.phone || '',
+                    p.email || ''
+                ].map(function(v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(',');
+            });
+
+            var csv = bom + headers.join(',') + '\n' + rows.join('\n');
+            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            var d = new Date();
+            link.download = '管理会社一覧_' + d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0') + '.csv';
+            link.click();
+            URL.revokeObjectURL(link.href);
         }
 
         // 検索条件クリア

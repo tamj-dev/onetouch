@@ -712,8 +712,8 @@
 
         // スコープに応じてアカウントをフィルタリング
         function filterAccountsByScope(accountList) {
-            // 本社管理者（company_admin）はアカウントマスタの管理対象外（会社マスタで管理）
-            var filtered = accountList.filter(a => a.role !== 'company_admin');
+            // 本社管理者・システム管理者はアカウントマスタの管理対象外
+            var filtered = accountList.filter(a => a.role !== 'company_admin' && a.role !== 'system_admin');
             
             if (currentUser.role === 'system_admin') {
                 return filtered;

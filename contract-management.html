@@ -67,7 +67,7 @@
                     📖 契約テーブルとは（概要）
                 </a>
                 <a href="docs.html#howto" class="link-btn" style="background:#f0fdf4; border:1px solid #bbf7d0; color:#166534;">
-                    🔧 業者の変更手順
+                    🔧 管理会社の変更手順
                 </a>
                 <a href="docs.html#faq" class="link-btn" style="background:#fefce8; border:1px solid #fde68a; color:#854d0e;">
                     ❓ よくある質問
@@ -81,15 +81,18 @@
         <!-- 契約一覧テーブル -->
         <div class="section">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
-                <div class="section-title" style="margin-bottom:0;">契約一覧（業者 × 会社 × カテゴリ）</div>
-                <input type="text" id="contractFilter" placeholder="業者名で検索..." oninput="cm_currentPage=1;renderTable()" style="padding:8px 14px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; width:220px;">
+                <div class="section-title" style="margin-bottom:0;">契約一覧（管理会社 × 会社 × カテゴリ）</div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <input type="text" id="contractFilter" placeholder="管理会社名で検索..." oninput="cm_currentPage=1;renderTable()" style="padding:8px 14px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; width:220px;">
+                    <button onclick="downloadCSV()" style="padding: 8px 20px; background: #1e3a5f; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; white-space:nowrap;">CSVエクスポート</button>
+                </div>
             </div>
-            <div style="overflow-x:auto;">
-                <table style="width:100%; min-width:700px; border-collapse:collapse; font-size:14px;">
+            <div style="overflow-x:hidden;">
+                <table style="width:100%; border-collapse:collapse; font-size:14px; table-layout:fixed;">
                     <thead>
                         <tr style="background:#f8f9fa; border-bottom:2px solid #e8e8e8;">
-                            <th style="padding:10px 12px; text-align:left; font-weight:600; color:#64748b; width:90px;">業者コード</th>
-                            <th style="padding:10px 12px; text-align:left; font-weight:600; color:#64748b;">業者名</th>
+                            <th style="padding:10px 12px; text-align:left; font-weight:600; color:#64748b; width:90px;">管理会社コード</th>
+                            <th style="padding:10px 12px; text-align:left; font-weight:600; color:#64748b;">管理会社名</th>
                             <th style="padding:10px 12px; text-align:left; font-weight:600; color:#64748b; width:120px;">契約会社</th>
                             <th style="padding:10px 12px; text-align:left; font-weight:600; color:#64748b;">担当カテゴリ</th>
                             <th style="padding:10px 12px; text-align:center; font-weight:600; color:#64748b; width:60px;">状態</th>
@@ -194,6 +197,41 @@
 
     var cm_currentPage = 1;
     var cm_pageSize = 30;
+
+    // CSVエクスポート
+    function downloadCSV() {
+        _loadData();
+        var filterText = (document.getElementById('contractFilter').value || '').trim().toLowerCase();
+        var filtered = _contracts.filter(function(c) {
+            if (!filterText) return true;
+            var pName = (_partners.find(function(p){return p.id===c.partnerId;}) || {}).name || '';
+            return pName.toLowerCase().includes(filterText) || (c.partnerId||'').toLowerCase().includes(filterText);
+        });
+        if (filtered.length === 0) { alert('ダウンロードするデータがありません'); return; }
+
+        var bom = '\uFEFF';
+        var headers = ['管理会社コード','管理会社名','契約会社','担当カテゴリ','状態'];
+        var rows = filtered.map(function(c) {
+            var partner = _partners.find(function(p){return p.id===c.partnerId;}) || {};
+            var company = _companies.find(function(co){return co.code===c.companyCode;}) || {};
+            return [
+                c.partnerId || '',
+                partner.name || '',
+                company.name || c.companyCode || '',
+                (c.categories || []).join(' / '),
+                c.status === 'active' ? '有効' : '無効'
+            ].map(function(v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(',');
+        });
+
+        var csv = bom + headers.join(',') + '\n' + rows.join('\n');
+        var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        var d = new Date();
+        link.download = '契約一覧_' + d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0') + '.csv';
+        link.click();
+        URL.revokeObjectURL(link.href);
+    }
 
     function renderTable() {
         _loadData();
