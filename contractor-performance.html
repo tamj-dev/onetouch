@@ -108,6 +108,7 @@
                 </tbody>
             </table>
         </div>
+        <div id="historyPagination" style="margin-top:12px;"></div>
     </div>
 
     <script>
@@ -261,6 +262,22 @@
         }).join('');
     }
 
+    var hp_currentPage = 1;
+    var hp_pageSize = 30;
+
+    function renderPagination(containerId, currentPage, totalPages, totalItems, onPageChange) {
+        var container = document.getElementById(containerId);
+        if (!container) return;
+        if (totalPages <= 1) { container.innerHTML = totalItems > 0 ? '<div style="text-align:center;padding:12px;font-size:13px;color:#999;">全 ' + totalItems + ' 件</div>' : ''; return; }
+        var html = '<div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;">';
+        html += '<span style="font-size:13px;color:#666;margin-right:8px;">全 ' + totalItems + ' 件</span>';
+        html += '<button onclick="window._pgCb' + containerId + '(' + (currentPage-1) + ')" ' + (currentPage<=1?'disabled':'') + ' style="padding:6px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;font-size:13px;' + (currentPage<=1?'opacity:0.4;cursor:default;':'') + '">前へ</button>';
+        var s=Math.max(1,currentPage-2),e=Math.min(totalPages,s+4); if(e-s<4) s=Math.max(1,e-4);
+        for(var p=s;p<=e;p++) html += '<button onclick="window._pgCb' + containerId + '(' + p + ')" style="padding:6px 12px;border:1px solid ' + (p===currentPage?'#2563eb':'#d1d5db') + ';border-radius:6px;background:' + (p===currentPage?'#2563eb':'#fff') + ';color:' + (p===currentPage?'#fff':'#333') + ';cursor:pointer;font-size:13px;font-weight:' + (p===currentPage?'700':'400') + ';">' + p + '</button>';
+        html += '<button onclick="window._pgCb' + containerId + '(' + (currentPage+1) + ')" ' + (currentPage>=totalPages?'disabled':'') + ' style="padding:6px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;font-size:13px;' + (currentPage>=totalPages?'opacity:0.4;cursor:default;':'') + '">次へ</button></div>';
+        container.innerHTML = html; window['_pgCb' + containerId] = onPageChange;
+    }
+
     function renderHistory(reports) {
         var tbody = document.getElementById('historyBody');
 
@@ -274,10 +291,17 @@
 
         if (history.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:#999;">対応済みの履歴がありません</td></tr>';
+            if (document.getElementById('historyPagination')) document.getElementById('historyPagination').innerHTML = '';
             return;
         }
 
-        tbody.innerHTML = history.slice(0, 50).map(function(r) {
+        // ページネーション
+        var totalPages = Math.ceil(history.length / hp_pageSize);
+        if (hp_currentPage > totalPages) hp_currentPage = totalPages;
+        var start = (hp_currentPage - 1) * hp_pageSize;
+        var pageItems = history.slice(start, start + hp_pageSize);
+
+        tbody.innerHTML = pageItems.map(function(r) {
             var date = new Date(r.completedAt || r.timestamp);
             var dateStr = isNaN(date.getTime()) ? '-' :
                 date.getFullYear() + '/' + String(date.getMonth()+1).padStart(2,'0') + '/' + String(date.getDate()).padStart(2,'0');
@@ -311,6 +335,11 @@
                 '<td>' + timeStr + '</td>' +
             '</tr>';
         }).join('');
+
+        renderPagination('historyPagination', hp_currentPage, totalPages, history.length, function(page) {
+            hp_currentPage = page;
+            renderHistory(allReports);
+        });
     }
 
     loadReports();

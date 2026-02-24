@@ -2063,7 +2063,7 @@
       if(!hasPartnerCol){section.style.display='none';return;}
       section.style.display='block';
 
-      // 業者マスタを読み込み
+      // 管理会社マスタを読み込み
       var partners=[];
       try{partners=JSON.parse(sessionStorage.getItem('partners')||'[]');}catch(e){}
       try{var pl=JSON.parse(localStorage.getItem('partners')||'[]');pl.forEach(function(p){if(!partners.find(function(m){return m.id===p.id;}))partners.push(p);});}catch(e){}

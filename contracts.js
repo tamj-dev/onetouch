@@ -67,7 +67,7 @@ router.get('/', companyScope, async (req, res) => {
 
 /**
  * GET /api/contracts/resolve
- * カテゴリから担当業者を検索（通報画面の自動振り分け確認用）
+ * カテゴリから担当管理会社を検索（通報画面の自動振り分け確認用）
  */
 router.get('/resolve', companyScope, async (req, res) => {
   try {

@@ -1,5 +1,5 @@
 /**
- * デモデータ投入: 既存のデモアカウント/事業所/業者をDBに登録
+ * デモデータ投入: 既存のデモアカウント/事業所/管理会社をDBに登録
  * 使い方: node db/seed.js
  */
 const bcrypt = require('bcryptjs');
@@ -44,7 +44,7 @@ async function seed() {
     `, [demoHash, adminHash]);
     console.log('[SEED] アカウントデータ OK');
 
-    // ========== 業者 ==========
+    // ========== 管理会社 ==========
     await client.query(`
       INSERT INTO partners (id, partner_code, name, contact_name, categories, status) VALUES
         ('PN001', 'PN001', 'TAMJ建設', '山田 太郎', '["建物・外まわり","部屋・共用部の家具・家電","介護医療・お風呂の道具","厨房・食事の道具","通信・呼出し・防火の機器"]', 'active'),
@@ -66,7 +66,7 @@ async function seed() {
     `);
     console.log('[SEED] 管理会社データ OK');
 
-    // ========== 業者担当者 ==========
+    // ========== 管理会社担当者 ==========
     await client.query(`
       INSERT INTO partner_contacts (partner_id, name, login_id, password_hash, phone, is_main) VALUES
         ('PN001', '山田 太郎', 'pn001-yamada', $1, '090-1234-5678', TRUE),
@@ -75,7 +75,7 @@ async function seed() {
         ('PN003', '鈴木 一郎', 'p003-suzuki', $1, '090-3333-4444', TRUE)
       ON CONFLICT (login_id) DO NOTHING
     `, [demoHash]);
-    console.log('[SEED] 業者担当者データ OK');
+    console.log('[SEED] 管理会社担当者データ OK');
 
     // ========== 契約 ==========
     await client.query(`

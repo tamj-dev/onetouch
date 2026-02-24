@@ -17,9 +17,24 @@
 
   /**
    * デモモードかどうか判定
+   * items.html等と同じロジック: companyCode または isDemoMode フラグで判定
    */
   function isDemoMode() {
-    return sessionStorage.getItem('demo.mode') === 'true';
+    // 明示的フラグ（互換性）
+    if (sessionStorage.getItem('demo.mode') === 'true') return true;
+    // currentUser の companyCode ベース判定（デモ環境の実際の動作）
+    try {
+      var user = JSON.parse(sessionStorage.getItem('currentUser'));
+      if (!user) return false;
+      if (user.companyCode === 'TAMJ' || user.companyCode === 'JMAT' || user.companyCode === 'SYSTEM') return true;
+      if (user.isDemoMode) return true;
+    } catch (e) {}
+    // 管理会社（contractor）のデモ判定
+    try {
+      var contractor = JSON.parse(sessionStorage.getItem('currentContractor'));
+      if (contractor) return true; // デモ環境ではcontractor情報がある = デモモード
+    } catch (e) {}
+    return false;
   }
 
   /**

@@ -33,7 +33,7 @@
       return 'USR' + Math.random().toString(36).substr(2, 9);
     };
   </script>
-  <script src="js/core.js"></script>
+  <!-- core.js は統合済み・不要 -->
   <script>if(!ONE.isLoggedIn())location.replace("login.html");</script>
   <style>
     :root{--bg:#f5f5f5;--card:#fff;--border:#e8e8e8;--border-light:#ddd;--text:#1e293b;--text-dim:#888;--text-muted:#aaa;--danger:#dc2626;}
@@ -550,10 +550,9 @@
         return;
       }
       
-      // 最大50件表示
-      var shown = filtered.slice(0, 50);
+      // 全件表示（カテゴリ件数と一致させる）
       var h = '';
-      shown.forEach(function(item) {
+      filtered.forEach(function(item) {
         var locParts = [item.floor, item.location].filter(Boolean);
         var locStr = locParts.length > 0 ? locParts.join(' ') : '';
         var maker = item.maker ? '<span style="color:#888;font-size:12px;"> ' + item.maker + '</span>' : '';
@@ -566,8 +565,8 @@
           + '<div style="margin-top:2px;">' + cat + locBadge + '</div>'
           + '</div>';
       });
-      if (filtered.length > 50) {
-        h += '<div style="padding:10px;color:#888;font-size:12px;text-align:center;">他 ' + (filtered.length - 50) + ' 件（検索で絞り込んでください）</div>';
+      if (filtered.length > 100) {
+        h += '<div style="padding:10px;color:#888;font-size:12px;text-align:center;">💡 検索で絞り込むと見つけやすくなります</div>';
       }
       list.innerHTML = h;
       list.style.display = 'block';
@@ -657,12 +656,12 @@
       if(!itemId){toast('設備を選択してください');return;}
       if(!desc){toast('状況を入力してください');return;}
       
-      // 商品・業者情報を取得
+      // 商品・管理会社情報を取得
       var itemId = document.getElementById('selectedItemId').value;
       var partnerId = document.getElementById('selectedPartnerId').value;
       var partnerName = document.getElementById('selectedPartnerName').value;
 
-      // 業者振り分けフォールバック（提案書3.3準拠）
+      // 管理会社振り分けフォールバック（提案書3.3準拠）
       if (!partnerId && typeof resolvePartner === 'function') {
         var currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
         var resolved = resolvePartner(
@@ -684,15 +683,15 @@
         location:loc,
         description:desc,
         emergency:false,
-        assignedPartnerId: partnerId,  // 業者ID
-        assignedPartnerName: partnerName,  // 業者名
+        assignedPartnerId: partnerId,  // 管理会社ID
+        assignedPartnerName: partnerName,  // 管理会社名
         photos: attachedPhotos.slice()  // 写真データ
       });
       closeForm();
       clearPhotos();
       logEvent('report_submit', { reportType: type, title: title, category: cat, priority: priority, location: loc, partnerId: partnerId });
       showSentOK(lastSavedReportId || '');
-      // 業者向け通知を発生
+      // 管理会社向け通知を発生
       if (typeof sendNotification === 'function' && partnerId) {
         var urgLabel = priority === '高' ? '【緊急】' : '';
         sendNotification({
@@ -839,7 +838,7 @@
       window.lastSavedReportId = reportId;
       
       // ========================================
-      // 業者情報を商品から取得
+      // 管理会社情報を商品から取得
       // ========================================
       var assignedPartnerId = data.assignedPartnerId || null;
       var assignedPartnerName = data.assignedPartnerName || null;
@@ -854,7 +853,7 @@
         officeCode: currentOfficeCode,
         officeName: currentOfficeName,
         timestamp: new Date().toISOString(),
-        // 業者情報（新規追加）
+        // 管理会社情報（新規追加）
         assignedPartnerId: assignedPartnerId,
         assignedPartnerName: assignedPartnerName,
         assignedAt: assignedPartnerId ? new Date().toISOString() : null,
@@ -907,12 +906,11 @@
     function renderHistory(){
       var reports=getAllReports();
       
-      // 自分が送信した通報のみフィルタリング
-      const currentUserId = currentUser?.userId || currentUser?.id || '';
+      // 同じ事業所の通報を全件表示（二重通報防止）
+      const currentOfficeCode = currentUser?.officeCode || '';
       
       reports = reports.filter(function(r) {
-        var rid = r.userId || r.reporterId || '';
-        return rid === currentUserId;
+        return r.officeCode === currentOfficeCode;
       });
 
       // カウント更新（フィルタ前）
@@ -931,15 +929,15 @@
         return;
       }
       
-      // 業者マスタを読み込み（業者名がない場合に取得するため）
+      // 管理会社マスタを読み込み（管理会社名がない場合に取得するため）
       var partners = JSON.parse(demoGetFromLocalStorage('partners') || '[]');
       
       var h='';
-      reports.slice(0,10).forEach(function(r){
+      reports.forEach(function(r){
         var d=new Date(r.timestamp);
         var time=d.toLocaleDateString('ja-JP')+' '+d.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
         
-        // 業者名を取得（保存されていない場合はpartner-masterから取得）
+        // 管理会社名を取得（保存されていない場合はpartner-masterから取得）
         if (!r.assignedPartnerName && r.assignedPartnerId) {
           var partner = partners.find(function(p) { return p.id === r.assignedPartnerId; });
           if (partner) {
@@ -980,9 +978,9 @@
         h+='<span>'+r.category+'</span>';
         h+='</div>';
         if(r.assignedPartnerName){
-          h+='<div class="history-partner">業者: '+esc(r.assignedPartnerName)+'</div>';
+          h+='<div class="history-partner">管理会社: '+esc(r.assignedPartnerName)+'</div>';
         } else {
-          h+='<div style="font-size:12px;color:#ef4444;margin-bottom:8px;">業者未割当</div>';
+          h+='<div style="font-size:12px;color:#ef4444;margin-bottom:8px;">管理会社未割当</div>';
         }
         h+=latestComment;
         h+=durationHtml;
@@ -1055,13 +1053,13 @@
       content += '<div class="detail-value detail-desc">' + esc(r.description || '-') + '</div>';
       content += '</div>';
       
-      // 業者情報
+      // 管理会社情報
       content += '<div class="detail-row">';
-      content += '<div class="detail-label">割当業者</div>';
+      content += '<div class="detail-label">割当管理会社</div>';
       if (r.assignedPartnerName) {
         content += '<div class="detail-value" style="color:#1e40af;font-weight:600;">' + esc(r.assignedPartnerName) + '</div>';
       } else {
-        content += '<div class="detail-value" style="color:#ef4444;">業者未割当</div>';
+        content += '<div class="detail-value" style="color:#ef4444;">管理会社未割当</div>';
       }
       content += '</div>';
       
@@ -1169,7 +1167,7 @@
       content+='</div>';
       
       content+='<div class="detail-row">';
-      content+='<div class="detail-label">対象業者</div>';
+      content+='<div class="detail-label">対象管理会社</div>';
       content+='<div class="detail-value">'+esc(typeLabels[r.type]||r.type||'-')+'</div>';
       content+='</div>';
       

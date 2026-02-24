@@ -158,7 +158,7 @@
             if (role === 'system_admin') {
                 show('companyCard');
                 // settingsCardは非表示（システム管理ダッシュボード経由でアクセス）
-                // 通報画面・業者画面にDEMO切替でアクセス
+                // 通報画面・管理会社画面にDEMO切替でアクセス
                 show('staffCard');
                 show('contractorCard');
             }
@@ -166,12 +166,12 @@
             // 事業所管理者
             if (role === 'office_admin') {
                 hide('officeCard');  // 自分の事業所しかないので不要
-                hide('partnerCard'); // 業者マスタはsystem_adminのみ
+                hide('partnerCard'); // 管理会社マスタはsystem_adminのみ
             }
 
             // 本社管理者
             if (role === 'company_admin') {
-                hide('partnerCard'); // 業者マスタはsystem_adminのみ
+                hide('partnerCard'); // 管理会社マスタはsystem_adminのみ
                 hide('importCard'); // インポートは非表示
             }
 

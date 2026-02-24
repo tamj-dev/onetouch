@@ -12,7 +12,7 @@ const ROLE_LEVELS = {
   office_admin: 2,
   company_admin: 3,
   system_admin: 4,
-  contractor: 0, // 業者は別系統
+  contractor: 0, // 管理会社は別系統
 };
 
 /**

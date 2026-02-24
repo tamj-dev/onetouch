@@ -11,7 +11,7 @@ router.use(authenticate);
 
 /**
  * POST /api/reports
- * 新規通報作成 + 業者自動振り分け
+ * 新規通報作成 + 管理会社自動振り分け
  */
 router.post('/', authorize('staff', 'office_admin', 'company_admin', 'system_admin'), async (req, res) => {
   try {
@@ -27,7 +27,7 @@ router.post('/', authorize('staff', 'office_admin', 'company_admin', 'system_adm
     const companyCode = user.companyCode;
     const officeCode = user.officeCode;
 
-    // 商品情報から業者を取得（assignedPartnerId優先）
+    // 商品情報から管理会社を取得（assignedPartnerId優先）
     let partnerId = null;
     let partnerName = '';
 
@@ -45,7 +45,7 @@ router.post('/', authorize('staff', 'office_admin', 'company_admin', 'system_adm
       }
     }
 
-    // 商品に業者が未設定 → 契約テーブルから自動振り分け
+    // 商品に管理会社が未設定 → 契約テーブルから自動振り分け
     if (!partnerId && category) {
       const resolved = await resolvePartnerFromContract(companyCode, officeCode, category);
       if (resolved) {
@@ -118,7 +118,7 @@ router.get('/', officeScope, async (req, res) => {
     // ロール別フィルタ
     if (req.user.role === 'contractor') {
       conditions.push(`r.assigned_partner_id = $${paramIdx++}`);
-      params.push(req.user.companyCode); // 業者のcompanyCode = partnerId
+      params.push(req.user.companyCode); // 管理会社のcompanyCode = partnerId
     } else {
       if (req.companyFilter) {
         conditions.push(`r.company_code = $${paramIdx++}`);
@@ -206,7 +206,7 @@ router.get('/:id', async (req, res) => {
 
     const report = result.rows[0];
 
-    // アクセス権チェック（同じ会社 or 担当業者）
+    // アクセス権チェック（同じ会社 or 担当管理会社）
     if (req.user.role === 'contractor') {
       if (report.assigned_partner_id !== req.user.companyCode) {
         return res.status(403).json({ error: 'アクセス権がありません' });
@@ -227,7 +227,7 @@ router.get('/:id', async (req, res) => {
 
 /**
  * PUT /api/reports/:id/status
- * ステータス更新（業者の対応開始/完了 など）
+ * ステータス更新（管理会社の対応開始/完了 など）
  */
 router.put('/:id/status', async (req, res) => {
   try {
@@ -288,7 +288,7 @@ router.put('/:id/status', async (req, res) => {
 // ========== ヘルパー関数 ==========
 
 /**
- * 契約テーブルから業者を自動振り分け
+ * 契約テーブルから管理会社を自動振り分け
  * 現在のdemo-mode.jsのresolvePartner()と同じロジック
  */
 async function resolvePartnerFromContract(companyCode, officeCode, category) {

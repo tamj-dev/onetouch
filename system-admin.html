@@ -135,7 +135,7 @@
                 <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
                 <div class="card-title">新規セットアップ</div>
                 <div class="card-description">
-                    業者・会社・事業所・契約・アカウント・商品を<br>
+                    管理会社・会社・事業所・契約・アカウント・商品を<br>
                     ステップに沿って登録
                 </div>
             </a>
@@ -144,7 +144,7 @@
                 <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 14l2 2 4-4"/></svg></div>
                 <div class="card-title">契約管理</div>
                 <div class="card-description">
-                    業者 × 会社 × カテゴリの紐づけ<br>
+                    管理会社 × 会社 × カテゴリの紐づけ<br>
                     契約一覧の確認・編集
                 </div>
             </a>
@@ -215,7 +215,7 @@
                 return;
             }
             
-            var stepNames = ['業者選択','会社登録','事業所登録','契約設定','アカウント登録','商品登録'];
+            var stepNames = ['管理会社選択','会社登録','事業所登録','契約設定','アカウント登録','商品登録'];
             
             var inProgress = filtered.filter(function(s) { return !s.currentStep || s.currentStep <= 6; });
             var completed = filtered.filter(function(s) { return s.currentStep > 6; });

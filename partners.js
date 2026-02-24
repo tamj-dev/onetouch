@@ -10,7 +10,7 @@ router.use(authenticate);
 
 /**
  * GET /api/partners
- * 業者一覧
+ * 管理会社一覧
  */
 router.get('/', async (req, res) => {
   try {
@@ -40,7 +40,7 @@ router.get('/', async (req, res) => {
     const countResult = await db.query(`SELECT COUNT(*) FROM partners p ${where}`, params);
     const total = parseInt(countResult.rows[0].count);
 
-    // 業者が担当する会社を契約テーブルから取得
+    // 管理会社が担当する会社を契約テーブルから取得
     const dataResult = await db.query(
       `SELECT p.*,
               COALESCE(

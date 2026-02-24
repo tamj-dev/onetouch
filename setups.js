@@ -158,7 +158,7 @@ router.put('/:id/step', authorize('company_admin', 'system_admin'), async (req, 
         break;
       }
 
-      // ステップ4完了: 業者登録
+      // ステップ4完了: 管理会社登録
       case 4: {
         const partner = data.partner;
         if (partner) {

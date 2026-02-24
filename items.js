@@ -26,7 +26,7 @@ router.get('/', officeScope, async (req, res) => {
 
     // ロール別スコープ
     if (req.user.role === 'contractor') {
-      // 業者は担当商品のみ
+      // 管理会社は担当商品のみ
       conditions.push(`i.assigned_partner_id = $${paramIdx++}`);
       params.push(req.user.companyCode);
     } else {

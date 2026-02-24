@@ -392,7 +392,7 @@ const UnifiedHeader = {
             const currentRole = user.role;
             const roles = [
                 { key: 'staff', label: 'スタッフで表示', color: '#4CAF50', active: currentRole === 'staff' },
-                { key: 'contractor', label: '業者で表示', color: '#2196F3', active: currentRole === 'contractor' },
+                { key: 'contractor', label: '管理会社で表示', color: '#2196F3', active: currentRole === 'contractor' },
                 { key: 'office_admin', label: '事業所管理者で表示', color: '#FF9800', active: currentRole === 'office_admin' },
                 { key: 'company_admin', label: '本社管理者で表示', color: '#9C27B0', active: currentRole === 'company_admin' }
             ];
@@ -578,7 +578,7 @@ const UnifiedHeader = {
     _initDemoBadge() {
         const user = this._getUser();
         let isDemo = user && user.companyCode === 'TAMJ';
-        // 業者の場合: currentContractorのassignedCompaniesにTAMJが含まれるか確認
+        // 管理会社の場合: currentContractorのassignedCompaniesにTAMJが含まれるか確認
         if (!isDemo && user && user.role === 'contractor') {
             try {
                 const contractor = JSON.parse(sessionStorage.getItem('currentContractor'));
@@ -759,7 +759,7 @@ const UnifiedHeader = {
         if (reportId) {
             var currentPage = window.location.pathname.split('/').pop();
             if (currentPage === 'contractor-dashboard.html') {
-                // 業者はそのまま（ダッシュボードで詳細を開く）
+                // 管理会社はそのまま（ダッシュボードで詳細を開く）
             } else {
                 // スタッフ・管理者はreport.htmlへ
             }
@@ -954,7 +954,7 @@ const UnifiedHeader = {
         localStorage.setItem('ONE_userId', user.id);
         localStorage.setItem('ONE_userName', user.name);
 
-        // 業者の場合はcontractor情報も保存
+        // 管理会社の場合はcontractor情報も保存
         if (user.role === 'contractor') {
             sessionStorage.setItem('currentContractor', JSON.stringify({
                 id: user.partnerId, partnerId: user.partnerId,
@@ -1078,7 +1078,7 @@ const UnifiedHeader = {
                 user.password = newPw;
                 user.isFirstLogin = false;
                 sessionStorage.setItem('currentUser', JSON.stringify(user));
-                // 業者の場合はcurrentContractorも更新
+                // 管理会社の場合はcurrentContractorも更新
                 if (user.role === 'contractor') {
                     try {
                         const contractor = JSON.parse(sessionStorage.getItem('currentContractor'));
@@ -1091,7 +1091,7 @@ const UnifiedHeader = {
                 alert('パスワードを変更しました。\n※ DEMOモードのため、ログアウト後は元に戻ります。');
                 this._logAudit('password_change', { userId: user.id || user.userId });
             } else {
-                // 業者の場合はpartnersから検索
+                // 管理会社の場合はpartnersから検索
                 let updated = false;
                 if (user.role === 'contractor') {
                     let partners = JSON.parse(localStorage.getItem('partners') || '[]');

@@ -96,10 +96,10 @@
           return filterItemsForUser(allItems, currentUser);
         }
 
-        // 商品ナンバー生成: 業者コード + yymm + 4桁連番
+        // 商品ナンバー生成: 管理会社コード + yymm + 4桁連番
         // 例: PN001250200001
         function generateItemNumber(assignedPartnerId) {
-          // 業者コードを取得
+          // 管理会社コードを取得
           var partnerCode = '';
           if (assignedPartnerId) {
             var partners = [];
@@ -919,7 +919,7 @@
             </div>
 
             <form id="itemForm" onsubmit="saveItem(event)">
-                <!-- 業者ログイン時のみ表示: 納品先会社選択 -->
+                <!-- 管理会社ログイン時のみ表示: 納品先会社選択 -->
                 <div class="form-group" id="contractorCompanyGroup" style="display: none;">
                     <label class="form-label required">納品先会社</label>
                     <select class="form-input" id="itemDeliveryCompany">
@@ -956,7 +956,7 @@
                     </select>
                     <input type="hidden" id="itemAssignedPartner" value="">
                     <div style="font-size: 12px; color: #888; margin-top: 4px;">
-                        ※ カテゴリに紐づく業者が自動表示されます（複数の場合は選択可）
+                        ※ カテゴリに紐づく管理会社が自動表示されます（複数の場合は選択可）
                     </div>
                 </div>
 
@@ -1110,14 +1110,14 @@
             }
         });
 
-        // 業者一覧を読み込む
+        // 管理会社一覧を読み込む
         // ロール別事業所選択の初期化
         function initOfficeSelect() {
             var group = document.getElementById('itemOfficeGroup');
             var select = document.getElementById('itemOfficeSelect');
             if (!group || !select) return;
 
-            // スタッフ・事業所管理者・業者は不要（自分の事業所が自動適用）
+            // スタッフ・事業所管理者・管理会社は不要（自分の事業所が自動適用）
             if (currentUser.role === 'staff' || currentUser.role === 'office_admin' || currentUser.role === 'contractor') {
                 group.style.display = 'none';
                 return;
@@ -1160,7 +1160,7 @@
                 if (userRole === 'system_admin') {
                     match = true; // 全契約
                 } else if (userRole === 'contractor') {
-                    // 業者: 自分のpartnerIdに紐づく契約
+                    // 管理会社: 自分のpartnerIdに紐づく契約
                     match = (c.partnerId === currentUser.partnerId || c.partnerId === currentUser.partnerCode);
                 } else {
                     // スタッフ・事業所管理者・本社管理者: 自社の契約
@@ -1198,7 +1198,7 @@
             
             var companyCode = currentUser.companyCode || '';
             
-            // 契約テーブルから該当カテゴリの業者を検索
+            // 契約テーブルから該当カテゴリの管理会社を検索
             var contracts = [];
             try { contracts = JSON.parse(sessionStorage.getItem('onetouch.contracts') || '[]'); } catch(e) {}
             try { var cl = JSON.parse(localStorage.getItem('onetouch.contracts') || '[]'); cl.forEach(function(c){ if(!contracts.find(function(x){return x.id===c.id;})) contracts.push(c); }); } catch(e) {}
@@ -1207,7 +1207,7 @@
             try { partners = JSON.parse(sessionStorage.getItem('partners') || '[]'); } catch(e) {}
             try { var pl = JSON.parse(localStorage.getItem('partners') || '[]'); pl.forEach(function(p){ if(!partners.find(function(x){return x.id===p.id || x.partnerCode===p.partnerCode;})) partners.push(p); }); } catch(e) {}
             
-            // 該当カテゴリを持つ有効な契約の業者を取得
+            // 該当カテゴリを持つ有効な契約の管理会社を取得
             var userRole = currentUser.role || '';
             var matchedPartners = [];
             contracts.forEach(function(c) {
@@ -1250,7 +1250,7 @@
                 partnerSelect.innerHTML = '<option value="' + matchedPartners[0].id + '">' + matchedPartners[0].name + '</option>';
                 hidden.value = matchedPartners[0].id;
             } else {
-                partnerSelect.innerHTML = '<option value="">業者を選択してください</option>' + matchedPartners.map(function(p) {
+                partnerSelect.innerHTML = '<option value="">管理会社を選択してください</option>' + matchedPartners.map(function(p) {
                     return '<option value="' + p.id + '">' + p.name + '</option>';
                 }).join('');
                 hidden.value = '';
@@ -1260,19 +1260,19 @@
         function loadPartners() {
             
             try {
-                // 業者ログインの場合
+                // 管理会社ログインの場合
                 if (currentUser.role === 'contractor') {
                     const currentContractor = JSON.parse(sessionStorage.getItem('currentContractor'));
                     
                     if (!currentContractor) {
-                        console.error('[loadPartners] 業者情報が見つかりません');
+                        console.error('[loadPartners] 管理会社情報が見つかりません');
                         return;
                     }
                     
                     const partnerDisplayName = currentContractor.companyName || currentContractor.name;
                     const select = document.getElementById('itemAssignedPartner');
                     select.innerHTML = `<option value="${currentContractor.id}" data-partner-name="${partnerDisplayName}" selected>${partnerDisplayName}</option>`;
-                    select.disabled = true; // 業者は変更できない
+                    select.disabled = true; // 管理会社は変更できない
                     
                     return;
                 }
@@ -1283,7 +1283,7 @@
                 try { partnersLocal = JSON.parse(localStorage.getItem('partners') || '[]'); } catch(e) {}
                 partnersLocal.forEach(p => { if (!partners.find(m => m.id === p.id)) partners.push(p); });
                 
-                // DEMOモードで業者データが空の場合、デフォルトデータを使用
+                // DEMOモードで管理会社データが空の場合、デフォルトデータを使用
                 if (partners.length === 0 && isDemoMode()) {
                     partners = [
                         {
@@ -1314,7 +1314,7 @@
                 }
                 
                 
-                // 現在の会社に紐付いている業者のみフィルター（契約テーブルベース）
+                // 現在の会社に紐付いている管理会社のみフィルター（契約テーブルベース）
                 var contracts = [];
                 try { contracts = JSON.parse(sessionStorage.getItem('onetouch.contracts') || '[]'); } catch(e) {}
                 try { var cl = JSON.parse(localStorage.getItem('onetouch.contracts') || '[]'); cl.forEach(function(c) { if (!contracts.find(function(x) { return x.id === c.id; })) contracts.push(c); }); } catch(e) {}
@@ -1391,7 +1391,7 @@
                 
                 allItems.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-                // 業者ログインの場合: 自分の担当商品だけに絞る
+                // 管理会社ログインの場合: 自分の担当商品だけに絞る
                 if (currentUser.role === 'contractor') {
                     const currentContractor = JSON.parse(sessionStorage.getItem('currentContractor') || '{}');
                     if (currentContractor && currentContractor.id) {
@@ -1474,7 +1474,7 @@
             const companyFilter = companyFilterEl ? companyFilterEl.value : '';
 
             filteredItems = allItems.filter(item => {
-                // 業者ログインの場合: 自社が担当している商品のみ表示
+                // 管理会社ログインの場合: 自社が担当している商品のみ表示
                 if (currentUser.role === 'contractor') {
                     const currentContractor = JSON.parse(sessionStorage.getItem('currentContractor'));
                     if (currentContractor && item.assignedPartnerId !== currentContractor.id) {
@@ -1670,7 +1670,7 @@
             document.getElementById('itemAssignedPartner').value = '';
             document.getElementById('itemAssignedPartnerSelect').innerHTML = '<option value="">カテゴリ選択後に自動設定</option>';
             
-            // 業者ログインの場合、納品先会社を自動セット
+            // 管理会社ログインの場合、納品先会社を自動セット
             if (currentUser.role === 'contractor') {
                 const currentContractor = JSON.parse(sessionStorage.getItem('currentContractor'));
                 const companyGroup = document.getElementById('contractorCompanyGroup');
@@ -1735,7 +1735,7 @@
             if (item.assignedPartnerId) {
                 document.getElementById('itemAssignedPartner').value = item.assignedPartnerId;
                 var partnerSelect = document.getElementById('itemAssignedPartnerSelect');
-                // 既存の業者がプルダウンに含まれていれば選択
+                // 既存の管理会社がプルダウンに含まれていれば選択
                 for (var i = 0; i < partnerSelect.options.length; i++) {
                     if (partnerSelect.options[i].value === item.assignedPartnerId) {
                         partnerSelect.selectedIndex = i;
@@ -1806,7 +1806,7 @@
             const partnerSelect = document.getElementById('itemAssignedPartnerSelect');
             var partnerDisplayName = partnerSelect.options[partnerSelect.selectedIndex] ? partnerSelect.options[partnerSelect.selectedIndex].text : '';
             
-            // 業者ログイン時は納品先会社を使用
+            // 管理会社ログイン時は納品先会社を使用
             let companyCode = currentUser.companyCode;
             let officeCode = currentUser.officeCode;
             
@@ -1867,12 +1867,12 @@
 
             try {
                 if (currentEditId) {
-                    // 更新時: 業者変更履歴を記録
+                    // 更新時: 管理会社変更履歴を記録
                     const oldItem = allItems.find(i => i.itemId === currentEditId);
                     
                     if (oldItem && oldItem.assignedPartnerId !== item.assignedPartnerId) {
                         
-                        // 業者変更履歴を初期化（存在しない場合）
+                        // 管理会社変更履歴を初期化（存在しない場合）
                         if (!item.partnerHistory) {
                             item.partnerHistory = oldItem.partnerHistory || [];
                         }
@@ -1889,7 +1889,7 @@
                         });
                         
                     } else {
-                        // 業者変更がない場合は既存の履歴を保持
+                        // 管理会社変更がない場合は既存の履歴を保持
                         item.partnerHistory = oldItem?.partnerHistory || [];
                     }
                     
