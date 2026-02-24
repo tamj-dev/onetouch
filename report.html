@@ -460,16 +460,6 @@
 
     function buildCategoryTabs(items) {
       var catOrder = ['建物・外','部屋・共用部','介護医療備品','厨房','ネットワーク','浴室','福祉用具'];
-      var catDescs = {
-        '建物・外':'工事しないと動かせないもの',
-        '部屋・共用部':'部屋・共用部に置いてあるもの全般',
-        '介護医療備品':'体に触れる・お世話をするときに使うもの',
-        '厨房':'作る・運ぶ・食べるために使うもの',
-        'ネットワーク':'繋ぐ・呼ぶ・守る機器',
-        '浴室':'浴室で使用する設備・備品',
-        '福祉用具':'車いす・歩行器などの福祉用具',
-        'その他':'上記に当てはまらないもの'
-      };
       var cats = {};
       items.forEach(function(i) { var c = i.category || 'その他'; cats[c] = (cats[c]||0) + 1; });
       var tabsEl = document.getElementById('categoryTabs');
@@ -477,19 +467,15 @@
       var h = '';
       catOrder.forEach(function(c) {
         var count = cats[c] || 0;
-        var desc = catDescs[c] || '';
         h += '<button onclick="filterCategory(\'' + c + '\')" class="cat-tab" style="' + btnBase + '#ddd;background:#fafafa;color:#333;">';
         h += '<span style="display:block;font-size:15px;font-weight:700;color:#1e293b;">' + c + '</span>';
-        h += '<span style="display:block;font-size:12px;color:#64748b;margin-top:2px;">▶ ' + desc + '</span>';
         h += '<span style="display:block;font-size:13px;font-weight:700;color:#2563eb;margin-top:4px;">(' + count + ')</span>';
         h += '</button>';
       });
       // その他カテゴリ
       if (cats['その他']) {
-        var desc = catDescs['その他'];
         h += '<button onclick="filterCategory(\'その他\')" class="cat-tab" style="' + btnBase + '#ddd;background:#fafafa;color:#333;">';
         h += '<span style="display:block;font-size:15px;font-weight:700;color:#1e293b;">その他</span>';
-        h += '<span style="display:block;font-size:12px;color:#64748b;margin-top:2px;">▶ ' + desc + '</span>';
         h += '<span style="display:block;font-size:13px;font-weight:700;color:#2563eb;margin-top:4px;">(' + cats['その他'] + ')</span>';
         h += '</button>';
       }
