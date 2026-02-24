@@ -259,13 +259,15 @@ CREATE TABLE categories (
     created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 初期データ（5大分類+その他）
+-- 初期データ（7分類+その他）
 INSERT INTO categories (name, sort_order, is_system) VALUES
-    ('建物・外まわり', 1, TRUE),
-    ('部屋・共用部の家具・家電', 2, TRUE),
-    ('介護医療・お風呂の道具', 3, TRUE),
-    ('厨房・食事の道具', 4, TRUE),
-    ('通信・呼出し・防火の機器', 5, TRUE),
+    ('建物・外', 1, TRUE),
+    ('部屋・共用部', 2, TRUE),
+    ('介護医療備品', 3, TRUE),
+    ('厨房', 4, TRUE),
+    ('ネットワーク', 5, TRUE),
+    ('浴室', 6, TRUE),
+    ('福祉用具', 7, TRUE),
     ('その他', 99, TRUE);
 
 -- =============================================

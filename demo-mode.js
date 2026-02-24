@@ -134,7 +134,7 @@ else { showDemoModeBadge(); }
 window.DEMO = { isDemo:isDemoMode, showWarning:showDemoWarning, save:demoSaveToLocalStorage, get:demoGetFromLocalStorage, delete:demoDeleteFromLocalStorage, exportData:demoExportData, importData:demoImportData };
 
 // ========== カテゴリ ==========
-window.SYSTEM_CATEGORIES = ['建物・外まわり', '部屋・共用部の家具・家電', '介護医療・お風呂の道具', '厨房・食事の道具', '通信・呼出し・防火の機器', 'その他'];
+window.SYSTEM_CATEGORIES = ['建物・外', '部屋・共用部', '介護医療備品', '厨房', 'ネットワーク', '浴室', '福祉用具', 'その他'];
 
 // カテゴリ別業者は契約テーブル（DEMO_CONTRACTS）で管理
 
@@ -190,74 +190,74 @@ window.DEMO_ACCOUNTS = {
     'admin': {companyCode:'SYSTEM',id:'admin',password:'admin',name:'システム管理者',role:'system_admin',scope:'system',companyName:'ワンタッチ管理運営',officeCode:'',officeName:'',status:'active',isFirstLogin:false,isDemoMode:true},
 
     // 管理会社ログイン用（15社）
-    'pn001-yamada':     {companyCode:'PN001',id:'pn001-yamada',password:'demo',name:'山田 太郎',role:'contractor',companyName:'TAMJ建設',partnerId:'PN001',partnerCode:'PN001',categories:['建物・外まわり','部屋・共用部の家具・家電','介護医療・お風呂の道具','厨房・食事の道具','通信・呼出し・防火の機器'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
-    'pn002-aoki':       {companyCode:'PN002',id:'pn002-aoki',password:'demo',name:'青木 一郎',role:'contractor',companyName:'ACタムジ',partnerId:'PN002',partnerCode:'PN002',categories:['建物・外まわり'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
-    'pn003-eto':        {companyCode:'PN003',id:'pn003-eto',password:'demo',name:'江藤 健太',role:'contractor',companyName:'EVタムジ',partnerId:'PN003',partnerCode:'PN003',categories:['建物・外まわり'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
-    'pn004-tamura':     {companyCode:'PN004',id:'pn004-tamura',password:'demo',name:'田村 美咲',role:'contractor',companyName:'タムタム家具',partnerId:'PN004',partnerCode:'PN004',categories:['部屋・共用部の家具・家電','介護医療・お風呂の道具','厨房・食事の道具','通信・呼出し・防火の機器'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
-    'pn005-hayashi':    {companyCode:'PN005',id:'pn005-hayashi',password:'demo',name:'林 誠',role:'contractor',companyName:'リネンTAMJ',partnerId:'PN005',partnerCode:'PN005',categories:['部屋・共用部の家具・家電'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
-    'pn006-fukuda':     {companyCode:'PN006',id:'pn006-fukuda',password:'demo',name:'福田 裕子',role:'contractor',companyName:'福たむ',partnerId:'PN006',partnerCode:'PN006',categories:['部屋・共用部の家具・家電','介護医療・お風呂の道具','厨房・食事の道具'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
-    'pn007-ando':       {companyCode:'PN007',id:'pn007-ando',password:'demo',name:'安藤 大輔',role:'contractor',companyName:'AEDタム',partnerId:'PN007',partnerCode:'PN007',categories:['介護医療・お風呂の道具'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
-    'pn008-oshima':     {companyCode:'PN008',id:'pn008-oshima',password:'demo',name:'大島 春菜',role:'contractor',companyName:'お掃除タムタム',partnerId:'PN008',partnerCode:'PN008',categories:['厨房・食事の道具'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
-    'pn009-kitamura':   {companyCode:'PN009',id:'pn009-kitamura',password:'demo',name:'北村 和也',role:'contractor',companyName:'キッチンタムジ',partnerId:'PN009',partnerCode:'PN009',categories:['厨房・食事の道具'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
-    'pn010-nakata':     {companyCode:'PN010',id:'pn010-nakata',password:'demo',name:'中田 翔',role:'contractor',companyName:'タムネット',partnerId:'PN010',partnerCode:'PN010',categories:['通信・呼出し・防火の機器'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
-    'pn011-domoto':     {companyCode:'PN011',id:'pn011-domoto',password:'demo',name:'堂本 光',role:'contractor',companyName:'タム電気',partnerId:'PN011',partnerCode:'PN011',categories:['通信・呼出し・防火の機器'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
-    'pn012-sekiguchi':  {companyCode:'PN012',id:'pn012-sekiguchi',password:'demo',name:'関口 武',role:'contractor',companyName:'タムセキュリティ',partnerId:'PN012',partnerCode:'PN012',categories:['通信・呼出し・防火の機器'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
-    'pn013-kato':       {companyCode:'PN013',id:'pn013-kato',password:'demo',name:'加藤 優',role:'contractor',companyName:'介護タム',partnerId:'PN013',partnerCode:'PN013',categories:['介護医療・お風呂の道具'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
-    'pn014-nishimura':  {companyCode:'PN014',id:'pn014-nishimura',password:'demo',name:'西村 拓',role:'contractor',companyName:'Nタムタム',partnerId:'PN014',partnerCode:'PN014',categories:['通信・呼出し・防火の機器'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
-    'pn015-kobayashi':  {companyCode:'PN015',id:'pn015-kobayashi',password:'demo',name:'小林 恵',role:'contractor',companyName:'タムコール',partnerId:'PN015',partnerCode:'PN015',categories:['通信・呼出し・防火の機器'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true}
+    'pn001-yamada':     {companyCode:'PN001',id:'pn001-yamada',password:'demo',name:'山田 太郎',role:'contractor',companyName:'TAMJ建設',partnerId:'PN001',partnerCode:'PN001',categories:['建物・外','部屋・共用部','介護医療備品','厨房','ネットワーク'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn002-aoki':       {companyCode:'PN002',id:'pn002-aoki',password:'demo',name:'青木 一郎',role:'contractor',companyName:'ACタムジ',partnerId:'PN002',partnerCode:'PN002',categories:['建物・外'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn003-eto':        {companyCode:'PN003',id:'pn003-eto',password:'demo',name:'江藤 健太',role:'contractor',companyName:'EVタムジ',partnerId:'PN003',partnerCode:'PN003',categories:['建物・外'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn004-tamura':     {companyCode:'PN004',id:'pn004-tamura',password:'demo',name:'田村 美咲',role:'contractor',companyName:'タムタム家具',partnerId:'PN004',partnerCode:'PN004',categories:['部屋・共用部','介護医療備品','厨房','ネットワーク'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn005-hayashi':    {companyCode:'PN005',id:'pn005-hayashi',password:'demo',name:'林 誠',role:'contractor',companyName:'リネンTAMJ',partnerId:'PN005',partnerCode:'PN005',categories:['部屋・共用部'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn006-fukuda':     {companyCode:'PN006',id:'pn006-fukuda',password:'demo',name:'福田 裕子',role:'contractor',companyName:'福たむ',partnerId:'PN006',partnerCode:'PN006',categories:['部屋・共用部','介護医療備品','厨房'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn007-ando':       {companyCode:'PN007',id:'pn007-ando',password:'demo',name:'安藤 大輔',role:'contractor',companyName:'AEDタム',partnerId:'PN007',partnerCode:'PN007',categories:['介護医療備品'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn008-oshima':     {companyCode:'PN008',id:'pn008-oshima',password:'demo',name:'大島 春菜',role:'contractor',companyName:'お掃除タムタム',partnerId:'PN008',partnerCode:'PN008',categories:['厨房'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn009-kitamura':   {companyCode:'PN009',id:'pn009-kitamura',password:'demo',name:'北村 和也',role:'contractor',companyName:'キッチンタムジ',partnerId:'PN009',partnerCode:'PN009',categories:['厨房'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn010-nakata':     {companyCode:'PN010',id:'pn010-nakata',password:'demo',name:'中田 翔',role:'contractor',companyName:'タムネット',partnerId:'PN010',partnerCode:'PN010',categories:['ネットワーク'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn011-domoto':     {companyCode:'PN011',id:'pn011-domoto',password:'demo',name:'堂本 光',role:'contractor',companyName:'タム電気',partnerId:'PN011',partnerCode:'PN011',categories:['ネットワーク'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn012-sekiguchi':  {companyCode:'PN012',id:'pn012-sekiguchi',password:'demo',name:'関口 武',role:'contractor',companyName:'タムセキュリティ',partnerId:'PN012',partnerCode:'PN012',categories:['ネットワーク'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn013-kato':       {companyCode:'PN013',id:'pn013-kato',password:'demo',name:'加藤 優',role:'contractor',companyName:'介護タム',partnerId:'PN013',partnerCode:'PN013',categories:['介護医療備品'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn014-nishimura':  {companyCode:'PN014',id:'pn014-nishimura',password:'demo',name:'西村 拓',role:'contractor',companyName:'Nタムタム',partnerId:'PN014',partnerCode:'PN014',categories:['ネットワーク'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true},
+    'pn015-kobayashi':  {companyCode:'PN015',id:'pn015-kobayashi',password:'demo',name:'小林 恵',role:'contractor',companyName:'タムコール',partnerId:'PN015',partnerCode:'PN015',categories:['ネットワーク'],assignedCompanies:['TAMJ','JMAT'],status:'active',isDemoMode:true}
 };
 
 // ========== 管理会社マスタ（15社） ==========
 window.DEMO_PARTNERS = [
-    {id:'PN001',name:'TAMJ建設',partnerCode:'PN001',categories:['建物・外まわり','部屋・共用部の家具・家電','介護医療・お風呂の道具','厨房・食事の道具','通信・呼出し・防火の機器'],status:'active',contactName:'山田 太郎',contacts:[{name:'山田 太郎',loginId:'pn001-yamada',password:'demo',phone:'090-1234-5678',isMain:true}]},
-    {id:'PN002',name:'ACタムジ',partnerCode:'PN002',categories:['建物・外まわり'],status:'active',contactName:'青木 一郎',contacts:[{name:'青木 一郎',loginId:'pn002-aoki',password:'demo',phone:'090-2222-0001',isMain:true}]},
-    {id:'PN003',name:'EVタムジ',partnerCode:'PN003',categories:['建物・外まわり'],status:'active',contactName:'江藤 健太',contacts:[{name:'江藤 健太',loginId:'pn003-eto',password:'demo',phone:'090-2222-0002',isMain:true}]},
-    {id:'PN004',name:'タムタム家具',partnerCode:'PN004',categories:['部屋・共用部の家具・家電','介護医療・お風呂の道具','厨房・食事の道具','通信・呼出し・防火の機器'],status:'active',contactName:'田村 美咲',contacts:[{name:'田村 美咲',loginId:'pn004-tamura',password:'demo',phone:'090-2222-0003',isMain:true}]},
-    {id:'PN005',name:'リネンTAMJ',partnerCode:'PN005',categories:['部屋・共用部の家具・家電'],status:'active',contactName:'林 誠',contacts:[{name:'林 誠',loginId:'pn005-hayashi',password:'demo',phone:'090-2222-0004',isMain:true}]},
-    {id:'PN006',name:'福たむ',partnerCode:'PN006',categories:['部屋・共用部の家具・家電','介護医療・お風呂の道具','厨房・食事の道具'],status:'active',contactName:'福田 裕子',contacts:[{name:'福田 裕子',loginId:'pn006-fukuda',password:'demo',phone:'090-2222-0005',isMain:true}]},
-    {id:'PN007',name:'AEDタム',partnerCode:'PN007',categories:['介護医療・お風呂の道具'],status:'active',contactName:'安藤 大輔',contacts:[{name:'安藤 大輔',loginId:'pn007-ando',password:'demo',phone:'090-2222-0006',isMain:true}]},
-    {id:'PN008',name:'お掃除タムタム',partnerCode:'PN008',categories:['厨房・食事の道具'],status:'active',contactName:'大島 春菜',contacts:[{name:'大島 春菜',loginId:'pn008-oshima',password:'demo',phone:'090-2222-0007',isMain:true}]},
-    {id:'PN009',name:'キッチンタムジ',partnerCode:'PN009',categories:['厨房・食事の道具'],status:'active',contactName:'北村 和也',contacts:[{name:'北村 和也',loginId:'pn009-kitamura',password:'demo',phone:'090-2222-0008',isMain:true}]},
-    {id:'PN010',name:'タムネット',partnerCode:'PN010',categories:['通信・呼出し・防火の機器'],status:'active',contactName:'中田 翔',contacts:[{name:'中田 翔',loginId:'pn010-nakata',password:'demo',phone:'090-2222-0009',isMain:true}]},
-    {id:'PN011',name:'タム電気',partnerCode:'PN011',categories:['通信・呼出し・防火の機器'],status:'active',contactName:'堂本 光',contacts:[{name:'堂本 光',loginId:'pn011-domoto',password:'demo',phone:'090-2222-0010',isMain:true}]},
-    {id:'PN012',name:'タムセキュリティ',partnerCode:'PN012',categories:['通信・呼出し・防火の機器'],status:'active',contactName:'関口 武',contacts:[{name:'関口 武',loginId:'pn012-sekiguchi',password:'demo',phone:'090-2222-0011',isMain:true}]},
-    {id:'PN013',name:'介護タム',partnerCode:'PN013',categories:['介護医療・お風呂の道具'],status:'active',contactName:'加藤 優',contacts:[{name:'加藤 優',loginId:'pn013-kato',password:'demo',phone:'090-2222-0012',isMain:true}]},
-    {id:'PN014',name:'Nタムタム',partnerCode:'PN014',categories:['通信・呼出し・防火の機器'],status:'active',contactName:'西村 拓',contacts:[{name:'西村 拓',loginId:'pn014-nishimura',password:'demo',phone:'090-2222-0013',isMain:true}]},
-    {id:'PN015',name:'タムコール',partnerCode:'PN015',categories:['通信・呼出し・防火の機器'],status:'active',contactName:'小林 恵',contacts:[{name:'小林 恵',loginId:'pn015-kobayashi',password:'demo',phone:'090-2222-0014',isMain:true}]}
+    {id:'PN001',name:'TAMJ建設',partnerCode:'PN001',categories:['建物・外','部屋・共用部','介護医療備品','厨房','ネットワーク'],status:'active',contactName:'山田 太郎',contacts:[{name:'山田 太郎',loginId:'pn001-yamada',password:'demo',phone:'090-1234-5678',isMain:true}]},
+    {id:'PN002',name:'ACタムジ',partnerCode:'PN002',categories:['建物・外'],status:'active',contactName:'青木 一郎',contacts:[{name:'青木 一郎',loginId:'pn002-aoki',password:'demo',phone:'090-2222-0001',isMain:true}]},
+    {id:'PN003',name:'EVタムジ',partnerCode:'PN003',categories:['建物・外'],status:'active',contactName:'江藤 健太',contacts:[{name:'江藤 健太',loginId:'pn003-eto',password:'demo',phone:'090-2222-0002',isMain:true}]},
+    {id:'PN004',name:'タムタム家具',partnerCode:'PN004',categories:['部屋・共用部','介護医療備品','厨房','ネットワーク'],status:'active',contactName:'田村 美咲',contacts:[{name:'田村 美咲',loginId:'pn004-tamura',password:'demo',phone:'090-2222-0003',isMain:true}]},
+    {id:'PN005',name:'リネンTAMJ',partnerCode:'PN005',categories:['部屋・共用部'],status:'active',contactName:'林 誠',contacts:[{name:'林 誠',loginId:'pn005-hayashi',password:'demo',phone:'090-2222-0004',isMain:true}]},
+    {id:'PN006',name:'福たむ',partnerCode:'PN006',categories:['部屋・共用部','介護医療備品','厨房'],status:'active',contactName:'福田 裕子',contacts:[{name:'福田 裕子',loginId:'pn006-fukuda',password:'demo',phone:'090-2222-0005',isMain:true}]},
+    {id:'PN007',name:'AEDタム',partnerCode:'PN007',categories:['介護医療備品'],status:'active',contactName:'安藤 大輔',contacts:[{name:'安藤 大輔',loginId:'pn007-ando',password:'demo',phone:'090-2222-0006',isMain:true}]},
+    {id:'PN008',name:'お掃除タムタム',partnerCode:'PN008',categories:['厨房'],status:'active',contactName:'大島 春菜',contacts:[{name:'大島 春菜',loginId:'pn008-oshima',password:'demo',phone:'090-2222-0007',isMain:true}]},
+    {id:'PN009',name:'キッチンタムジ',partnerCode:'PN009',categories:['厨房'],status:'active',contactName:'北村 和也',contacts:[{name:'北村 和也',loginId:'pn009-kitamura',password:'demo',phone:'090-2222-0008',isMain:true}]},
+    {id:'PN010',name:'タムネット',partnerCode:'PN010',categories:['ネットワーク'],status:'active',contactName:'中田 翔',contacts:[{name:'中田 翔',loginId:'pn010-nakata',password:'demo',phone:'090-2222-0009',isMain:true}]},
+    {id:'PN011',name:'タム電気',partnerCode:'PN011',categories:['ネットワーク'],status:'active',contactName:'堂本 光',contacts:[{name:'堂本 光',loginId:'pn011-domoto',password:'demo',phone:'090-2222-0010',isMain:true}]},
+    {id:'PN012',name:'タムセキュリティ',partnerCode:'PN012',categories:['ネットワーク'],status:'active',contactName:'関口 武',contacts:[{name:'関口 武',loginId:'pn012-sekiguchi',password:'demo',phone:'090-2222-0011',isMain:true}]},
+    {id:'PN013',name:'介護タム',partnerCode:'PN013',categories:['介護医療備品'],status:'active',contactName:'加藤 優',contacts:[{name:'加藤 優',loginId:'pn013-kato',password:'demo',phone:'090-2222-0012',isMain:true}]},
+    {id:'PN014',name:'Nタムタム',partnerCode:'PN014',categories:['ネットワーク'],status:'active',contactName:'西村 拓',contacts:[{name:'西村 拓',loginId:'pn014-nishimura',password:'demo',phone:'090-2222-0013',isMain:true}]},
+    {id:'PN015',name:'タムコール',partnerCode:'PN015',categories:['ネットワーク'],status:'active',contactName:'小林 恵',contacts:[{name:'小林 恵',loginId:'pn015-kobayashi',password:'demo',phone:'090-2222-0014',isMain:true}]}
 ];
 
 // ========== 契約テーブル（TAMJ・JMAT共通で15社） ==========
 window.DEMO_CONTRACTS = [
-    {id:'CNT-T01',partnerId:'PN001',companyCode:'TAMJ',officeCode:'',categories:['建物・外まわり','部屋・共用部の家具・家電','介護医療・お風呂の道具','厨房・食事の道具','通信・呼出し・防火の機器'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
-    {id:'CNT-T02',partnerId:'PN002',companyCode:'TAMJ',officeCode:'',categories:['建物・外まわり'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
-    {id:'CNT-T03',partnerId:'PN003',companyCode:'TAMJ',officeCode:'',categories:['建物・外まわり'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
-    {id:'CNT-T04',partnerId:'PN004',companyCode:'TAMJ',officeCode:'',categories:['部屋・共用部の家具・家電','介護医療・お風呂の道具','厨房・食事の道具','通信・呼出し・防火の機器'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
-    {id:'CNT-T05',partnerId:'PN005',companyCode:'TAMJ',officeCode:'',categories:['部屋・共用部の家具・家電'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
-    {id:'CNT-T06',partnerId:'PN006',companyCode:'TAMJ',officeCode:'',categories:['部屋・共用部の家具・家電','介護医療・お風呂の道具','厨房・食事の道具'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
-    {id:'CNT-T07',partnerId:'PN007',companyCode:'TAMJ',officeCode:'',categories:['介護医療・お風呂の道具'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
-    {id:'CNT-T08',partnerId:'PN008',companyCode:'TAMJ',officeCode:'',categories:['厨房・食事の道具'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
-    {id:'CNT-T09',partnerId:'PN009',companyCode:'TAMJ',officeCode:'',categories:['厨房・食事の道具'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
-    {id:'CNT-T10',partnerId:'PN010',companyCode:'TAMJ',officeCode:'',categories:['通信・呼出し・防火の機器'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
-    {id:'CNT-T11',partnerId:'PN011',companyCode:'TAMJ',officeCode:'',categories:['通信・呼出し・防火の機器'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
-    {id:'CNT-T12',partnerId:'PN012',companyCode:'TAMJ',officeCode:'',categories:['通信・呼出し・防火の機器'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
-    {id:'CNT-T13',partnerId:'PN013',companyCode:'TAMJ',officeCode:'',categories:['介護医療・お風呂の道具'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
-    {id:'CNT-T14',partnerId:'PN014',companyCode:'TAMJ',officeCode:'',categories:['通信・呼出し・防火の機器'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
-    {id:'CNT-T15',partnerId:'PN015',companyCode:'TAMJ',officeCode:'',categories:['通信・呼出し・防火の機器'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
-    {id:'CNT-J01',partnerId:'PN001',companyCode:'JMAT',officeCode:'',categories:['建物・外まわり','部屋・共用部の家具・家電','介護医療・お風呂の道具','厨房・食事の道具','通信・呼出し・防火の機器'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
-    {id:'CNT-J02',partnerId:'PN002',companyCode:'JMAT',officeCode:'',categories:['建物・外まわり'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
-    {id:'CNT-J03',partnerId:'PN003',companyCode:'JMAT',officeCode:'',categories:['建物・外まわり'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
-    {id:'CNT-J04',partnerId:'PN004',companyCode:'JMAT',officeCode:'',categories:['部屋・共用部の家具・家電','介護医療・お風呂の道具','厨房・食事の道具','通信・呼出し・防火の機器'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
-    {id:'CNT-J05',partnerId:'PN005',companyCode:'JMAT',officeCode:'',categories:['部屋・共用部の家具・家電'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
-    {id:'CNT-J06',partnerId:'PN006',companyCode:'JMAT',officeCode:'',categories:['部屋・共用部の家具・家電','介護医療・お風呂の道具','厨房・食事の道具'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
-    {id:'CNT-J07',partnerId:'PN007',companyCode:'JMAT',officeCode:'',categories:['介護医療・お風呂の道具'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
-    {id:'CNT-J08',partnerId:'PN008',companyCode:'JMAT',officeCode:'',categories:['厨房・食事の道具'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
-    {id:'CNT-J09',partnerId:'PN009',companyCode:'JMAT',officeCode:'',categories:['厨房・食事の道具'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
-    {id:'CNT-J10',partnerId:'PN010',companyCode:'JMAT',officeCode:'',categories:['通信・呼出し・防火の機器'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
-    {id:'CNT-J11',partnerId:'PN011',companyCode:'JMAT',officeCode:'',categories:['通信・呼出し・防火の機器'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
-    {id:'CNT-J12',partnerId:'PN012',companyCode:'JMAT',officeCode:'',categories:['通信・呼出し・防火の機器'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
-    {id:'CNT-J13',partnerId:'PN013',companyCode:'JMAT',officeCode:'',categories:['介護医療・お風呂の道具'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
-    {id:'CNT-J14',partnerId:'PN014',companyCode:'JMAT',officeCode:'',categories:['通信・呼出し・防火の機器'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
-    {id:'CNT-J15',partnerId:'PN015',companyCode:'JMAT',officeCode:'',categories:['通信・呼出し・防火の機器'],status:'active',createdAt:'2025-01-20T00:00:00Z'}
+    {id:'CNT-T01',partnerId:'PN001',companyCode:'TAMJ',officeCode:'',categories:['建物・外','部屋・共用部','介護医療備品','厨房','ネットワーク','浴室','福祉用具'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
+    {id:'CNT-T02',partnerId:'PN002',companyCode:'TAMJ',officeCode:'',categories:['建物・外'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
+    {id:'CNT-T03',partnerId:'PN003',companyCode:'TAMJ',officeCode:'',categories:['建物・外'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
+    {id:'CNT-T04',partnerId:'PN004',companyCode:'TAMJ',officeCode:'',categories:['部屋・共用部','介護医療備品','厨房','ネットワーク'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
+    {id:'CNT-T05',partnerId:'PN005',companyCode:'TAMJ',officeCode:'',categories:['部屋・共用部'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
+    {id:'CNT-T06',partnerId:'PN006',companyCode:'TAMJ',officeCode:'',categories:['部屋・共用部','介護医療備品','厨房','浴室','福祉用具'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
+    {id:'CNT-T07',partnerId:'PN007',companyCode:'TAMJ',officeCode:'',categories:['介護医療備品'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
+    {id:'CNT-T08',partnerId:'PN008',companyCode:'TAMJ',officeCode:'',categories:['厨房'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
+    {id:'CNT-T09',partnerId:'PN009',companyCode:'TAMJ',officeCode:'',categories:['厨房'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
+    {id:'CNT-T10',partnerId:'PN010',companyCode:'TAMJ',officeCode:'',categories:['ネットワーク'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
+    {id:'CNT-T11',partnerId:'PN011',companyCode:'TAMJ',officeCode:'',categories:['ネットワーク'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
+    {id:'CNT-T12',partnerId:'PN012',companyCode:'TAMJ',officeCode:'',categories:['ネットワーク'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
+    {id:'CNT-T13',partnerId:'PN013',companyCode:'TAMJ',officeCode:'',categories:['介護医療備品'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
+    {id:'CNT-T14',partnerId:'PN014',companyCode:'TAMJ',officeCode:'',categories:['ネットワーク'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
+    {id:'CNT-T15',partnerId:'PN015',companyCode:'TAMJ',officeCode:'',categories:['ネットワーク'],status:'active',createdAt:'2025-01-15T00:00:00Z'},
+    {id:'CNT-J01',partnerId:'PN001',companyCode:'JMAT',officeCode:'',categories:['建物・外','部屋・共用部','介護医療備品','厨房','ネットワーク'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
+    {id:'CNT-J02',partnerId:'PN002',companyCode:'JMAT',officeCode:'',categories:['建物・外'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
+    {id:'CNT-J03',partnerId:'PN003',companyCode:'JMAT',officeCode:'',categories:['建物・外'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
+    {id:'CNT-J04',partnerId:'PN004',companyCode:'JMAT',officeCode:'',categories:['部屋・共用部','介護医療備品','厨房','ネットワーク'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
+    {id:'CNT-J05',partnerId:'PN005',companyCode:'JMAT',officeCode:'',categories:['部屋・共用部'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
+    {id:'CNT-J06',partnerId:'PN006',companyCode:'JMAT',officeCode:'',categories:['部屋・共用部','介護医療備品','厨房'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
+    {id:'CNT-J07',partnerId:'PN007',companyCode:'JMAT',officeCode:'',categories:['介護医療備品'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
+    {id:'CNT-J08',partnerId:'PN008',companyCode:'JMAT',officeCode:'',categories:['厨房'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
+    {id:'CNT-J09',partnerId:'PN009',companyCode:'JMAT',officeCode:'',categories:['厨房'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
+    {id:'CNT-J10',partnerId:'PN010',companyCode:'JMAT',officeCode:'',categories:['ネットワーク'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
+    {id:'CNT-J11',partnerId:'PN011',companyCode:'JMAT',officeCode:'',categories:['ネットワーク'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
+    {id:'CNT-J12',partnerId:'PN012',companyCode:'JMAT',officeCode:'',categories:['ネットワーク'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
+    {id:'CNT-J13',partnerId:'PN013',companyCode:'JMAT',officeCode:'',categories:['介護医療備品'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
+    {id:'CNT-J14',partnerId:'PN014',companyCode:'JMAT',officeCode:'',categories:['ネットワーク'],status:'active',createdAt:'2025-01-20T00:00:00Z'},
+    {id:'CNT-J15',partnerId:'PN015',companyCode:'JMAT',officeCode:'',categories:['ネットワーク'],status:'active',createdAt:'2025-01-20T00:00:00Z'}
 ];
 
 // ========== 商品マスタ生成（300件/事業所 × 事業所数）==========
@@ -265,7 +265,7 @@ window.DEMO_CONTRACTS = [
 function generateDemoItems(companyCode, officeCodes, officeNames) {
     var items = [];
     var tpl = {
-        '建物・外まわり': [
+        '建物・外': [
             {n:'受電盤（キュービクル）',md:'',f:'1F',l:'電気室'},
             {n:'動力盤',md:'',f:'各階',l:'EPS'},
             {n:'各階分電盤',md:'',f:'各階',l:'EPS'},
@@ -304,7 +304,7 @@ function generateDemoItems(companyCode, officeCodes, officeNames) {
             {n:'連結送水管',md:'',f:'各階',l:'階段室'},
             {n:'排煙設備',md:'',f:'各階',l:'天井'}
         ],
-        '部屋・共用部の家具・家電': [
+        '部屋・共用部': [
             {n:'介護用電動ベッド（3モーター）',md:'',f:'各階',l:'各居室'},
             {n:'ベッドサイドテーブル',md:'',f:'各階',l:'各居室'},
             {n:'ベッドサイド柵',md:'',f:'各階',l:'各居室'},
@@ -355,7 +355,7 @@ function generateDemoItems(companyCode, officeCodes, officeNames) {
             {n:'ペーパータオルホルダー',md:'',f:'各階',l:'各トイレ'},
             {n:'消毒液ディスペンサー（自動）',md:'',f:'各階',l:'各階入口'}
         ],
-        '介護医療・お風呂の道具': [
+        '介護医療備品': [
             {n:'特殊浴槽（機械浴）本体',md:'フィーノ SP110',f:'1F',l:'機械浴室'},
             {n:'電動ストレッチャー',md:'SP100-ST',f:'1F',l:'機械浴室'},
             {n:'リフト付シャワーキャリー',md:'LS-500',f:'1F',l:'機械浴室'},
@@ -385,7 +385,7 @@ function generateDemoItems(companyCode, officeCodes, officeNames) {
             {n:'救急箱/応急処置セット',md:'',f:'各階',l:'各階'},
             {n:'ツールカート',md:'CA385-000X-MB',f:'各階',l:'各階'}
         ],
-        '厨房・食事の道具': [
+        '厨房': [
             {n:'冷凍冷蔵庫（業務用）',md:'SRR-K1561C2B',f:'1F',l:'厨房'},
             {n:'冷蔵コールドテーブル',md:'SUR-K1261SB',f:'1F',l:'厨房'},
             {n:'スチームコンベクションオーブン',md:'TGSC-5CL',f:'1F',l:'厨房'},
@@ -417,7 +417,7 @@ function generateDemoItems(companyCode, officeCodes, officeNames) {
             {n:'グリスフィルター',md:'',f:'1F',l:'厨房'},
             {n:'グリストラップ',md:'',f:'1F',l:'厨房'}
         ],
-        '通信・呼出し・防火の機器': [
+        'ネットワーク': [
             {n:'ルーター',md:'NVR510',f:'1F',l:'サーバー室'},
             {n:'無線アクセスポイント',md:'WAPM-1266R',f:'各階',l:'天井'},
             {n:'ノートPC',md:'ASUS M1405YA',f:'1F',l:'事務室'},
@@ -471,18 +471,18 @@ function generateDemoItems(companyCode, officeCodes, officeNames) {
 function generateDemoReports(companyCode, officeCodes, officeNames, accounts) {
     var reports = [];
     var data = [
-        ['2F居室のエアコンが冷えない','建物・外まわり','完了'],['共用廊下の蛍光灯が切れている','建物・外まわり','完了'],
-        ['浴室の排水が詰まり気味','建物・外まわり','対応中'],['車いすのブレーキが効きにくい','介護医療・お風呂の道具','未対応'],
-        ['業務用冷蔵庫から異音','厨房・食事の道具','完了'],['ナースコール応答遅延','通信・呼出し・防火の機器','対応中'],
-        ['玄関の自動ドアの動作が遅い','建物・外まわり','完了'],['給湯器のお湯が出にくい','建物・外まわり','未対応'],
-        ['3F共用スペースのTV映らない','部屋・共用部の家具・家電','完了'],['歩行器のゴム摩耗','介護医療・お風呂の道具','完了'],
-        ['食洗機のエラー表示','厨房・食事の道具','対応中'],['Wi-Fiが途切れる','通信・呼出し・防火の機器','完了'],
-        ['電動ベッドのリモコン故障','部屋・共用部の家具・家電','未対応'],['防犯カメラの映像乱れ','通信・呼出し・防火の機器','完了'],
-        ['スチコンの温度上がらない','厨房・食事の道具','対応中'],['消火器の期限切れ確認','建物・外まわり','完了'],
-        ['洗濯機の脱水異音','部屋・共用部の家具・家電','完了'],['吸引器の吸引力低下','介護医療・お風呂の道具','未対応'],
-        ['AEDバッテリー警告表示','介護医療・お風呂の道具','対応中'],['配膳車のキャスター不具合','厨房・食事の道具','完了'],
-        ['複合機の紙詰まり頻発','通信・呼出し・防火の機器','完了'],['分電盤から焦げ臭い','建物・外まわり','対応中'],
-        ['パルスオキシメーター電池切れ','介護医療・お風呂の道具','完了'],['製氷機が氷を作らない','厨房・食事の道具','未対応']
+        ['2F居室のエアコンが冷えない','建物・外','完了'],['共用廊下の蛍光灯が切れている','建物・外','完了'],
+        ['浴室の排水が詰まり気味','建物・外','対応中'],['車いすのブレーキが効きにくい','介護医療備品','未対応'],
+        ['業務用冷蔵庫から異音','厨房','完了'],['ナースコール応答遅延','ネットワーク','対応中'],
+        ['玄関の自動ドアの動作が遅い','建物・外','完了'],['給湯器のお湯が出にくい','建物・外','未対応'],
+        ['3F共用スペースのTV映らない','部屋・共用部','完了'],['歩行器のゴム摩耗','介護医療備品','完了'],
+        ['食洗機のエラー表示','厨房','対応中'],['Wi-Fiが途切れる','ネットワーク','完了'],
+        ['電動ベッドのリモコン故障','部屋・共用部','未対応'],['防犯カメラの映像乱れ','ネットワーク','完了'],
+        ['スチコンの温度上がらない','厨房','対応中'],['消火器の期限切れ確認','建物・外','完了'],
+        ['洗濯機の脱水異音','部屋・共用部','完了'],['吸引器の吸引力低下','介護医療備品','未対応'],
+        ['AEDバッテリー警告表示','介護医療備品','対応中'],['配膳車のキャスター不具合','厨房','完了'],
+        ['複合機の紙詰まり頻発','ネットワーク','完了'],['分電盤から焦げ臭い','建物・外','対応中'],
+        ['パルスオキシメーター電池切れ','介護医療備品','完了'],['製氷機が氷を作らない','厨房','未対応']
     ];
     var staffs = accounts.filter(function(a){return a.companyCode===companyCode&&(a.role==='staff'||a.role==='office_admin');});
     for (var i = 0; i < data.length; i++) {
@@ -505,7 +505,7 @@ function generateDemoReports(companyCode, officeCodes, officeNames, accounts) {
 
 // ========== デモマスタデータ初期化 ==========
 function initDemoData() {
-    if (localStorage.getItem('demo_initialized') === 'v11') return;
+    if (localStorage.getItem('demo_initialized') === 'v12') return;
 
     var companies = [
         {code:'TAMJ',name:'タムジ株式会社',status:'active',postalCode:'100-0001',prefecture:'東京都',address:'千代田区千代田1-1',phone:'03-1234-5678'},
@@ -541,6 +541,13 @@ function initDemoData() {
     var tamjItems = generateDemoItems('TAMJ',['TAMJ-J0001','TAMJ-J0002','TAMJ-J0003'],['さくら苑','ひまわり荘','あおぞらの家']);
     var jmatItems = generateDemoItems('JMAT',['JMAT-J0001','JMAT-J0002','JMAT-J0003'],['グリーンヒル','コスモス園','やすらぎの丘']);
     var allItems = tamjItems.concat(jmatItems);
+    // CSVカテゴリー再編成に基づくカテゴリー上書き（商品コードを軸）
+    var categoryMapping = {"ITEM-TAMJ-0061":"福祉用具","ITEM-TAMJ-0062":"福祉用具","ITEM-TAMJ-0110":"福祉用具","ITEM-TAMJ-0121":"浴室","ITEM-TAMJ-0122":"浴室","ITEM-TAMJ-0123":"浴室","ITEM-TAMJ-0124":"浴室","ITEM-TAMJ-0125":"浴室","ITEM-TAMJ-0126":"浴室","ITEM-TAMJ-0127":"浴室","ITEM-TAMJ-0129":"浴室","ITEM-TAMJ-0130":"浴室","ITEM-TAMJ-0131":"浴室","ITEM-TAMJ-0149":"浴室","ITEM-TAMJ-0150":"浴室","ITEM-TAMJ-0151":"浴室","ITEM-TAMJ-0152":"浴室","ITEM-TAMJ-0153":"浴室","ITEM-TAMJ-0154":"浴室","ITEM-TAMJ-0155":"浴室","ITEM-TAMJ-0157":"浴室","ITEM-TAMJ-0158":"浴室","ITEM-TAMJ-0159":"浴室","ITEM-TAMJ-0177":"浴室","ITEM-TAMJ-0178":"浴室","ITEM-TAMJ-0179":"浴室","ITEM-TAMJ-0180":"浴室","ITEM-TAMJ-0249":"部屋・共用部","ITEM-TAMJ-0250":"部屋・共用部","ITEM-TAMJ-0261":"部屋・共用部","ITEM-TAMJ-0262":"部屋・共用部","ITEM-TAMJ-0263":"建物・外","ITEM-TAMJ-0264":"その他","ITEM-TAMJ-0265":"その他","ITEM-TAMJ-0275":"部屋・共用部","ITEM-TAMJ-0276":"部屋・共用部","ITEM-TAMJ-0287":"部屋・共用部","ITEM-TAMJ-0288":"部屋・共用部","ITEM-TAMJ-0289":"建物・外","ITEM-TAMJ-0290":"その他","ITEM-TAMJ-0291":"その他"};
+    allItems.forEach(function(item) {
+        if (categoryMapping[item.itemId]) {
+            item.category = categoryMapping[item.itemId];
+        }
+    });
     // 契約テーブルからカテゴリに基づいて管理会社を自動割当（ラウンドロビンで分散）
     var partnerCounters = {};
     allItems.forEach(function(item){
@@ -577,7 +584,7 @@ function initDemoData() {
     });
     localStorage.setItem('onetouch.reports', JSON.stringify(allReports));
 
-    localStorage.setItem('demo_initialized', 'v11');
+    localStorage.setItem('demo_initialized', 'v12');
 }
 
 // ========== 業者振り分けロジック ==========

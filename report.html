@@ -328,8 +328,8 @@
         backButton: currentUser && (currentUser.role === 'company_admin' || currentUser.role === 'office_admin' || currentUser.role === 'system_admin'),
     });
 
-    var labels={wholesale:'部屋・共用部の家具・家電',building:'部屋・共用部の家具・家電',welfare:'介護医療・お風呂の道具',emergency:'緊急',report:'設備トラブル'};
-    var typeLabels={wholesale:'部屋・共用部の家具・家電',building:'部屋・共用部の家具・家電',welfare:'介護医療・お風呂の道具',emergency:'緊急',report:'設備トラブル'};
+    var labels={wholesale:'部屋・共用部',building:'部屋・共用部',welfare:'介護医療備品',emergency:'緊急',report:'設備トラブル'};
+    var typeLabels={wholesale:'部屋・共用部',building:'部屋・共用部',welfare:'介護医療備品',emergency:'緊急',report:'設備トラブル'};
 
     // 文字数カウンター
     var formDesc = document.getElementById('formDesc');
@@ -459,13 +459,15 @@
     }
 
     function buildCategoryTabs(items) {
-      var catOrder = ['建物・外まわり','部屋・共用部の家具・家電','介護医療・お風呂の道具','厨房・食事の道具','通信・呼出し・防火の機器'];
+      var catOrder = ['建物・外','部屋・共用部','介護医療備品','厨房','ネットワーク','浴室','福祉用具'];
       var catDescs = {
-        '建物・外まわり':'工事しないと動かせないもの',
-        '部屋・共用部の家具・家電':'部屋・共用部に置いてあるもの全般',
-        '介護医療・お風呂の道具':'体に触れる・お世話をするときに使うもの',
-        '厨房・食事の道具':'作る・運ぶ・食べるために使うもの',
-        '通信・呼出し・防火の機器':'繋ぐ・呼ぶ・守る機器',
+        '建物・外':'工事しないと動かせないもの',
+        '部屋・共用部':'部屋・共用部に置いてあるもの全般',
+        '介護医療備品':'体に触れる・お世話をするときに使うもの',
+        '厨房':'作る・運ぶ・食べるために使うもの',
+        'ネットワーク':'繋ぐ・呼ぶ・守る機器',
+        '浴室':'浴室で使用する設備・備品',
+        '福祉用具':'車いす・歩行器などの福祉用具',
         'その他':'上記に当てはまらないもの'
       };
       var cats = {};
@@ -506,7 +508,7 @@
           // ボタン内の最初のspanテキストで判定
           var firstSpan = btn.querySelector('span');
           if (firstSpan) {
-            var labelMap = {'建物・外まわり':'建物・外まわり','部屋・共用部の家具・家電':'部屋・共用部の家具・家電','介護医療・お風呂の道具':'介護医療・お風呂の道具','厨房・食事の道具':'厨房・食事の道具','通信・呼出し・防火の機器':'通信・呼出し・防火の機器','その他':'その他'};
+            var labelMap = {'建物・外':'建物・外','部屋・共用部':'部屋・共用部','介護医療備品':'介護医療備品','厨房':'厨房','ネットワーク':'ネットワーク','その他':'その他'};
             var mapped = labelMap[firstSpan.textContent] || firstSpan.textContent;
             isActive = (mapped === cat);
           }

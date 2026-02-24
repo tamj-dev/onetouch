@@ -688,7 +688,7 @@
         function renderCategoryPartners(categoryPartners) {
             var area = document.getElementById('categoryPartnersArea');
             if (!area) return;
-            var categories = (typeof SYSTEM_CATEGORIES !== 'undefined') ? SYSTEM_CATEGORIES : ['建物・外まわり','部屋・共用部の家具・家電','介護医療・お風呂の道具','厨房・食事の道具','通信・呼出し・防火の機器','その他'];
+            var categories = (typeof SYSTEM_CATEGORIES !== 'undefined') ? SYSTEM_CATEGORIES : ['建物・外','部屋・共用部','介護医療備品','厨房','ネットワーク','その他'];
             // 管理会社リストを取得
             var partners = [];
             try { partners = JSON.parse(sessionStorage.getItem('partners') || '[]'); } catch(e) {}
@@ -724,7 +724,7 @@
 
         // カテゴリ別担当管理会社の値を取得
         function getCategoryPartnersFromForm() {
-            var categories = (typeof SYSTEM_CATEGORIES !== 'undefined') ? SYSTEM_CATEGORIES : ['建物・外まわり','部屋・共用部の家具・家電','介護医療・お風呂の道具','厨房・食事の道具','通信・呼出し・防火の機器','その他'];
+            var categories = (typeof SYSTEM_CATEGORIES !== 'undefined') ? SYSTEM_CATEGORIES : ['建物・外','部屋・共用部','介護医療備品','厨房','ネットワーク','その他'];
             var result = {};
             categories.forEach(function(cat) {
                 var sel = document.getElementById('cp_' + cat.replace(/[\/]/g, '_'));
