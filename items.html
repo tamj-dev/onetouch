@@ -42,26 +42,47 @@
         }
 
         async function initDemoItems() {
-          // demo-mode.jsのinitDemoData()がlocalStorage['onetouch.items']に300件生成済み
-          return;
+          if (!isDemoMode()) return;
+          if (sessionStorage.getItem('demo.items')) return;
+          // localStorageのonetouch.itemsから自社データをコピー
+          const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+          const allItems = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
+          let myItems = allItems;
+          if (currentUser && currentUser.role !== 'system_admin') {
+            if (currentUser.role === 'company_admin') {
+              myItems = allItems.filter(i => i.companyCode === currentUser.companyCode);
+            } else {
+              myItems = allItems.filter(i => i.officeCode === currentUser.officeCode);
+            }
+          }
+          sessionStorage.setItem('demo.items', JSON.stringify(myItems));
         }
 
         async function getItems() {
           const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
           if (!currentUser) return [];
-          // DEMO・本番ともlocalStorage['onetouch.items']から取得
+          if (isDemoMode()) {
+            const demoItems = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
+            // demo.itemsが空でlocalStorageにデータがある場合はフォールバック
+            if (demoItems.length === 0) {
+              const allItems = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
+              let myItems = allItems;
+              if (currentUser.role === 'company_admin') {
+                myItems = allItems.filter(i => i.companyCode === currentUser.companyCode);
+              } else if (currentUser.role !== 'system_admin') {
+                myItems = allItems.filter(i => i.officeCode === currentUser.officeCode);
+              }
+              if (myItems.length > 0) {
+                sessionStorage.setItem('demo.items', JSON.stringify(myItems));
+                return myItems;
+              }
+            }
+            return demoItems;
+          }
+          // 本番モード: localStorageから取得（scope別フィルタ）
           const allItems = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
           if (currentUser.role === 'system_admin') return allItems;
           if (currentUser.role === 'company_admin') return allItems.filter(i => i.companyCode === currentUser.companyCode);
-          if (currentUser.role === 'contractor') {
-            // 業者: assignedCompaniesに含まれる会社の商品で、自分が担当する商品
-            var assignedCompanies = currentUser.assignedCompanies || [];
-            var partnerId = currentUser.partnerId || currentUser.partnerCode || '';
-            return allItems.filter(i => 
-              assignedCompanies.indexOf(i.companyCode) >= 0 && 
-              (i.assignedPartnerId === partnerId || !i.assignedPartnerId)
-            );
-          }
           return allItems.filter(i => i.officeCode === currentUser.officeCode);
         }
 
@@ -110,9 +131,9 @@
           item.officeCode = item.officeCode || currentUser.officeCode;
           
           if (isDemoMode()) {
-            const items = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
+            const items = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
             items.push(item);
-            localStorage.setItem('onetouch.items', JSON.stringify(items));
+            sessionStorage.setItem('demo.items', JSON.stringify(items));
             return item;
           }
           const items = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
@@ -124,11 +145,11 @@
         async function updateItem(item) {
           item.updatedAt = new Date().toISOString();
           if (isDemoMode()) {
-            const items = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
+            const items = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
             const index = items.findIndex(i => i.itemId === item.itemId);
             if (index !== -1) {
               items[index] = item;
-              localStorage.setItem('onetouch.items', JSON.stringify(items));
+              sessionStorage.setItem('demo.items', JSON.stringify(items));
             }
             return item;
           }
@@ -144,9 +165,9 @@
 
         async function deleteItem(itemId) {
           if (isDemoMode()) {
-            const items = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
+            const items = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
             const filtered = items.filter(i => i.itemId !== itemId);
-            localStorage.setItem('onetouch.items', JSON.stringify(filtered));
+            sessionStorage.setItem('demo.items', JSON.stringify(filtered));
             return true;
           }
           // 本番モード
@@ -819,17 +840,12 @@
         </div>
 
         <div class="filters">
-            <span class="filter-label" id="companyFilterLabel" style="display:none;">会社:</span>
-            <select class="filter-select" id="companyFilter" onchange="onCompanyFilterChange()" style="display:none;">
-                <option value="">全て</option>
-            </select>
-
             <span class="filter-label" id="officeFilterLabel" style="display:none;">事業所:</span>
             <select class="filter-select" id="officeFilter" onchange="applyFilters()" style="display:none;">
                 <option value="">全て</option>
             </select>
 
-            <span class="filter-label" id="partnerFilterLabel">担当管理会社:</span>
+            <span class="filter-label" id="partnerFilterLabel">担当業者:</span>
             <select class="filter-select" id="partnerFilter" onchange="applyFilters()">
                 <option value="">全て</option>
             </select>
@@ -857,7 +873,7 @@
         <div id="searchGuide" style="text-align: center; padding: 60px 20px; color: #999;">
             <div style="margin-bottom: 16px; color: #ccc;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
             <div style="font-size: 16px; font-weight: 600; color: #666; margin-bottom: 8px;">検索条件を入力してください</div>
-            <div style="font-size: 13px;">商品名・型番・メーカーで検索、または担当管理会社・メーカーで絞り込みできます</div>
+            <div style="font-size: 13px;">商品名・型番・メーカーで検索、または担当業者・メーカーで絞り込みできます</div>
             <button class="btn btn-primary" onclick="showAllItems()" style="margin-top: 20px; padding: 10px 24px;">全件表示</button>
         </div>
 
@@ -888,7 +904,7 @@
             </div>
 
             <form id="itemForm" onsubmit="saveItem(event)">
-                <!-- 管理会社ログイン時のみ表示: 納品先会社選択 -->
+                <!-- 業者ログイン時のみ表示: 納品先会社選択 -->
                 <div class="form-group" id="contractorCompanyGroup" style="display: none;">
                     <label class="form-label required">納品先会社</label>
                     <select class="form-input" id="itemDeliveryCompany">
@@ -919,13 +935,13 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">担当管理会社</label>
+                    <label class="form-label">担当業者</label>
                     <select class="form-input" id="itemAssignedPartnerSelect" onchange="document.getElementById('itemAssignedPartner').value=this.value">
                         <option value="">カテゴリ選択後に自動設定</option>
                     </select>
                     <input type="hidden" id="itemAssignedPartner" value="">
                     <div style="font-size: 12px; color: #888; margin-top: 4px;">
-                        ※ カテゴリに紐づく管理会社が自動表示されます（複数の場合は選択可）
+                        ※ カテゴリに紐づく業者が自動表示されます（複数の場合は選択可）
                     </div>
                 </div>
 
@@ -1045,48 +1061,6 @@
                     }).join('');
                 }
             }
-
-            // 事業所管理者: 事業所フィルタ不要（自事業所のみ）、インポート/新規登録を表示
-            if (currentUser.role === 'office_admin') {
-                // 事業所フィルタは非表示のまま（自事業所の商品だけが表示される）
-            }
-
-            // スタッフ: インポート/新規登録を非表示
-            if (currentUser.role === 'staff') {
-                var btnImport = document.getElementById('btnImport');
-                var btnCreate = document.getElementById('btnCreate');
-                if (btnImport) btnImport.style.display = 'none';
-                if (btnCreate) btnCreate.style.display = 'none';
-            }
-
-            // システム管理者: 会社・事業所・管理会社フィルタを全て表示
-            if (currentUser.role === 'system_admin') {
-                // 会社フィルタ
-                var cLabel = document.getElementById('companyFilterLabel');
-                var cSelect = document.getElementById('companyFilter');
-                if (cLabel) cLabel.style.display = '';
-                if (cSelect) {
-                    cSelect.style.display = '';
-                    var companies = [];
-                    try { companies = JSON.parse(localStorage.getItem('companies') || '[]'); } catch(e) {}
-                    companies = companies.filter(function(c) { return c.code !== 'SYSTEM'; });
-                    cSelect.innerHTML = '<option value="">全会社</option>' + companies.map(function(c) {
-                        return '<option value="' + c.code + '">' + c.name + '</option>';
-                    }).join('');
-                }
-                // 事業所フィルタ
-                var ofLabel2 = document.getElementById('officeFilterLabel');
-                var ofSelect2 = document.getElementById('officeFilter');
-                if (ofLabel2) ofLabel2.style.display = '';
-                if (ofSelect2) {
-                    ofSelect2.style.display = '';
-                    var allOffices = [];
-                    try { allOffices = JSON.parse(localStorage.getItem('offices') || '[]'); } catch(e) {}
-                    ofSelect2.innerHTML = '<option value="">全事業所</option>' + allOffices.map(function(o) {
-                        return '<option value="' + o.code + '">' + o.name + '（' + o.companyCode + '）</option>';
-                    }).join('');
-                }
-            }
         }
 
         // ユーザー情報表示
@@ -1145,18 +1119,6 @@
                 offices = offices.filter(function(o) { return o.companyCode === currentUser.companyCode; });
             }
 
-            // システム管理者は会社フィルタの選択に連動
-            if (currentUser.role === 'system_admin') {
-                var companyFilter = document.getElementById('companyFilter');
-                var selectedCompany = companyFilter ? companyFilter.value : '';
-                if (selectedCompany) {
-                    offices = offices.filter(function(o) { return o.companyCode === selectedCompany; });
-                }
-            }
-
-            // 本社（-H）を除外
-            offices = offices.filter(function(o) { return o.code.indexOf('-H') === -1; });
-
             select.innerHTML = '<option value="">選択してください</option>' + offices.map(function(o) {
                 return '<option value="' + o.code + '">' + o.name + '</option>';
             }).join('');
@@ -1199,7 +1161,7 @@
             
             // フォールバック: 契約がない場合は全カテゴリ表示
             if (categories.length === 0) {
-                categories = ['建物・外まわり','部屋・共用部の家具・家電','介護医療・お風呂の道具','厨房・食事の道具','通信・呼出し・防火の機器','その他'];
+                categories = ['建物インフラ','居室・生活','介護・医療','厨房・食事','IT・安全','その他'];
             }
             
             catSelect.innerHTML = '<option value="">選択してください</option>' + categories.map(function(cat) {
@@ -1207,7 +1169,7 @@
             }).join('');
         }
 
-        // カテゴリ選択時に契約テーブルから担当管理会社を解決
+        // カテゴリ選択時に契約テーブルから担当業者を解決
         function resolvePartnerFromCategory() {
             var category = document.getElementById('itemCategory').value;
             var partnerSelect = document.getElementById('itemAssignedPartnerSelect');
@@ -1273,7 +1235,7 @@
                 partnerSelect.innerHTML = '<option value="' + matchedPartners[0].id + '">' + matchedPartners[0].name + '</option>';
                 hidden.value = matchedPartners[0].id;
             } else {
-                partnerSelect.innerHTML = '<option value="">管理会社を選択してください</option>' + matchedPartners.map(function(p) {
+                partnerSelect.innerHTML = '<option value="">業者を選択してください</option>' + matchedPartners.map(function(p) {
                     return '<option value="' + p.id + '">' + p.name + '</option>';
                 }).join('');
                 hidden.value = '';
@@ -1288,7 +1250,7 @@
                     const currentContractor = JSON.parse(sessionStorage.getItem('currentContractor'));
                     
                     if (!currentContractor) {
-                        console.error('[loadPartners] 管理会社情報が見つかりません');
+                        console.error('[loadPartners] 業者情報が見つかりません');
                         return;
                     }
                     
@@ -1308,10 +1270,32 @@
                 
                 // DEMOモードで業者データが空の場合、デフォルトデータを使用
                 if (partners.length === 0 && isDemoMode()) {
-                    // DEMO_PARTNERSがあればそこから取得
-                    if (typeof DEMO_PARTNERS !== 'undefined') {
-                        partners = DEMO_PARTNERS;
-                    }
+                    partners = [
+                        {
+                            id: 'PN001',
+                            name: '東京設備工業株式会社',
+                            partnerCode: 'PN001',
+                            categories: ['居室・生活', '厨房・食事', '介護・医療'],
+                            assignedCompanies: ['TAMJ'],
+                            status: 'active'
+                        },
+                        {
+                            id: 'PN002',
+                            name: '関東水道サービス',
+                            partnerCode: 'PN002',
+                            categories: ['建物インフラ'],
+                            assignedCompanies: ['TAMJ'],
+                            status: 'active'
+                        },
+                        {
+                            id: 'PN003',
+                            name: '日本電気工事',
+                            partnerCode: 'PN003',
+                            categories: ['IT・安全'],
+                            assignedCompanies: ['TAMJ'],
+                            status: 'active'
+                        }
+                    ];
                 }
                 
                 
@@ -1361,26 +1345,36 @@
                 
                 // DEMOモード（TAMJ）で商品が0件の場合、ダミー商品を自動生成
                 if (allItems.length === 0 && isDemoMode()) {
-                    // DEMOデータが未生成の場合、initDemoDataで300件/社を生成
-                    if (typeof initDemoData === 'function') {
-                        localStorage.removeItem('demo_initialized');
-                        initDemoData();
-                        allItems = await ItemStorage.getItems();
-                    }
+                    const demoItems = [
+                        { itemId:'ITEM-DEMO-001', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'介護ベッド 101号室', maker:'パラマウントベッド', model:'KQ-60330', category:'居室・生活', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:280000, stock:1, description:'電動3モーター', floor:'1F', location:'居室101', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+                        { itemId:'ITEM-DEMO-002', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'食堂テーブル A', maker:'コクヨ', model:'MT-V159', category:'居室・生活', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:45000, stock:1, description:'6人掛け', floor:'1F', location:'食堂', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+                        { itemId:'ITEM-DEMO-003', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'エアコン 1号機', maker:'ダイキン', model:'AN22XRS-W', category:'居室・生活', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:150000, stock:1, description:'2F 会議室に設置', floor:'2F', location:'会議室', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+                        { itemId:'ITEM-DEMO-004', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'照明器具 LED-01', maker:'パナソニック', model:'LGB51210', category:'居室・生活', assignedPartnerId:'PN003', assignedPartnerName:'日本電気工事', unit:'個', price:12000, stock:10, description:'各フロア共通', floor:'共用部', location:'各フロア', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+                        { itemId:'ITEM-DEMO-005', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'洗濯機 2F', maker:'パナソニック', model:'NA-FA120V5', category:'居室・生活', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:180000, stock:1, description:'', floor:'2F', location:'洗濯室', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+                        { itemId:'ITEM-DEMO-006', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'Wi-Fiルーター 1F', maker:'バッファロー', model:'WSR-5400AX6S', category:'IT・安全', assignedPartnerId:'PN003', assignedPartnerName:'日本電気工事', unit:'台', price:15000, stock:1, description:'', floor:'1F', location:'事務室', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+                        { itemId:'ITEM-DEMO-007', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'ナースコール受信機', maker:'アイホン', model:'NFX-SER', category:'IT・安全', assignedPartnerId:'PN003', assignedPartnerName:'日本電気工事', unit:'台', price:350000, stock:1, description:'', floor:'1F', location:'スタッフステーション', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+                        { itemId:'ITEM-DEMO-008', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'業務用冷蔵庫', maker:'ホシザキ', model:'HR-120AT', category:'厨房・食事', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:350000, stock:1, description:'', floor:'1F', location:'厨房', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+                        { itemId:'ITEM-DEMO-009', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'食器洗浄機', maker:'ホシザキ', model:'JWE-400TUB', category:'厨房・食事', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:280000, stock:1, description:'', floor:'1F', location:'厨房', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+                        { itemId:'ITEM-DEMO-010', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'機械浴槽', maker:'酒井医療', model:'ヌクティ', category:'建物インフラ', assignedPartnerId:'PN002', assignedPartnerName:'関東水道サービス', unit:'台', price:2500000, stock:1, description:'リフト式', floor:'1F', location:'浴室', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+                        { itemId:'ITEM-DEMO-011', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'給湯器 A', maker:'リンナイ', model:'RUX-A1615W-E', category:'建物インフラ', assignedPartnerId:'PN002', assignedPartnerName:'関東水道サービス', unit:'台', price:80000, stock:1, description:'', floor:'1F', location:'機械室', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+                        { itemId:'ITEM-DEMO-012', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'車椅子 標準型', maker:'カワムラサイクル', model:'KA822-40B', category:'介護・医療', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:45000, stock:5, description:'', floor:'共用部', location:'倉庫', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+                        { itemId:'ITEM-DEMO-013', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'吸引器', maker:'新鋭工業', model:'QS-101', category:'介護・医療', assignedPartnerId:'PN001', assignedPartnerName:'東京設備工業株式会社', unit:'台', price:38000, stock:2, description:'', floor:'2F', location:'スタッフステーション', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+                        { itemId:'ITEM-DEMO-014', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'トイレ 1F', maker:'TOTO', model:'CES9788F', category:'建物インフラ', assignedPartnerId:'PN002', assignedPartnerName:'関東水道サービス', unit:'台', price:180000, stock:1, description:'', floor:'1F', location:'男子トイレ', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+                        { itemId:'ITEM-DEMO-015', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'手洗い場 2F', maker:'LIXIL', model:'L-A74TA', category:'建物インフラ', assignedPartnerId:'PN002', assignedPartnerName:'関東水道サービス', unit:'台', price:25000, stock:1, description:'', floor:'2F', location:'廊下', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+                        { itemId:'ITEM-DEMO-016', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'ガスコンロ 厨房', maker:'リンナイ', model:'RSW-F404C', category:'建物インフラ', assignedPartnerId:'PN002', assignedPartnerName:'関東水道サービス', unit:'台', price:120000, stock:1, description:'', floor:'1F', location:'厨房', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+                        { itemId:'ITEM-DEMO-017', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'エレベーター', maker:'三菱電機', model:'AXIEZ', category:'建物インフラ', assignedPartnerId:'PN003', assignedPartnerName:'日本電気工事', unit:'基', price:5000000, stock:1, description:'本館', floor:'共用部', location:'本館', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+                        { itemId:'ITEM-DEMO-018', companyCode:'TAMJ', officeCode:'TAMJ-J0001', name:'階段昇降機', maker:'シンドラー', model:'S200', category:'建物インフラ', assignedPartnerId:'PN003', assignedPartnerName:'日本電気工事', unit:'台', price:800000, stock:1, description:'', floor:'共用部', location:'北棟階段', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() }
+                    ];
+                    
+                    // sessionStorageに保存
+                    const storageKey = isDemoMode() ? 'demo.items' : 'items';
+                    const storage = isDemoMode() ? sessionStorage : localStorage;
+                    storage.setItem(storageKey, JSON.stringify(demoItems));
+                    
+                    allItems = demoItems;
                 }
                 
                 allItems.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-                // officeNameが空の商品にofficesマスタから補完
-                try {
-                    var _offices = JSON.parse(localStorage.getItem('offices') || '[]');
-                    allItems.forEach(function(item) {
-                        if (!item.officeName && item.officeCode) {
-                            var of = _offices.find(function(o) { return o.code === item.officeCode; });
-                            if (of) item.officeName = of.name;
-                        }
-                    });
-                } catch(e) {}
 
                 // 業者ログインの場合: 自分の担当商品だけに絞る
                 if (currentUser.role === 'contractor') {
@@ -1391,7 +1385,7 @@
                                    item.assignedPartnerId === currentContractor.partnerCode;
                         });
                     }
-                    // 担当管理会社フィルタを非表示（自分の担当分しかないので不要）
+                    // 担当業者フィルタを非表示（自分の担当分しかないので不要）
                     var pfl = document.getElementById('partnerFilterLabel');
                     var pf = document.getElementById('partnerFilter');
                     if (pfl) pfl.style.display = 'none';
@@ -1410,7 +1404,7 @@
 
         // フィルター更新
         function updateFilters() {
-            // 担当管理会社
+            // 担当業者
             const partners = [...new Set(allItems.map(item => item.assignedPartnerName).filter(Boolean))];
             const partnerFilter = document.getElementById('partnerFilter');
             partnerFilter.innerHTML = '<option value="">全て</option>' + 
@@ -1426,30 +1420,11 @@
             }).replace(/[\u3000]/g, ' ').toLowerCase();
         }
 
-        // 会社フィルタ変更時：事業所プルダウンを連動
-        function onCompanyFilterChange() {
-            var companyCode = document.getElementById('companyFilter').value;
-            var ofSelect = document.getElementById('officeFilter');
-            if (ofSelect && currentUser.role === 'system_admin') {
-                var allOffices = [];
-                try { allOffices = JSON.parse(localStorage.getItem('offices') || '[]'); } catch(e) {}
-                if (companyCode) {
-                    allOffices = allOffices.filter(function(o) { return o.companyCode === companyCode; });
-                }
-                ofSelect.innerHTML = '<option value="">全事業所</option>' + allOffices.map(function(o) {
-                    return '<option value="' + o.code + '">' + o.name + (companyCode ? '' : '（' + o.companyCode + '）') + '</option>';
-                }).join('');
-            }
-            applyFilters();
-        }
-
         function applyFilters() {
             const searchQuery = normalizeSearch(document.getElementById('searchInput').value);
             const partnerFilter = document.getElementById('partnerFilter').value;
             const officeFilterEl = document.getElementById('officeFilter');
             const officeFilter = officeFilterEl ? officeFilterEl.value : '';
-            const companyFilterEl = document.getElementById('companyFilter');
-            const companyFilter = companyFilterEl ? companyFilterEl.value : '';
 
             filteredItems = allItems.filter(item => {
                 // 業者ログインの場合: 自社が担当している商品のみ表示
@@ -1470,16 +1445,13 @@
                     normalizeSearch(item.floor).includes(searchQuery) ||
                     normalizeSearch(item.location).includes(searchQuery);
 
-                // 会社フィルタ
-                const matchCompany = !companyFilter || item.companyCode === companyFilter;
-
                 // 事業所フィルタ
                 const matchOffice = !officeFilter || item.officeCode === officeFilter;
 
-                // 担当管理会社
+                // 担当業者
                 const matchPartner = !partnerFilter || item.assignedPartnerName === partnerFilter;
 
-                return matchSearch && matchCompany && matchOffice && matchPartner;
+                return matchSearch && matchOffice && matchPartner;
             });
 
             // 検索・フィルタ時はページを1に戻す
@@ -1502,8 +1474,6 @@
         function clearSearch() {
             document.getElementById('searchInput').value = '';
             document.getElementById('partnerFilter').value = '';
-            var cSelect = document.getElementById('companyFilter');
-            if (cSelect) cSelect.value = '';
             var ofSelect = document.getElementById('officeFilter');
             if (ofSelect) ofSelect.value = '';
             
@@ -1538,24 +1508,28 @@
                 <table class="items-table">
                     <thead>
                         <tr>
+                            <th>商品No.</th>
                             <th>商品名</th>
-                            <th>カテゴリ</th>
                             <th>メーカー</th>
-                            <th>事業所</th>
-                            <th>担当管理会社</th>
+                            <th>型番</th>
+                            <th>担当業者</th>
                             <th>設置場所</th>
+                            <th>在庫</th>
+                            <th>単価</th>
                             <th>編集</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${pageItems.map(item => `
                         <tr style="${item.endDate ? 'background: #f0f0f0; color: #aaa;' : ''}">
+                            <td style="font-family: monospace; font-size: 12px; color: ${item.endDate ? '#ccc' : '#888'};">${item.itemId || '-'}</td>
                             <td class="col-name" title="${item.name || ''}">${item.name || '-'}${item.endDate ? ' <span style="font-size:11px;color:#bbb;">（終了）</span>' : ''}</td>
-                            <td style="font-size:11px;color:#555;">${(item.category || '-').replace('・', '・<wbr>')}</td>
-                            <td style="font-size:12px;">${item.maker || '-'}</td>
-                            <td style="font-size:12px;">${item.officeName || '-'}</td>
+                            <td>${item.maker || '-'}</td>
+                            <td>${item.model || '-'}</td>
                             <td>${item.assignedPartnerName ? `<span class="badge-partner" title="${item.assignedPartnerName}" style="${item.endDate ? 'opacity:0.5;' : ''}">${item.assignedPartnerName}</span>` : '-'}</td>
                             <td style="font-size:12px;color:#666;">${[item.floor, item.location].filter(Boolean).join(' ') || '-'}</td>
+                            <td>${item.stock || 0} ${item.unit || '個'}</td>
+                            <td class="col-price">¥${(item.price || 0).toLocaleString()}</td>
                             <td class="col-actions">
                                 <button onclick="editItem('${item.itemId}')" title="編集">編集</button>
                             </td>
@@ -1640,7 +1614,7 @@
             document.getElementById('itemForm').reset();
             document.getElementById('itemId').value = '';
             document.getElementById('itemNumberGroup').style.display = 'none';
-            // 担当管理会社をリセット
+            // 担当業者をリセット
             document.getElementById('itemAssignedPartner').value = '';
             document.getElementById('itemAssignedPartnerSelect').innerHTML = '<option value="">カテゴリ選択後に自動設定</option>';
             
@@ -1704,7 +1678,7 @@
             document.getElementById('itemMaker').value = item.maker || '';
             document.getElementById('itemModel').value = item.model || '';
             document.getElementById('itemCategory').value = item.category || '';
-            // 担当管理会社は契約ベースで表示（既存のassignedPartnerIdがあればそれを選択状態に）
+            // 担当業者は契約ベースで表示（既存のassignedPartnerIdがあればそれを選択状態に）
             resolvePartnerFromCategory();
             if (item.assignedPartnerId) {
                 document.getElementById('itemAssignedPartner').value = item.assignedPartnerId;
@@ -1889,7 +1863,7 @@
                 }
 
                 closeModal();
-                await loadItems();
+                await loadItems(true);
             } catch (e) {
                 console.error('[saveItem] エラー:', e);
                 alert('エラーが発生しました:\n\n' + e.message + '\n\n' + e.stack);
@@ -1901,7 +1875,7 @@
         function exportItems() {
 
             const csv = [
-                ['商品No.', '商品名', '担当管理会社', 'メーカー', '型番', 'カテゴリー', 'フロア', '設置場所', '単価', '在庫', '単位', '備考', '終了日', '登録日', '更新日'].join(','),
+                ['商品No.', '商品名', '担当業者', 'メーカー', '型番', 'カテゴリー', 'フロア', '設置場所', '単価', '在庫', '単位', '備考', '終了日', '登録日', '更新日'].join(','),
                 ...allItems.map(item => [
                     item.itemId || '',
                     item.name || '',
