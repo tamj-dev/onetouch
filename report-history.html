@@ -360,7 +360,7 @@
                 </div>
             </div>
 
-            <!-- システム管理者のみ: 管理会社フィルタ -->
+            <!-- システム管理者のみ: 業者フィルタ -->
             <div class="filter-row" id="partnerFilterRow" style="display: none;">
                 <div class="filter-label">管理会社</div>
                 <div>
@@ -370,32 +370,12 @@
                 </div>
             </div>
 
-            <!-- KPIカード + 滞留アラート（管理者のみ） -->
-            <div id="stagnationAlert" style="grid-column: 1 / -1; display: none;">
-                <!-- KPIカード -->
-                <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
-                    <div style="flex: 1; min-width: 140px; padding: 14px 16px; background: #fff; border: 1px solid #e0e0e0; border-radius: 10px;">
-                        <div style="font-size: 13px; color: #666; margin-bottom: 4px;">今日の未対応</div>
-                        <div style="font-size: 24px; font-weight: 700; color: #1e3a5f;" id="kpiTodayPending">0</div>
-                    </div>
-                    <div style="flex: 1; min-width: 140px; padding: 14px 16px; background: #fff; border: 1px solid #e0e0e0; border-radius: 10px;">
-                        <div style="font-size: 13px; color: #666; margin-bottom: 4px;">最長滞留</div>
-                        <div style="font-size: 24px; font-weight: 700; color: #1e3a5f;" id="kpiMaxStagnation">-</div>
-                    </div>
-                    <div id="alertUnassigned" style="display:none; flex: 1; min-width: 140px; padding: 14px 16px; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 10px; cursor: pointer;" onclick="filterByContractorStatus('', document.querySelector('.status-tab'));showUnassignedOnly();">
-                        <div style="font-size: 13px; font-weight: 600; color: #92400e;">⚠ 担当未割当</div>
-                        <div style="font-size: 24px; font-weight: 700; color: #92400e;" id="alertUnassignedCount">0</div>
-                    </div>
-                    <div id="alertStagnation" style="display:none; flex: 1; min-width: 140px; padding: 14px 16px; background: #fee2e2; border: 1px solid #ef4444; border-radius: 10px; cursor: pointer;" onclick="filterByContractorStatus('未対応', document.querySelectorAll('.status-tab')[1]);">
-                        <div style="font-size: 13px; font-weight: 600; color: #991b1b;">⚠ <span id="alertStagnationDays">3</span>日以上滞留</div>
-                        <div style="font-size: 24px; font-weight: 700; color: #991b1b;" id="alertStagnationCount">0</div>
-                    </div>
-                </div>
-            </div>
-
             <!-- 全ロール共通: ステータスタブ -->
             <div style="grid-column: 1 / -1;">
-                <div class="filter-label" style="margin-bottom: 8px;">ステータス</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div class="filter-label">ステータス</div>
+                    <button onclick="exportCSV()" style="padding: 8px 20px; background: #1e3a5f; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">CSVエクスポート</button>
+                </div>
                 <div class="status-tabs">
                     <div class="status-tab active" onclick="filterByContractorStatus('', this)">
                         <div class="status-tab-label">すべて</div>
@@ -417,17 +397,6 @@
                         <div class="status-tab-label">対応不可</div>
                         <div class="status-tab-count" id="countUnavailable">0</div>
                     </div>
-                </div>
-            </div>
-
-            <div class="filter-row" style="margin-top: 20px;">
-                <div class="filter-label">期間</div>
-                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                    <input type="date" id="startDate" class="filter-input">
-                    <span>〜</span>
-                    <input type="date" id="endDate" class="filter-input">
-                    <button onclick="filterReports();this.textContent='検索中...';var b=this;setTimeout(function(){b.textContent='検索';},300);" style="padding: 8px 20px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; margin-left: 12px;">検索</button>
-                    <button onclick="exportCSV()" style="padding: 8px 20px; background: #1e3a5f; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">CSVエクスポート</button>
                 </div>
             </div>
         </div>
@@ -520,9 +489,9 @@
                            datetime.toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
             
             const typeLabels = {
-                wholesale: '部屋・共用部の家具・家電',
-                building: '部屋・共用部の家具・家電',
-                welfare: '介護医療・お風呂の道具',
+                wholesale: '居室・生活',
+                building: '居室・生活',
+                welfare: '介護・医療',
                 emergency: '緊急'
             };
 
@@ -571,9 +540,9 @@
                 content += '</div>';
             }
 
-            // 対象管理会社
+            // 対象業者
             content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
-            content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">対象管理会社</div>';
+            content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">対象業者</div>';
             content += '<div style="font-size: 15px; color: #333;">' + (typeLabels[report.type] || report.category || '-') + '</div>';
             content += '</div>';
 
@@ -591,11 +560,11 @@
             content += '<div style="background: #f9fafb; padding: 16px; border-radius: 8px; font-size: 14px; line-height: 1.8; white-space: pre-wrap;">' + (report.description || '-') + '</div>';
             content += '</div>';
             
-            // 割当管理会社（追加）
+            // 割当業者（追加）
             if (report.assignedPartnerName || report.assignedPartnerId) {
                 content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
-                content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">割当管理会社</div>';
-                const partnerName = report.assignedPartnerName || '管理会社ID: ' + report.assignedPartnerId;
+                content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">割当業者</div>';
+                const partnerName = report.assignedPartnerName || '業者ID: ' + report.assignedPartnerId;
                 content += '<div style="font-size: 15px; color: #333;">' + partnerName + '</div>';
                 content += '</div>';
             }
@@ -703,7 +672,7 @@
                 
                 // 会社フィルタ初期化
                 initCompanyFilter();
-                // 管理会社フィルタ初期化
+                // 業者フィルタ初期化
                 initPartnerFilter();
                 
                 // 事業所：全事業所を表示（会社選択で絞り込み）
@@ -734,7 +703,6 @@
             let companiesLocal = [];
             try { companiesLocal = JSON.parse(localStorage.getItem('companies') || '[]'); } catch(e) {}
             companiesLocal.forEach(c => { if (!companies.find(m => m.code === c.code)) companies.push(c); });
-            companies = companies.filter(c => c.code !== 'SYSTEM');
             
             companies.forEach(c => {
                 const opt = document.createElement('option');
@@ -810,7 +778,7 @@
             });
         }
 
-        // 管理会社フィルタ初期化
+        // 業者フィルタ初期化
         function initPartnerFilter() {
             const partnerFilter = document.getElementById('partnerFilter');
             let partners = [];
@@ -869,16 +837,6 @@
             let reportsFromLocal = [];
             try { reportsFromSession = JSON.parse(sessionStorage.getItem('onetouch.reports') || '[]'); } catch(e) {}
             try { reportsFromLocal = JSON.parse(localStorage.getItem('onetouch.reports') || '[]'); } catch(e) {}
-
-            // DEMOモードで通報データが空の場合、initDemoDataで再生成
-            if (reportsFromSession.length === 0 && reportsFromLocal.length === 0 && currentUser.isDemoMode) {
-                if (typeof initDemoData === 'function') {
-                    localStorage.removeItem('demo_initialized');
-                    initDemoData();
-                    try { reportsFromLocal = JSON.parse(localStorage.getItem('onetouch.reports') || '[]'); } catch(e) {}
-                }
-            }
-
             let reports = [...reportsFromSession];
             reportsFromLocal.forEach(r => { if (!reports.find(m => m.id === r.id)) reports.push(r); });
             
@@ -897,7 +855,7 @@
                 reports = reports.filter(r => r.officeCode === selectedOfficeCode);
             }
 
-            // 管理会社フィルタ（システム管理者のみ）
+            // 業者フィルタ（システム管理者のみ）
             if (currentUser.role === 'system_admin') {
                 const partnerId = document.getElementById('partnerFilter') ? document.getElementById('partnerFilter').value : '';
                 if (partnerId) {
@@ -917,20 +875,6 @@
             if (showUnassignedFlag) {
                 reports = reports.filter(r => !r.assignedPartnerId);
                 showUnassignedFlag = false;
-            }
-            
-            // 日付でフィルタリング
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
-            
-            if (startDate) {
-                const startTime = new Date(startDate + 'T00:00:00').getTime();
-                reports = reports.filter(r => new Date(r.timestamp).getTime() >= startTime);
-            }
-            
-            if (endDate) {
-                const endTime = new Date(endDate + 'T23:59:59').getTime();
-                reports = reports.filter(r => new Date(r.timestamp).getTime() <= endTime);
             }
             
             renderReports(reports);
@@ -1013,8 +957,7 @@
             document.getElementById('countComplete').textContent = counts['完了'];
             document.getElementById('countUnavailable').textContent = counts['対応不可'];
             
-            // 滞留アラート（管理者のみ）
-            updateStagnationAlert(reports);
+            // 滞留アラート削除済み
         }
 
         function updateStagnationAlert(reports) {
@@ -1167,9 +1110,9 @@
             var pageReports = reports.slice(start, start + rh_pageSize);
 
             const typeLabels = {
-                wholesale: '部屋・共用部の家具・家電',
-                building: '部屋・共用部の家具・家電',
-                welfare: '介護医療・お風呂の道具',
+                wholesale: '居室・生活',
+                building: '居室・生活',
+                welfare: '介護・医療',
                 emergency: '緊急'
             };
             
@@ -1293,7 +1236,7 @@
 
             var esc = function(v) { return '"' + String(v || '').replace(/"/g, '""').replace(/\n/g, ' ') + '"'; };
 
-            const headers = ['通報者名','通報日時','会社コード','事業所','設備名','カテゴリ','場所','状況詳細','割当管理会社','管理会社ステータス','対応時間','最新コメント','写真枚数'];
+            const headers = ['通報ID','通報日時','通報者','会社コード','事業所','設備名','カテゴリ','場所','状況詳細','割当業者','業者ステータス','対応時間','最新コメント','写真枚数'];
             const rows = allReports.map(r => {
                 const date = r.timestamp ? new Date(r.timestamp).toLocaleString('ja-JP') : '';
                 let responseTime = '';
@@ -1303,7 +1246,7 @@
                     const m = Math.floor((diffMs % 3600000) / 60000);
                     responseTime = h > 0 ? h + '時間' + m + '分' : m + '分';
                 }
-                // 割当管理会社名
+                // 割当業者名
                 var partnerName = r.assignedPartnerName || '';
                 if (!partnerName && r.assignedPartnerId) {
                     var p = partners.find(function(x) { return x.id === r.assignedPartnerId; });
@@ -1323,8 +1266,9 @@
                 var photoCount = (r.photos && r.photos.length) || 0;
 
                 return [
-                    esc(r.reporter),
+                    esc(r.id),
                     esc(date),
+                    esc(r.reporter),
                     esc(r.companyCode),
                     esc(r.officeName),
                     esc(r.title),
@@ -1353,15 +1297,6 @@
 
         // 初期化
         initOfficeFilter();
-
-        // 日付フィルタ（今日の日付を設定）
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('endDate').value = today;
-        
-        // 1ヶ月前を開始日に設定
-        const monthAgo = new Date();
-        monthAgo.setMonth(monthAgo.getMonth() - 1);
-        document.getElementById('startDate').value = monthAgo.toISOString().split('T')[0];
     </script>
 
     <script>

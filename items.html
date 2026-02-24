@@ -33,7 +33,7 @@
           try {
             const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
             if (!currentUser) return false;
-            if (currentUser.companyCode === 'TAMJ') return true;
+            if (currentUser.companyCode === 'TAMJ' || currentUser.companyCode === 'JMAT' || currentUser.companyCode === 'SYSTEM') return true;
             if (currentUser.isDemoMode) return true;
             return false;
           } catch (e) { 
@@ -41,21 +41,39 @@
           }
         }
 
+        // contractorの場合、担当会社の商品をフィルタ
+        function filterItemsForUser(allItems, currentUser) {
+          if (!currentUser) return [];
+          if (currentUser.role === 'system_admin') return allItems;
+          if (currentUser.role === 'contractor') {
+            // assignedCompaniesがあればその会社の商品を表示
+            var assigned = currentUser.assignedCompanies || [];
+            if (assigned.length > 0) {
+              return allItems.filter(function(i) { return assigned.indexOf(i.companyCode) >= 0; });
+            }
+            return allItems;
+          }
+          if (currentUser.role === 'company_admin') {
+            return allItems.filter(function(i) { return i.companyCode === currentUser.companyCode; });
+          }
+          // office_admin, staff
+          return allItems.filter(function(i) { return i.officeCode === currentUser.officeCode; });
+        }
+
         async function initDemoItems() {
           if (!isDemoMode()) return;
-          if (sessionStorage.getItem('demo.items')) return;
-          // localStorageのonetouch.itemsから自社データをコピー
           const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
-          const allItems = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
-          let myItems = allItems;
-          if (currentUser && currentUser.role !== 'system_admin') {
-            if (currentUser.role === 'company_admin') {
-              myItems = allItems.filter(i => i.companyCode === currentUser.companyCode);
-            } else {
-              myItems = allItems.filter(i => i.officeCode === currentUser.officeCode);
-            }
+          // ユーザーが変わったらdemo.itemsをリセット
+          const cachedUser = sessionStorage.getItem('demo.items.user');
+          const currentId = currentUser ? (currentUser.userId || currentUser.id || '') : '';
+          if (cachedUser && cachedUser !== currentId) {
+            sessionStorage.removeItem('demo.items');
           }
+          if (sessionStorage.getItem('demo.items')) return;
+          const allItems = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
+          const myItems = filterItemsForUser(allItems, currentUser);
           sessionStorage.setItem('demo.items', JSON.stringify(myItems));
+          sessionStorage.setItem('demo.items.user', currentId);
         }
 
         async function getItems() {
@@ -63,15 +81,9 @@
           if (!currentUser) return [];
           if (isDemoMode()) {
             const demoItems = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
-            // demo.itemsが空でlocalStorageにデータがある場合はフォールバック
             if (demoItems.length === 0) {
               const allItems = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
-              let myItems = allItems;
-              if (currentUser.role === 'company_admin') {
-                myItems = allItems.filter(i => i.companyCode === currentUser.companyCode);
-              } else if (currentUser.role !== 'system_admin') {
-                myItems = allItems.filter(i => i.officeCode === currentUser.officeCode);
-              }
+              const myItems = filterItemsForUser(allItems, currentUser);
               if (myItems.length > 0) {
                 sessionStorage.setItem('demo.items', JSON.stringify(myItems));
                 return myItems;
@@ -79,11 +91,9 @@
             }
             return demoItems;
           }
-          // 本番モード: localStorageから取得（scope別フィルタ）
+          // 本番モード
           const allItems = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
-          if (currentUser.role === 'system_admin') return allItems;
-          if (currentUser.role === 'company_admin') return allItems.filter(i => i.companyCode === currentUser.companyCode);
-          return allItems.filter(i => i.officeCode === currentUser.officeCode);
+          return filterItemsForUser(allItems, currentUser);
         }
 
         // 商品ナンバー生成: 業者コード + yymm + 4桁連番

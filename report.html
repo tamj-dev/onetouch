@@ -61,7 +61,7 @@
     .overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);display:none;align-items:center;justify-content:center;padding:16px;z-index:999;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
     .overlay.open{display:flex;}
     .modal{width:min(480px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:16px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.15);}
-    .modal h3{font-size:1rem;font-weight:700;margin-bottom:16px;color:var(--text);}
+    .modal h3{font-size:1.25rem;font-weight:700;margin-bottom:16px;color:var(--text);}
     .field{margin-bottom:14px;}
     .field label{display:block;font-size:16px;color:var(--text-dim);margin-bottom:6px;font-weight:600;}
     .field select,.field input,.field textarea{width:100%;padding:12px 14px;border:1px solid var(--border-light);border-radius:10px;font-family:inherit;font-size:18px;background:#fff;color:var(--text);}
@@ -221,7 +221,7 @@
       <div class="field">
         <label>設備名/商品名</label>
         <div id="equipmentSelector">
-          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:10px;" id="categoryTabs"></div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px;" id="categoryTabs"></div>
           <div style="position:relative;">
             <input type="text" id="equipmentSearch" placeholder="設備名・型番・メーカーで検索" autocomplete="off"
               style="width:100%;padding:12px 14px;border:1px solid #ddd;border-radius:8px;font-size:15px;background:#fafafa;">
@@ -258,7 +258,7 @@
       <!-- 写真添付 -->
       <div class="photo-section">
         <div class="photo-label">写真（最大3枚）</div>
-        <div style="font-size:16px;color:#2563eb;margin-bottom:6px;">写真があると管理会社に伝わりやすくなります</div>
+        <div style="font-size:16px;color:#2563eb;margin-bottom:6px;">📷 写真があると管理会社に伝わりやすくなります</div>
         <input type="file" id="photoInput" accept="image/*" capture="environment" multiple style="display:none;" onchange="handlePhotos(this)">
         <div class="photo-add-btn" onclick="document.getElementById('photoInput').click()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
@@ -328,8 +328,8 @@
         backButton: currentUser && (currentUser.role === 'company_admin' || currentUser.role === 'office_admin' || currentUser.role === 'system_admin'),
     });
 
-    var labels={wholesale:'部屋・共用部の家具・家電',building:'部屋・共用部の家具・家電',welfare:'介護医療・お風呂の道具',emergency:'緊急',report:'設備トラブル'};
-    var typeLabels={wholesale:'部屋・共用部の家具・家電',building:'部屋・共用部の家具・家電',welfare:'介護医療・お風呂の道具',emergency:'緊急',report:'設備トラブル'};
+    var labels={wholesale:'居室・生活',building:'居室・生活',welfare:'介護・医療',emergency:'緊急',report:'設備トラブル'};
+    var typeLabels={wholesale:'居室・生活',building:'居室・生活',welfare:'介護・医療',emergency:'緊急',report:'設備トラブル'};
 
     // 文字数カウンター
     var formDesc = document.getElementById('formDesc');
@@ -361,24 +361,68 @@
     function loadItems() {
       try {
         const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
-        const isDemoMode = currentUser && (currentUser.companyCode === 'TAMJ' || currentUser.isDemoMode);
-        const storageKey = 'onetouch.items';
+        const isDemoMode = currentUser && (currentUser.companyCode === 'TAMJ' || currentUser.companyCode === 'JMAT' || currentUser.companyCode === 'SYSTEM' || currentUser.isDemoMode);
         
-        let items = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        let items = [];
         
-        if (items.length === 0 && isDemoMode) {
-          // DEMOデータが未生成の場合、initDemoDataで300件/社を生成
-          if (typeof initDemoData === 'function') {
-            localStorage.removeItem('demo_initialized');
-            initDemoData();
-            items = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        if (isDemoMode) {
+          // ユーザーが変わったらdemo.itemsをリセット
+          var cachedUser = sessionStorage.getItem('demo.items.user');
+          var currentId = currentUser.userId || currentUser.id || '';
+          if (cachedUser && cachedUser !== currentId) {
+            sessionStorage.removeItem('demo.items');
+          }
+          // DEMOモード: sessionStorageから取得、なければlocalStorageからコピー
+          items = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
+          if (items.length === 0) {
+            var allItems = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
+            if (currentUser.role === 'contractor') {
+              var assigned = currentUser.assignedCompanies || [];
+              if (assigned.length > 0) {
+                items = allItems.filter(function(i) { return assigned.indexOf(i.companyCode) >= 0; });
+              } else {
+                items = allItems;
+              }
+            } else if (currentUser.role === 'system_admin') {
+              items = allItems;
+            } else if (currentUser.role === 'company_admin') {
+              items = allItems.filter(function(i) { return i.companyCode === currentUser.companyCode; });
+            } else {
+              items = allItems.filter(function(i) { return i.officeCode === currentUser.officeCode; });
+            }
+            if (items.length > 0) {
+              sessionStorage.setItem('demo.items', JSON.stringify(items));
+              sessionStorage.setItem('demo.items.user', currentId);
+            }
+          }
+        } else {
+          // 本番モード: localStorageから取得
+          var allItems = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
+          if (currentUser.role === 'system_admin') {
+            items = allItems;
+          } else if (currentUser.role === 'company_admin') {
+            items = allItems.filter(function(i) { return i.companyCode === currentUser.companyCode; });
+          } else {
+            items = allItems.filter(function(i) { return i.officeCode === currentUser.officeCode; });
           }
         }
         
-        items = items.filter(function(item) {
-          return item.companyCode === currentUser.companyCode &&
-                 (item.officeCode === currentUser.officeCode || !item.officeCode);
-        });
+        // ロールに応じたフィルタ
+        if (currentUser.role === 'contractor') {
+          var assigned = currentUser.assignedCompanies || [];
+          if (assigned.length > 0) {
+            items = items.filter(function(item) { return assigned.indexOf(item.companyCode) >= 0; });
+          }
+        } else if (currentUser.role !== 'system_admin' && currentUser.role !== 'company_admin') {
+          items = items.filter(function(item) {
+            return item.companyCode === currentUser.companyCode &&
+                   (item.officeCode === currentUser.officeCode || !item.officeCode);
+          });
+        } else if (currentUser.role === 'company_admin') {
+          items = items.filter(function(item) {
+            return item.companyCode === currentUser.companyCode;
+          });
+        }
         
         _allEquipments = items;
         
@@ -415,56 +459,79 @@
     }
 
     function buildCategoryTabs(items) {
-      var catOrder = ['建物・外まわり','部屋・共用部の家具・家電','介護医療・お風呂の道具','厨房・食事の道具','通信・呼出し・防火の機器','その他'];
-      var catSub = {
-        '建物・外まわり':'▶ 工事しないと動かせないもの',
-        '部屋・共用部の家具・家電':'▶ 部屋・共用部に置いてあるもの全般',
-        '介護医療・お風呂の道具':'▶ 体に触れる・お世話をするときに使うもの',
-        '厨房・食事の道具':'▶ 作る・運ぶ・食べるために使うもの',
-        '通信・呼出し・防火の機器':'▶ 繋ぐ・呼ぶ・守る機器',
-        'その他':'▶ 上記に当てはまらないもの'
+      var catOrder = ['建物インフラ','居室・生活','介護・医療','厨房・食事','IT・安全'];
+      var catLabels = {
+        '建物インフラ':'建物・外まわり',
+        '居室・生活':'部屋・共用部の家具・家電',
+        '介護・医療':'介護医療・お風呂の道具',
+        '厨房・食事':'厨房・食事の道具',
+        'IT・安全':'通信・呼出し・防火の機器',
+        'その他':'その他'
+      };
+      var catDescs = {
+        '建物インフラ':'工事しないと動かせないもの',
+        '居室・生活':'部屋・共用部に置いてあるもの全般',
+        '介護・医療':'体に触れる・お世話をするときに使うもの',
+        '厨房・食事':'作る・運ぶ・食べるために使うもの',
+        'IT・安全':'繋ぐ・呼ぶ・守る機器',
+        'その他':'上記に当てはまらないもの'
       };
       var cats = {};
       items.forEach(function(i) { var c = i.category || 'その他'; cats[c] = (cats[c]||0) + 1; });
       var tabsEl = document.getElementById('categoryTabs');
-      var btnStyle = 'padding:10px 6px;border:1px solid #ddd;border-radius:8px;font-size:11px;cursor:pointer;text-align:center;line-height:1.4;';
+      var btnBase = 'padding:14px 10px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;text-align:center;line-height:1.4;border:2px solid ';
       var h = '';
       catOrder.forEach(function(c) {
         var count = cats[c] || 0;
-        h += '<button onclick="filterCategory(\'' + c + '\')" class="cat-tab" style="' + btnStyle + 'background:white;color:#555;"><span style="font-weight:700;font-size:12px;">' + c + '</span><br><span style="font-size:9px;color:#999;">' + (catSub[c]||'') + '</span><br><span style="font-size:10px;color:#666;font-weight:600;">(' + count + ')</span></button>';
+        var label = catLabels[c] || c;
+        var desc = catDescs[c] || '';
+        h += '<button onclick="filterCategory(\'' + c + '\')" class="cat-tab" style="' + btnBase + '#ddd;background:#fafafa;color:#333;">';
+        h += '<span style="display:block;font-size:15px;font-weight:700;color:#1e293b;">' + label + '</span>';
+        h += '<span style="display:block;font-size:12px;color:#64748b;margin-top:2px;">▶ ' + desc + '</span>';
+        h += '<span style="display:block;font-size:13px;font-weight:700;color:#2563eb;margin-top:4px;">(' + count + ')</span>';
+        h += '</button>';
       });
+      // その他カテゴリ
+      if (cats['その他']) {
+        var label = catLabels['その他'];
+        var desc = catDescs['その他'];
+        h += '<button onclick="filterCategory(\'その他\')" class="cat-tab" style="' + btnBase + '#ddd;background:#fafafa;color:#333;">';
+        h += '<span style="display:block;font-size:15px;font-weight:700;color:#1e293b;">' + label + '</span>';
+        h += '<span style="display:block;font-size:12px;color:#64748b;margin-top:2px;">▶ ' + desc + '</span>';
+        h += '<span style="display:block;font-size:13px;font-weight:700;color:#2563eb;margin-top:4px;">(' + cats['その他'] + ')</span>';
+        h += '</button>';
+      }
       tabsEl.innerHTML = h;
-      // 最初のカテゴリをアクティブにしない（全表示状態）
-      _activeCategory = '';
     }
 
     function filterCategory(cat) {
-      // 同じカテゴリをもう一度タップしたら全表示に戻す
-      if (_activeCategory === cat) {
-        _activeCategory = '';
-      } else {
-        _activeCategory = cat;
-      }
+      _activeCategory = cat;
       document.querySelectorAll('.cat-tab').forEach(function(btn) {
-        var spanEl = btn.querySelector('span[style*="font-weight:700"]');
-        var btnCat = spanEl ? spanEl.textContent.trim() : '';
-        var isActive = _activeCategory !== '' && btnCat === _activeCategory;
-        if (isActive) {
-          btn.style.background = '#1e3a5f'; btn.style.color = 'white';
-          btn.querySelectorAll('span').forEach(function(s){ s.style.color = 'rgba(255,255,255,0.8)'; });
-          if(spanEl) spanEl.style.color = 'white';
+        var btnText = btn.textContent.replace(/[\(\d+\)▶]/g,'').trim();
+        // カテゴリ名の一致判定（ラベル名 or 内部名）
+        var isActive = false;
+        if (cat === '') {
+          isActive = false; // 全て解除
         } else {
-          btn.style.background = 'white'; btn.style.color = '#555';
-          var spans = btn.querySelectorAll('span');
-          if(spans[0]) spans[0].style.color = '#333';
-          if(spans[1]) spans[1].style.color = '#999';
-          if(spans[2]) spans[2].style.color = '#666';
+          // ボタン内の最初のspanテキストで判定
+          var firstSpan = btn.querySelector('span');
+          if (firstSpan) {
+            var labelMap = {'建物・外まわり':'建物インフラ','部屋・共用部の家具・家電':'居室・生活','介護医療・お風呂の道具':'介護・医療','厨房・食事の道具':'厨房・食事','通信・呼出し・防火の機器':'IT・安全','その他':'その他'};
+            var mapped = labelMap[firstSpan.textContent] || firstSpan.textContent;
+            isActive = (mapped === cat);
+          }
+        }
+        if (isActive) {
+          btn.style.background = '#eff6ff'; btn.style.borderColor = '#2563eb'; btn.style.boxShadow = '0 0 0 1px #2563eb';
+        } else {
+          btn.style.background = '#fafafa'; btn.style.borderColor = '#ddd'; btn.style.boxShadow = 'none';
         }
       });
       showSuggestions();
       var searchInput = document.getElementById('equipmentSearch');
-      if (_activeCategory) searchInput.focus();
+      if (cat) searchInput.focus();
     }
+
     function normalizeStr(s) {
       if (!s) return '';
       return s.replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(c) {
@@ -524,20 +591,8 @@
       document.getElementById('formTitleInput').value = itemId;
       document.getElementById('formCat').value = item.category || 'その他';
       document.getElementById('selectedItemId').value = item.itemId;
-      
-      // 管理会社割当：商品に紐付いていなければ契約テーブルから自動解決
-      var pId = item.assignedPartnerId || '';
-      var pName = item.assignedPartnerName || '';
-      if (!pId && typeof resolvePartner === 'function') {
-        var cu = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
-        var resolved = resolvePartner(
-          { assignedPartnerId: '', assignedPartnerName: '', category: item.category, companyCode: cu.companyCode || '' },
-          cu.officeCode || ''
-        );
-        if (resolved.partnerId) { pId = resolved.partnerId; pName = resolved.partnerName; }
-      }
-      document.getElementById('selectedPartnerId').value = pId;
-      document.getElementById('selectedPartnerName').value = pName;
+      document.getElementById('selectedPartnerId').value = item.assignedPartnerId || '';
+      document.getElementById('selectedPartnerName').value = item.assignedPartnerName || '';
       
       // UI更新
       document.getElementById('suggestList').style.display = 'none';
@@ -621,7 +676,7 @@
       if (!partnerId && typeof resolvePartner === 'function') {
         var currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
         var resolved = resolvePartner(
-          { assignedPartnerId: partnerId, assignedPartnerName: partnerName, category: cat, companyCode: currentUser.companyCode || '' },
+          { assignedPartnerId: partnerId, assignedPartnerName: partnerName, category: cat },
           currentUser.officeCode || ''
         );
         if (resolved.partnerId) {
@@ -866,7 +921,8 @@
       const currentUserId = currentUser?.userId || currentUser?.id || '';
       
       reports = reports.filter(function(r) {
-        return r.userId === currentUserId || r.reporterId === currentUserId;
+        var rid = r.userId || r.reporterId || '';
+        return rid === currentUserId;
       });
 
       // カウント更新（フィルタ前）
@@ -934,9 +990,9 @@
         h+='<span>'+r.category+'</span>';
         h+='</div>';
         if(r.assignedPartnerName){
-          h+='<div class="history-partner">管理会社: '+esc(r.assignedPartnerName)+'</div>';
+          h+='<div class="history-partner">業者: '+esc(r.assignedPartnerName)+'</div>';
         } else {
-          h+='<div style="font-size:12px;color:#ef4444;margin-bottom:8px;">管理会社未割当</div>';
+          h+='<div style="font-size:12px;color:#ef4444;margin-bottom:8px;">業者未割当</div>';
         }
         h+=latestComment;
         h+=durationHtml;
@@ -1011,11 +1067,11 @@
       
       // 業者情報
       content += '<div class="detail-row">';
-      content += '<div class="detail-label">割当管理会社</div>';
+      content += '<div class="detail-label">割当業者</div>';
       if (r.assignedPartnerName) {
         content += '<div class="detail-value" style="color:#1e40af;font-weight:600;">' + esc(r.assignedPartnerName) + '</div>';
       } else {
-        content += '<div class="detail-value" style="color:#ef4444;">管理会社未割当</div>';
+        content += '<div class="detail-value" style="color:#ef4444;">業者未割当</div>';
       }
       content += '</div>';
       
@@ -1123,7 +1179,7 @@
       content+='</div>';
       
       content+='<div class="detail-row">';
-      content+='<div class="detail-label">対象管理会社</div>';
+      content+='<div class="detail-label">対象業者</div>';
       content+='<div class="detail-value">'+esc(typeLabels[r.type]||r.type||'-')+'</div>';
       content+='</div>';
       

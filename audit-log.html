@@ -150,6 +150,27 @@
     <div id="unified-header-mount"></div>
     <div class="container">
         <div class="filters">
+            <!-- ロール別フィルタ行（system_admin: 会社・事業所・管理会社、company_admin: 事業所） -->
+            <div class="filters-row" id="scopeFilterRow" style="display:none;">
+                <div class="form-group" id="companyFilterGroup" style="display:none;">
+                    <label>会社</label>
+                    <select id="companyFilter" onchange="onCompanyFilterChange()">
+                        <option value="">全会社</option>
+                    </select>
+                </div>
+                <div class="form-group" id="officeFilterGroup" style="display:none;">
+                    <label>事業所</label>
+                    <select id="officeFilter">
+                        <option value="">全事業所</option>
+                    </select>
+                </div>
+                <div class="form-group" id="partnerFilterGroup" style="display:none;">
+                    <label>管理会社</label>
+                    <select id="partnerFilter">
+                        <option value="">全管理会社</option>
+                    </select>
+                </div>
+            </div>
             <div class="filters-row">
                 <div class="form-group">
                     <label>開始日</label>
@@ -255,9 +276,9 @@
             'add_account': 'アカウント登録',
             'update_account': 'アカウント更新',
             'delete_account': 'アカウント削除',
-            'add_partner': '管理会社登録',
-            'update_partner': '管理会社更新',
-            'delete_partner': '管理会社削除',
+            'add_partner': '取引先登録',
+            'update_partner': '取引先更新',
+            'delete_partner': '取引先削除',
             'add_item': '商品登録',
             'update_item': '商品更新',
             'delete_item': '商品削除',
@@ -279,7 +300,7 @@
             'contractor-dashboard': '管理会社画面', 'contractor-dashboard.html': '管理会社画面',
             'master-top': '管理メニュー', 'master-top.html': '管理メニュー',
             'account-master': 'ユーザー管理', 'account-master.html': 'ユーザー管理',
-            'partner-master': '管理会社マスタ', 'partner-master.html': '管理会社マスタ',
+            'partner-master': '取引先マスタ', 'partner-master.html': '取引先マスタ',
             'office-master': '事業所マスタ', 'office-master.html': '事業所マスタ',
             'company-master': '会社マスタ', 'company-master.html': '会社マスタ',
             'items': '商品マスタ', 'items.html': '商品マスタ',
@@ -311,6 +332,16 @@
                 try { var p = JSON.parse(log.details); if (p.companyCode) return p.companyCode; } catch(e) {}
             }
             return '-';
+        }
+
+        // ========== 事業所コードを取得 ==========
+        function getOfficeCode(log) {
+            if (log.officeCode && log.officeCode !== '') return log.officeCode;
+            if (log.detail && typeof log.detail === 'object' && log.detail.officeCode) return log.detail.officeCode;
+            if (log.details && typeof log.details === 'string') {
+                try { var p = JSON.parse(log.details); if (p.officeCode) return p.officeCode; } catch(e) {}
+            }
+            return '';
         }
 
         // ========== 画面名を取得 ==========
@@ -405,11 +436,94 @@
                 if (currentUser.role === 'company_admin') {
                     allLogs = allLogs.filter(function(l) { return getCompanyCode(l) === currentUser.companyCode; });
                 } else if (currentUser.role === 'office_admin') {
-                    allLogs = allLogs.filter(function(l) { return getCompanyCode(l) === currentUser.companyCode; });
+                    // 事業所管理者は自事業所のログのみ
+                    allLogs = allLogs.filter(function(l) {
+                        var oc = getOfficeCode(l);
+                        return getCompanyCode(l) === currentUser.companyCode && (!oc || oc === currentUser.officeCode);
+                    });
                 }
                 filteredLogs = allLogs;
+                initScopeFilters();
                 renderLogs();
             } catch(e) { console.error('ログ読み込み失敗:', e); }
+        }
+
+        // ========== スコープフィルタの初期化 ==========
+        function initScopeFilters() {
+            var scopeRow = document.getElementById('scopeFilterRow');
+            
+            if (currentUser.role === 'system_admin') {
+                scopeRow.style.display = '';
+                // 会社フィルタ
+                var compGrp = document.getElementById('companyFilterGroup');
+                compGrp.style.display = '';
+                var compSel = document.getElementById('companyFilter');
+                var companies = [];
+                try { companies = JSON.parse(localStorage.getItem('companies') || '[]'); } catch(e) {}
+                companies.forEach(function(c) {
+                    if (c.code === 'SYSTEM') return;
+                    var opt = document.createElement('option');
+                    opt.value = c.code; opt.textContent = c.name || c.code;
+                    compSel.appendChild(opt);
+                });
+                // 事業所フィルタ
+                document.getElementById('officeFilterGroup').style.display = '';
+                // 管理会社フィルタ
+                var partGrp = document.getElementById('partnerFilterGroup');
+                partGrp.style.display = '';
+                var partSel = document.getElementById('partnerFilter');
+                var partners = [];
+                try { partners = JSON.parse(localStorage.getItem('partners') || '[]'); } catch(e) {}
+                if (partners.length === 0 && typeof DEMO_PARTNERS !== 'undefined') partners = DEMO_PARTNERS;
+                partners.forEach(function(p) {
+                    var opt = document.createElement('option');
+                    opt.value = p.id || p.partnerCode; opt.textContent = p.name;
+                    partSel.appendChild(opt);
+                });
+                onCompanyFilterChange();
+            } else if (currentUser.role === 'company_admin') {
+                scopeRow.style.display = '';
+                // 事業所フィルタのみ
+                var offGrp = document.getElementById('officeFilterGroup');
+                offGrp.style.display = '';
+                var offSel = document.getElementById('officeFilter');
+                var offices = [];
+                try { offices = JSON.parse(localStorage.getItem('offices') || '[]'); } catch(e) {}
+                offices.filter(function(o) { return o.companyCode === currentUser.companyCode; }).forEach(function(o) {
+                    var opt = document.createElement('option');
+                    opt.value = o.code; opt.textContent = o.name;
+                    offSel.appendChild(opt);
+                });
+            }
+            // office_adminはスコープフィルタ不要（自事業所のみ）
+        }
+
+        // 会社選択変更時に事業所リストを更新
+        function onCompanyFilterChange() {
+            var compVal = document.getElementById('companyFilter').value;
+            var offSel = document.getElementById('officeFilter');
+            offSel.innerHTML = '<option value="">全事業所</option>';
+            var offices = [];
+            try { offices = JSON.parse(localStorage.getItem('offices') || '[]'); } catch(e) {}
+            offices.filter(function(o) {
+                return !compVal || o.companyCode === compVal;
+            }).forEach(function(o) {
+                var opt = document.createElement('option');
+                opt.value = o.code; opt.textContent = o.name;
+                offSel.appendChild(opt);
+            });
+        }
+
+        // 管理会社IDを取得
+        function getPartnerId(log) {
+            if (log.partnerId && log.partnerId !== '') return log.partnerId;
+            if (log.detail && typeof log.detail === 'object' && log.detail.partnerId) return log.detail.partnerId;
+            if (log.details && typeof log.details === 'string') {
+                try { var p = JSON.parse(log.details); if (p.partnerId) return p.partnerId; } catch(e) {}
+            }
+            // contractorのログはcompanyCodeがPN系
+            if (log.companyCode && log.companyCode.startsWith('PN')) return log.companyCode;
+            return '';
         }
 
         var al_currentPage = 1;
@@ -456,6 +570,9 @@
             var endDate = document.getElementById('endDate').value;
             var typeFilter = document.getElementById('typeFilter').value;
             var userFilter = document.getElementById('userFilter').value.toLowerCase();
+            var companyVal = document.getElementById('companyFilter') ? document.getElementById('companyFilter').value : '';
+            var officeVal = document.getElementById('officeFilter') ? document.getElementById('officeFilter').value : '';
+            var partnerVal = document.getElementById('partnerFilter') ? document.getElementById('partnerFilter').value : '';
             if (startDate && endDate && startDate > endDate) {
                 showValidationError('開始日は終了日より前の日付を指定してください。');
                 return;
@@ -470,6 +587,9 @@
                     var u = (log.userId || '').toLowerCase();
                     if (!n.includes(userFilter) && !u.includes(userFilter)) return false;
                 }
+                if (companyVal && getCompanyCode(log) !== companyVal) return false;
+                if (officeVal && getOfficeCode(log) !== officeVal) return false;
+                if (partnerVal && getPartnerId(log) !== partnerVal) return false;
                 return true;
             });
             renderLogs();
@@ -482,6 +602,9 @@
             document.getElementById('endDate').value = '';
             document.getElementById('typeFilter').value = '';
             document.getElementById('userFilter').value = '';
+            if (document.getElementById('companyFilter')) document.getElementById('companyFilter').value = '';
+            if (document.getElementById('officeFilter')) { document.getElementById('officeFilter').value = ''; onCompanyFilterChange(); }
+            if (document.getElementById('partnerFilter')) document.getElementById('partnerFilter').value = '';
             clearValidationError();
             filteredLogs = allLogs;
             renderLogs();

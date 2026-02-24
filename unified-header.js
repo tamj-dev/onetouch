@@ -7,7 +7,7 @@
  *   2. <div id="unified-header-mount"></div> をbody直下に置く
  *   3. JS内で UnifiedHeader.init({ icon: '', title: 'アカウントマスタ', backButton: true }) を呼ぶ
  * 
- * 最終更新: 2026-02-18
+ * 最終更新: 2026-02-11
  */
 
 const UnifiedHeader = {
@@ -264,30 +264,31 @@ const UnifiedHeader = {
 
             /* 初回ログインバナー */
             .uh-first-login {
-                display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.5); z-index: 10000;
-                justify-content: center; align-items: center;
+                display: none; position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+                background: #1e3a5f;
+                color: white; padding: 16px 24px; border-radius: 12px;
+                box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3);
+                z-index: 9999; max-width: 500px; width: 90%;
             }
-            .uh-first-login.show { display: flex; }
-            .uh-fl-card {
-                background: white; border-radius: 16px; padding: 36px 32px 28px;
-                max-width: 400px; width: 90%; text-align: center;
-                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            .uh-first-login.show { display: block; }
+            .uh-fl-top { display: flex; align-items: center; gap: 16px; }
+            .uh-fl-icon { font-size: 32px; }
+            .uh-fl-text { flex: 1; }
+            .uh-fl-title { font-weight: 600; margin-bottom: 4px; }
+            .uh-fl-desc { font-size: 13px; opacity: 0.9; }
+            .uh-fl-close {
+                background: rgba(255,255,255,0.2); border: none; color: white;
+                padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 20px; line-height: 1;
             }
-            .uh-fl-icon { font-size: 48px; margin-bottom: 16px; }
-            .uh-fl-title { font-size: 18px; font-weight: 700; color: #1e3a5f; margin-bottom: 8px; }
-            .uh-fl-desc { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 24px; }
-            .uh-fl-actions { display: flex; flex-direction: column; gap: 10px; }
+            .uh-fl-actions { display: flex; gap: 8px; margin-top: 12px; }
             .uh-fl-btn-now {
-                background: #1e3a5f; color: white; border: none; padding: 14px; border-radius: 10px;
-                font-size: 15px; font-weight: 600; cursor: pointer;
+                flex: 1; padding: 8px 16px; background: white; color: #2563eb;
+                border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;
             }
-            .uh-fl-btn-now:hover { background: #2a4a73; }
             .uh-fl-btn-later {
-                background: none; border: 1px solid #ddd; color: #888; padding: 12px; border-radius: 10px;
-                font-size: 14px; cursor: pointer;
+                flex: 1; padding: 8px 16px; background: rgba(255,255,255,0.2); color: white;
+                border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;
             }
-            .uh-fl-btn-later:hover { background: #f5f5f5; }
 
             /* ========== レスポンシブ ========== */
             @media (max-width: 768px) {
@@ -363,7 +364,7 @@ const UnifiedHeader = {
             <div class="uh-divider"></div>
             <a href="contractor-dashboard.html" class="uh-menu-item">
                 <div class="uh-menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
-                <span class="uh-menu-text">対応依頼</span>
+                <span class="uh-menu-text">対応依頼一覧</span>
             </a>
             <a href="contractor-performance.html" class="uh-menu-item">
                 <div class="uh-menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
@@ -391,7 +392,7 @@ const UnifiedHeader = {
             const currentRole = user.role;
             const roles = [
                 { key: 'staff', label: 'スタッフで表示', color: '#4CAF50', active: currentRole === 'staff' },
-                { key: 'contractor', label: '管理会社で表示', color: '#2196F3', active: currentRole === 'contractor' },
+                { key: 'contractor', label: '業者で表示', color: '#2196F3', active: currentRole === 'contractor' },
                 { key: 'office_admin', label: '事業所管理者で表示', color: '#FF9800', active: currentRole === 'office_admin' },
                 { key: 'company_admin', label: '本社管理者で表示', color: '#9C27B0', active: currentRole === 'company_admin' }
             ];
@@ -424,6 +425,15 @@ const UnifiedHeader = {
             <a href="#" class="uh-menu-item" id="uhMenuPassword">
                 <div class="uh-menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>
                 <span class="uh-menu-text">パスワード変更</span>
+            </a>
+            <div class="uh-divider"></div>
+            <a href="terms.html" class="uh-menu-item">
+                <div class="uh-menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+                <span class="uh-menu-text">利用規約</span>
+            </a>
+            <a href="privacy.html" class="uh-menu-item">
+                <div class="uh-menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+                <span class="uh-menu-text">プライバシーポリシー</span>
             </a>
             <div class="uh-divider"></div>
             <a href="#" class="uh-menu-item uh-logout" id="uhMenuLogout">
@@ -501,14 +511,17 @@ const UnifiedHeader = {
         banner.className = 'uh-first-login';
         banner.id = 'uhFirstLogin';
         banner.innerHTML = `
-            <div class="uh-fl-card">
-                <div class="uh-fl-icon">🔐</div>
-                <div class="uh-fl-title">パスワードを変更してください</div>
-                <div class="uh-fl-desc">セキュリティ向上のため、<br>初期パスワードの変更をお願いします。</div>
-                <div class="uh-fl-actions">
-                    <button class="uh-fl-btn-now" id="uhFlNow">パスワードを変更する</button>
-                    <button class="uh-fl-btn-later" id="uhFlLater">あとで変更する</button>
+            <div class="uh-fl-top">
+                <div class="uh-fl-icon"></div>
+                <div class="uh-fl-text">
+                    <div class="uh-fl-title">パスワードの変更をおすすめします</div>
+                    <div class="uh-fl-desc">セキュリティ向上のため、初期パスワードを変更することを推奨します。</div>
                 </div>
+                <button class="uh-fl-close" id="uhFlClose">×</button>
+            </div>
+            <div class="uh-fl-actions">
+                <button class="uh-fl-btn-now" id="uhFlNow">今すぐ変更</button>
+                <button class="uh-fl-btn-later" id="uhFlLater">後で変更</button>
             </div>
         `;
         document.body.appendChild(banner);
@@ -840,8 +853,10 @@ const UnifiedHeader = {
         if (pwSubmit) pwSubmit.addEventListener('click', function() { self._changePassword(); });
 
         // 初回ログインバナー
+        const flClose = document.getElementById('uhFlClose');
         const flLater = document.getElementById('uhFlLater');
         const flNow = document.getElementById('uhFlNow');
+        if (flClose) flClose.addEventListener('click', function() { self._dismissBanner(); });
         if (flLater) flLater.addEventListener('click', function() { self._dismissBanner(); });
         if (flNow) flNow.addEventListener('click', function() {
             self._dismissBanner();
@@ -902,9 +917,6 @@ const UnifiedHeader = {
 
     // ========== DEMO切替 ==========
     _demoSwitch(roleOrId) {
-        // デモ切替中フラグ（beforeunloadでの復元を防止）
-        window._demoSwitching = true;
-
         // ドロップダウンを閉じる
         var dd = document.getElementById('uhDropdown');
         if (dd) dd.classList.remove('show');
@@ -941,9 +953,6 @@ const UnifiedHeader = {
         localStorage.setItem('ONE_loggedIn', '1');
         localStorage.setItem('ONE_userId', user.id);
         localStorage.setItem('ONE_userName', user.name);
-
-        // 切替先でスナップショットが正しく保持されるよう保存
-        if (typeof saveDemoSnapshot === 'function') saveDemoSnapshot();
 
         // 業者の場合はcontractor情報も保存
         if (user.role === 'contractor') {

@@ -343,6 +343,32 @@
                     </div>
                 </div>
             </div>
+            
+            <div class="info-row" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #eee;">
+                <div class="info-label">CSV出力</div>
+                <div class="info-value">
+                    <!-- システム管理者: 会社+事業所 -->
+                    <div id="auditCsvCompanyFilter" style="display:none; margin-bottom: 10px;">
+                        <label style="font-size: 13px; color: #555; margin-bottom: 4px; display: block;">会社</label>
+                        <select id="auditCsvCompany" onchange="onAuditCsvCompanyChange()" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; width: 100%;">
+                            <option value="">全会社</option>
+                        </select>
+                    </div>
+                    <!-- 本社管理者+システム管理者: 事業所 -->
+                    <div id="auditCsvOfficeFilter" style="display:none; margin-bottom: 10px;">
+                        <label style="font-size: 13px; color: #555; margin-bottom: 4px; display: block;">事業所</label>
+                        <select id="auditCsvOffice" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; width: 100%;">
+                            <option value="">全事業所</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-secondary" onclick="exportAuditCSV()" style="display: inline-block;">
+                         CSV出力
+                    </button>
+                    <div style="font-size: 12px; color: #666; margin-top: 6px;">
+                        フィルタ条件に合った監査ログをダウンロードします
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- 会社設定（company_admin以上） -->
@@ -358,10 +384,10 @@
                             T
                         </div>
                         <div>
-                            <input type="file" id="logoUpload" accept="image/png,image/jpeg,image/gif,image/webp" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);opacity:0;" onchange="handleLogoUpload(event)">
-                            <label for="logoUpload" class="btn btn-primary" style="width:auto; display:inline-block; cursor:pointer; margin-bottom:0;">
+                            <input type="file" id="logoUpload" accept="image/*" style="display: none;" onchange="handleLogoUpload(event)">
+                            <button class="btn btn-primary" onclick="document.getElementById('logoUpload').click()">
                                 ロゴを変更
-                            </label>
+                            </button>
                             <div style="font-size: 12px; color: #666; margin-top: 4px;">
                                 推奨: 正方形、PNG形式、200x200px以上
                             </div>
@@ -397,11 +423,11 @@
             <div style="margin-bottom: 20px;">
                 <div style="font-weight: 600; margin-bottom: 8px; color: #333;">標準カテゴリー（固定）</div>
                 <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                    <span class="badge" style="background: #f5f5f5; color: #333;">建物・外まわり</span>
-                    <span class="badge" style="background: #f5f5f5; color: #333;">部屋・共用部の家具・家電</span>
-                    <span class="badge" style="background: #f5f5f5; color: #333;">介護医療・お風呂の道具</span>
-                    <span class="badge" style="background: #f5f5f5; color: #333;">厨房・食事の道具</span>
-                    <span class="badge" style="background: #f5f5f5; color: #333;">通信・呼出し・防火の機器</span>
+                    <span class="badge" style="background: #f5f5f5; color: #333;">建物インフラ</span>
+                    <span class="badge" style="background: #f5f5f5; color: #333;">居室・生活</span>
+                    <span class="badge" style="background: #f5f5f5; color: #333;">介護・医療</span>
+                    <span class="badge" style="background: #f5f5f5; color: #333;">厨房・食事</span>
+                    <span class="badge" style="background: #f5f5f5; color: #333;">IT・安全</span>
                 </div>
             </div>
 
@@ -412,101 +438,6 @@
                     この機能は現在準備中です。今後のアップデートで利用可能になります。
                 </div>
             </div>
-        </div>
-
-        <!-- 滞留アラート設定（company_admin以上） -->
-        <div class="section" id="stagnationSettings" style="display:none;">
-            <div class="section-title">滞留アラート設定</div>
-            
-            <div style="margin-bottom: 16px; padding: 12px; background: #fafafa; border-radius: 6px; font-size: 14px; color: #666;">
-                通報が一定日数以上「受付しました」のまま滞留している場合、通報履歴画面にアラートを表示します。
-            </div>
-
-            <div class="info-row">
-                <div class="info-label">滞留アラート日数</div>
-                <div class="info-value">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <select id="stagnationDays" style="padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; width: 100px;">
-                            <option value="1">1日</option>
-                            <option value="2">2日</option>
-                            <option value="3">3日</option>
-                            <option value="5">5日</option>
-                            <option value="7">7日</option>
-                            <option value="10">10日</option>
-                            <option value="14">14日</option>
-                        </select>
-                        <span style="font-size: 14px; color: #666;">以上未対応で警告</span>
-                    </div>
-                    <div style="font-size: 13px; color: #999; margin-top: 8px;">※ この設定は全事業所に適用されます</div>
-                </div>
-            </div>
-
-            <button class="btn btn-primary" onclick="saveStagnationSetting()" style="margin-top: 12px;">
-                保存
-            </button>
-        </div>
-
-        <!-- データエクスポート（管理者のみ） -->
-        <div class="section" id="dataExportSection" style="display:none;">
-            <div class="section-title">データエクスポート</div>
-            
-            <div style="margin-bottom: 16px; padding: 12px; background: #fafafa; border-radius: 6px; font-size: 13px; color: #666;">
-                ℹ️ エクスポートするデータを選択してください。CSV形式でダウンロードされます。
-            </div>
-            
-            <div style="margin-bottom: 20px;">
-                <label style="display: flex; align-items: center; padding: 12px; border: 1px solid #e0e0e0; border-radius: 6px; cursor: pointer; margin-bottom: 8px;">
-                    <input type="checkbox" id="exportAccounts" style="margin-right: 12px; width: 18px; height: 18px;">
-                    <div>
-                        <div style="font-weight: 600;">アカウントマスタ</div>
-                        <div style="font-size: 12px; color: #666;">ユーザーID・名前・ロール等</div>
-                    </div>
-                </label>
-                
-                <label style="display: flex; align-items: center; padding: 12px; border: 1px solid #e0e0e0; border-radius: 6px; cursor: pointer; margin-bottom: 8px;" id="exportOfficesLabel">
-                    <input type="checkbox" id="exportOffices" style="margin-right: 12px; width: 18px; height: 18px;">
-                    <div>
-                        <div style="font-weight: 600;">事業所マスタ</div>
-                        <div style="font-size: 12px; color: #666;">事業所名・住所・連絡先等</div>
-                    </div>
-                </label>
-                
-                <label style="display: flex; align-items: center; padding: 12px; border: 1px solid #e0e0e0; border-radius: 6px; cursor: pointer; margin-bottom: 8px;" id="exportPartnersLabel">
-                    <input type="checkbox" id="exportPartners" style="margin-right: 12px; width: 18px; height: 18px;">
-                    <div>
-                        <div style="font-weight: 600;">管理会社マスタ</div>
-                        <div style="font-size: 12px; color: #666;">管理会社名・カテゴリー・連絡先等</div>
-                    </div>
-                </label>
-                
-                <label style="display: flex; align-items: center; padding: 12px; border: 1px solid #e0e0e0; border-radius: 6px; cursor: pointer; margin-bottom: 8px;">
-                    <input type="checkbox" id="exportItems" style="margin-right: 12px; width: 18px; height: 18px;">
-                    <div>
-                        <div style="font-weight: 600;">商品マスタ</div>
-                        <div style="font-size: 12px; color: #666;">商品名・メーカー・型番・担当管理会社等</div>
-                    </div>
-                </label>
-                
-                <label style="display: flex; align-items: center; padding: 12px; border: 1px solid #e0e0e0; border-radius: 6px; cursor: pointer; margin-bottom: 8px;">
-                    <input type="checkbox" id="exportReports" style="margin-right: 12px; width: 18px; height: 18px;">
-                    <div>
-                        <div style="font-weight: 600;">通報履歴</div>
-                        <div style="font-size: 12px; color: #666;">通報日時・カテゴリー・状況・対応状況等</div>
-                    </div>
-                </label>
-                
-                <label style="display: flex; align-items: center; padding: 12px; border: 1px solid #e0e0e0; border-radius: 6px; cursor: pointer;" id="exportAuditLabel">
-                    <input type="checkbox" id="exportAudit" style="margin-right: 12px; width: 18px; height: 18px;">
-                    <div>
-                        <div style="font-weight: 600;">監査ログ</div>
-                        <div style="font-size: 12px; color: #666;">操作履歴・日時・実行者等</div>
-                    </div>
-                </label>
-            </div>
-            
-            <button class="btn btn-primary" onclick="executeExport()" style="width: 100%;">
-                選択したデータをエクスポート
-            </button>
         </div>
 
         <!-- データ削除（system_adminのみ） -->
@@ -520,27 +451,6 @@
             <button class="btn btn-danger" onclick="clearAllData()">
                 ️ 全データを削除
             </button>
-        </div>
-
-        <!-- リンク -->
-        <div class="section">
-            <div class="section-title">規約・ポリシー</div>
-            
-            <a href="terms.html" class="link-item">
-                <div class="link-item-left">
-                    <span class="link-icon"></span>
-                    <span class="link-label">利用規約</span>
-                </div>
-                <span class="link-arrow">→</span>
-            </a>
-
-            <a href="privacy.html" class="link-item">
-                <div class="link-item-left">
-                    <span class="link-icon"></span>
-                    <span class="link-label">プライバシーポリシー</span>
-                </div>
-                <span class="link-arrow">→</span>
-            </a>
         </div>
 
         <!-- ログアウト -->
@@ -593,7 +503,7 @@
         function loadStats() {
             try {
                 // 会社数
-                const companies = JSON.parse(localStorage.getItem('companies') || '[]').filter(c => c.code !== 'SYSTEM');
+                const companies = JSON.parse(localStorage.getItem('companies') || '[]');
                 document.getElementById('companyCount').innerHTML = companies.length + '<span class="stat-unit">件</span>';
 
                 // アカウント数
@@ -614,6 +524,117 @@
             } catch (e) {
                 console.error('統計情報の取得に失敗:', e);
             }
+        }
+
+        // 監査ログCSVフィルタ初期化
+        function initAuditCsvFilters() {
+            var cu = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+            if (cu.role === 'system_admin') {
+                // 会社フィルタ
+                var compDiv = document.getElementById('auditCsvCompanyFilter');
+                if (compDiv) { compDiv.style.display = ''; }
+                var compSel = document.getElementById('auditCsvCompany');
+                var companies = [];
+                try { companies = JSON.parse(localStorage.getItem('companies') || '[]'); } catch(e) {}
+                companies.forEach(function(c) {
+                    if (c.code === 'SYSTEM') return;
+                    var opt = document.createElement('option');
+                    opt.value = c.code; opt.textContent = c.name || c.code;
+                    compSel.appendChild(opt);
+                });
+                // 事業所フィルタ
+                var offDiv = document.getElementById('auditCsvOfficeFilter');
+                if (offDiv) { offDiv.style.display = ''; }
+                onAuditCsvCompanyChange();
+            } else if (cu.role === 'company_admin') {
+                // 事業所フィルタのみ
+                var offDiv = document.getElementById('auditCsvOfficeFilter');
+                if (offDiv) { offDiv.style.display = ''; }
+                var offSel = document.getElementById('auditCsvOffice');
+                var offices = [];
+                try { offices = JSON.parse(localStorage.getItem('offices') || '[]'); } catch(e) {}
+                offices.filter(function(o) { return o.companyCode === cu.companyCode; }).forEach(function(o) {
+                    var opt = document.createElement('option');
+                    opt.value = o.code; opt.textContent = o.name;
+                    offSel.appendChild(opt);
+                });
+            }
+        }
+        
+        function onAuditCsvCompanyChange() {
+            var compVal = document.getElementById('auditCsvCompany').value;
+            var offSel = document.getElementById('auditCsvOffice');
+            offSel.innerHTML = '<option value="">全事業所</option>';
+            var offices = [];
+            try { offices = JSON.parse(localStorage.getItem('offices') || '[]'); } catch(e) {}
+            offices.filter(function(o) { return !compVal || o.companyCode === compVal; }).forEach(function(o) {
+                var opt = document.createElement('option');
+                opt.value = o.code; opt.textContent = o.name;
+                offSel.appendChild(opt);
+            });
+        }
+
+        // 監査ログCSV出力
+        function exportAuditCSV() {
+            try {
+                var logsS = [], logsL = [];
+                try { logsS = JSON.parse(sessionStorage.getItem('audit.logs') || '[]'); } catch(e) {}
+                try { logsL = JSON.parse(localStorage.getItem('audit.logs') || '[]'); } catch(e) {}
+                var allLogs = [].concat(logsS);
+                logsL.forEach(function(r) {
+                    if (!allLogs.find(function(m) { return m.timestamp === r.timestamp && (m.userId === r.userId || m.user === r.user) && m.type === r.type; }))
+                        allLogs.push(r);
+                });
+                allLogs.sort(function(a, b) { return b.timestamp.localeCompare(a.timestamp); });
+                
+                var cu = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+                // ロールベースの基本フィルタ
+                if (cu.role === 'company_admin') {
+                    allLogs = allLogs.filter(function(l) { return (l.companyCode || '') === cu.companyCode; });
+                } else if (cu.role === 'office_admin') {
+                    allLogs = allLogs.filter(function(l) {
+                        var oc = l.officeCode || '';
+                        return (l.companyCode || '') === cu.companyCode && (!oc || oc === cu.officeCode);
+                    });
+                }
+                // UI選択フィルタ
+                var compEl = document.getElementById('auditCsvCompany');
+                var offEl = document.getElementById('auditCsvOffice');
+                var compVal = compEl ? compEl.value : '';
+                var offVal = offEl ? offEl.value : '';
+                if (compVal) {
+                    allLogs = allLogs.filter(function(l) { return (l.companyCode || '') === compVal; });
+                }
+                if (offVal) {
+                    allLogs = allLogs.filter(function(l) { return (l.officeCode || '') === offVal; });
+                }
+                
+                if (allLogs.length === 0) { alert('該当する監査ログがありません。'); return; }
+                var bom = '\uFEFF';
+                var csv = bom + '日時,操作種別,ユーザー,会社コード,事業所コード,詳細\n';
+                allLogs.forEach(function(log) {
+                    var d = new Date(log.timestamp);
+                    var ts = d.getFullYear()+'/'+ String(d.getMonth()+1).padStart(2,'0')+'/'+ String(d.getDate()).padStart(2,'0')+' '+ String(d.getHours()).padStart(2,'0')+':'+ String(d.getMinutes()).padStart(2,'0');
+                    var type = log.type || '-';
+                    var user = log.userName || log.user || log.userId || '-';
+                    var comp = log.companyCode || '-';
+                    var office = log.officeCode || '-';
+                    var detail = '';
+                    if (log.detail && typeof log.detail === 'object') {
+                        detail = JSON.stringify(log.detail);
+                    } else if (log.details) {
+                        detail = String(log.details);
+                    }
+                    csv += ['"'+ts+'"','"'+type+'"','"'+user+'"','"'+comp+'"','"'+office+'"','"'+detail.replace(/"/g,'""')+'"'].join(',') + '\n';
+                });
+                var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = 'audit-log-' + new Date().toISOString().split('T')[0] + '.csv';
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch(e) { alert('CSV出力エラー: ' + e.message); }
         }
 
         // データエクスポート
@@ -643,7 +664,7 @@
                 if (exportOffices) {
                     let offices = JSON.parse(localStorage.getItem('offices') || '[]');
                     offices = filterByScope(offices);
-                    exportToCSV(offices, `offices_${dateStr}.csv`, ['code', 'name', 'companyCode', 'serviceType', 'address', 'phone', 'status']);
+                    exportToCSV(offices, `offices_${dateStr}.csv`, ['officeCode', 'officeName', 'companyCode', 'address', 'phone', 'status']);
                 }
                 
                 if (exportPartners) {
@@ -661,13 +682,13 @@
                 if (exportReports) {
                     let reports = JSON.parse(demoGetFromLocalStorage('onetouch.reports') || '[]');
                     reports = filterByScope(reports);
-                    exportToCSV(reports, `reports_${dateStr}.csv`, ['reporter', 'timestamp', 'category', 'title', 'priority', 'location', 'description', 'assignedPartnerName', 'contractorStatus']);
+                    exportToCSV(reports, `reports_${dateStr}.csv`, ['id', 'timestamp', 'category', 'title', 'priority', 'location', 'description', 'assignedPartnerName', 'contractorStatus']);
                 }
                 
                 if (exportAudit) {
                     let logs = JSON.parse(localStorage.getItem('audit.logs') || '[]');
                     logs = filterByScope(logs);
-                    exportToCSV(logs, `audit_logs_${dateStr}.csv`, ['timestamp', 'type', 'screen', 'user', 'userId', 'companyCode']);
+                    exportToCSV(logs, `audit_logs_${dateStr}.csv`, ['timestamp', 'action', 'userId', 'userName', 'details']);
                 }
                 
                 alert('エクスポートが完了しました。');
@@ -745,7 +766,7 @@
             const confirmed = confirm('本当に全データを削除しますか？\nこの操作は取り消せません。');
             if (!confirmed) return;
 
-            const doubleConfirm = confirm('削除すると、会社、アカウント、事業所、管理会社、通報履歴の全データが削除されます。\n本当によろしいですか？');
+            const doubleConfirm = confirm('削除すると、会社、アカウント、事業所、取引先、通報履歴の全データが削除されます。\n本当によろしいですか？');
             if (!doubleConfirm) return;
 
             try {
@@ -792,28 +813,23 @@
             
             if (currentUser.role === 'system_admin') {
                 // システム管理者
-                document.getElementById('dataExportSection').style.display = 'block';
                 document.getElementById('dataDeleteSection').style.display = 'block';
-                document.getElementById('stagnationSettings').style.display = 'block';
-                loadStagnationSetting();
+                document.getElementById('auditLogSection').style.display = 'block';
+                initAuditCsvFilters();
             } else if (currentUser.role === 'company_admin') {
                 // 本社管理者
                 document.getElementById('companySettings').style.display = 'block';
                 document.getElementById('categorySettings').style.display = 'block';
-                document.getElementById('stagnationSettings').style.display = 'block';
                 document.getElementById('auditLogSection').style.display = 'block';
-                document.getElementById('dataExportSection').style.display = 'block';
                 loadCompanySettings();
                 loadCustomCategories();
-                loadStagnationSetting();
-                // 管理会社エクスポートはシステム管理者のみ
-                document.getElementById('exportPartnersLabel').style.display = 'none';
+                initAuditCsvFilters();
             } else if (currentUser.role === 'office_admin') {
                 // 事業所管理者
                 document.getElementById('officeInfo').style.display = 'block';
                 document.getElementById('auditLogSection').style.display = 'block';
-                // データエクスポートは非表示
                 loadOfficeInfo();
+                initAuditCsvFilters();
             }
         }
 
@@ -825,7 +841,7 @@
             try {
                 if (currentUser.role === 'system_admin') {
                     // システム管理者: 全体の統計
-                    const companies = JSON.parse(localStorage.getItem('companies') || '[]').filter(c => c.code !== 'SYSTEM');
+                    const companies = JSON.parse(localStorage.getItem('companies') || '[]');
                     const offices = JSON.parse(localStorage.getItem('offices') || '[]');
                     const accounts = JSON.parse(demoGetFromLocalStorage('accounts') || '[]');
                     const partners = JSON.parse(demoGetFromLocalStorage('partners') || '[]');
@@ -845,7 +861,7 @@
                             <div class="stat-value">${accounts.length}<span class="stat-unit">件</span></div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-label">登録管理会社数</div>
+                            <div class="stat-label">登録業者数</div>
                             <div class="stat-value">${partners.length}<span class="stat-unit">社</span></div>
                         </div>
                         <div class="stat-card">
@@ -869,6 +885,10 @@
                         <div class="stat-card">
                             <div class="stat-label">登録アカウント数</div>
                             <div class="stat-value">${accounts.length}<span class="stat-unit">件</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">契約業者数</div>
+                            <div class="stat-value">${partners.length}<span class="stat-unit">社</span></div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-label">登録商品数</div>
@@ -907,9 +927,10 @@
         
         // sessionStorage/localStorage切り替え対応
         function demoGetFromSessionOrLocalStorage(key) {
-            // items は onetouch.items キーに統一
-            if (key === 'items') {
-                return localStorage.getItem('onetouch.items');
+            const isDemoMode = currentUser && currentUser.companyCode === 'TAMJ';
+            if (isDemoMode) {
+                const demoKey = 'demo.' + key;
+                return sessionStorage.getItem(demoKey) || localStorage.getItem(key);
             }
             return localStorage.getItem(key);
         }
@@ -948,8 +969,10 @@
         // 滞留アラート設定を読み込み
         function loadStagnationSetting() {
             var storageKey = 'onetouch.stagnationDays';
-            var saved = localStorage.getItem(storageKey) || '3';
-            document.getElementById('stagnationDays').value = saved;
+            var saved = localStorage.getItem(storageKey) || sessionStorage.getItem(storageKey);
+            if (saved) {
+                document.getElementById('stagnationDays').value = saved;
+            }
         }
 
         // 滞留アラート設定を保存
