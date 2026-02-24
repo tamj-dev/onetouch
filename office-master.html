@@ -149,14 +149,13 @@
             border: 1px solid #e8e8e8;
             border-radius: 0 0 8px 8px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
+            overflow-x: hidden;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 800px;
+            table-layout: fixed;
         }
 
         thead {
@@ -170,6 +169,8 @@
             color: #64748b;
             border-bottom: 2px solid #e2e8f0;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         td {
@@ -419,19 +420,20 @@
         </div>
 
         <div class="results-section" id="resultsSection">
-            <div class="result-header">
-                検索結果: <span id="displayCount">0</span>件 / 全 <span id="totalCount">0</span>件
+            <div class="result-header" style="display:flex;align-items:center;justify-content:space-between;">
+                <span>検索結果: <span id="displayCount">0</span>件 / 全 <span id="totalCount">0</span>件</span>
+                <button onclick="downloadCSV()" style="padding: 8px 20px; background: #1e3a5f; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">CSVエクスポート</button>
             </div>
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
-                            <th>事業所コード</th>
-                            <th>事業所名</th>
-                            <th>指定番号</th>
-                            <th>電話番号</th>
-                            <th>ステータス</th>
-                            <th>操作</th>
+                            <th style="width:18%;">事業所コード</th>
+                            <th style="width:22%;">事業所名</th>
+                            <th style="width:18%;">指定番号</th>
+                            <th style="width:16%;">電話番号</th>
+                            <th style="width:13%;">ステータス</th>
+                            <th style="width:13%;">操作</th>
                         </tr>
                     </thead>
                     <tbody id="officeList"></tbody>
@@ -666,10 +668,10 @@
             if (currentUser.role === 'system_admin') {
                 // システム管理者：全事業所
                 return officeList;
-            } else if (currentUser.scope === 'company') {
+            } else if (currentUser.scope === 'company' || currentUser.role === 'company_admin') {
                 // 本社管理者：自社の事業所のみ
                 return officeList.filter(o => o.companyCode === currentUser.companyCode);
-            } else if (currentUser.scope === 'office') {
+            } else if (currentUser.scope === 'office' || currentUser.role === 'office_admin') {
                 // 事業所管理者：自事業所のみ
                 return officeList.filter(o => o.code === currentUser.officeCode);
             }
@@ -936,6 +938,35 @@
             renderOffices(filtered);
         }
 
+        // CSVエクスポート
+        function downloadCSV() {
+            const statusLabelsCSV = { active: '有効', inactive: '無効', suspended: '停止中' };
+            const data = om_lastFiltered || offices;
+            if (data.length === 0) { alert('ダウンロードするデータがありません'); return; }
+
+            const bom = '\uFEFF';
+            const headers = ['事業所コード','事業所名','指定番号','電話番号','住所','ステータス'];
+            const rows = data.map(function(o) {
+                return [
+                    o.code,
+                    o.name,
+                    o.designationNumber || '',
+                    o.phone || '',
+                    o.address || '',
+                    statusLabelsCSV[o.status] || o.status || ''
+                ].map(function(v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(',');
+            });
+
+            var csv = bom + headers.join(',') + '\n' + rows.join('\n');
+            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            var d = new Date();
+            link.download = '事業所一覧_' + d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0') + '.csv';
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
         // 検索条件クリア
         function clearSearch() {
             document.getElementById('searchCode').value = '';
@@ -996,6 +1027,7 @@
             }
 
             // 初回表示
+            document.getElementById('resultsSection').classList.add('visible');
             renderOffices();
         })();
     </script>

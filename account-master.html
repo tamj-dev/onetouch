@@ -131,14 +131,13 @@
             border: 1px solid #e8e8e8;
             border-radius: 0 0 8px 8px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
+            overflow-x: hidden;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 800px;
+            table-layout: fixed;
         }
 
         thead {
@@ -152,11 +151,15 @@
             color: #555;
             border-bottom: 1px solid #e0e0e0;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         td {
             padding: 8px 10px; font-size: 13px;
             border-bottom: 1px solid #f0f0f0;
+            overflow: hidden;
+            text-overflow: ellipsis;
             white-space: nowrap;
         }
 
@@ -462,12 +465,9 @@
         }
 
         @media (max-width: 600px) {
-            table {
-                font-size: 13px;
-            }
-
             th, td {
                 padding: 8px 4px;
+                font-size: 12px;
             }
 
             .btn-edit {
@@ -536,20 +536,21 @@
 
     <!-- 検索結果 -->
     <div class="results-section" id="resultsSection">
-    <div class="result-header">
-        アカウント一覧 < 全<span id="totalCount">0</span>件中1～<span id="displayCount">0</span>件 >
+    <div class="result-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>アカウント一覧 < 全<span id="totalCount">0</span>件中1～<span id="displayCount">0</span>件 ></span>
+        <button onclick="downloadCSV()" style="padding: 8px 20px; background: #1e3a5f; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">CSVエクスポート</button>
     </div>
     <div class="table-container">
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>名前</th>
-                    <th>所属事業所</th>
-                    <th>身分</th>
-                    <th>在籍状況</th>
-                    <th>登録日</th>
-                    <th>操作</th>
+                    <th style="width:18%;">ID</th>
+                    <th style="width:17%;">名前</th>
+                    <th style="width:14%;">所属事業所</th>
+                    <th style="width:13%;">身分</th>
+                    <th style="width:11%;">在籍状況</th>
+                    <th style="width:12%;">登録日</th>
+                    <th style="width:15%;">操作</th>
                 </tr>
             </thead>
             <tbody id="accountList">
@@ -1185,6 +1186,35 @@
             // 検索結果セクションを表示
             document.getElementById('resultsSection').classList.add('visible');
             renderAccounts(filtered);
+        }
+
+        // CSVダウンロード
+        function downloadCSV() {
+            const roleLabelsCSV = { staff: 'スタッフ', office_admin: '事業所管理者', company_admin: '会社管理者', system_admin: 'システム管理者' };
+            const data = am_lastFiltered || accounts;
+            if (data.length === 0) { alert('ダウンロードするデータがありません'); return; }
+
+            const bom = '\uFEFF';
+            const headers = ['ID','名前','所属事業所','身分','在籍状況','登録日'];
+            const rows = data.map(function(a) {
+                return [
+                    a.id,
+                    a.name,
+                    a.officeName || '-',
+                    roleLabelsCSV[a.role] || a.role,
+                    (a.status || 'active') === 'active' ? '在籍中' : '退職済み',
+                    a.createdAt || ''
+                ].map(function(v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(',');
+            });
+            
+            var csv = bom + headers.join(',') + '\n' + rows.join('\n');
+            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            var d = new Date();
+            link.download = 'アカウント一覧_' + d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0') + '.csv';
+            link.click();
+            URL.revokeObjectURL(link.href);
         }
 
         // 検索条件クリア
