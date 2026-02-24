@@ -544,13 +544,13 @@
         <table>
             <thead>
                 <tr>
-                    <th style="width:18%;">ID</th>
-                    <th style="width:17%;">名前</th>
-                    <th style="width:14%;">所属事業所</th>
-                    <th style="width:13%;">身分</th>
-                    <th style="width:11%;">在籍状況</th>
+                    <th style="width:16%;">ID</th>
+                    <th style="width:15%;">名前</th>
+                    <th style="width:12%;">所属事業所</th>
+                    <th style="width:12%;">身分</th>
+                    <th style="width:10%;">在籍状況</th>
                     <th style="width:12%;">登録日</th>
-                    <th style="width:15%;">操作</th>
+                    <th style="width:23%;">操作</th>
                 </tr>
             </thead>
             <tbody id="accountList">
@@ -712,12 +712,15 @@
 
         // スコープに応じてアカウントをフィルタリング
         function filterAccountsByScope(accountList) {
+            // 本社管理者（company_admin）はアカウントマスタの管理対象外（会社マスタで管理）
+            var filtered = accountList.filter(a => a.role !== 'company_admin');
+            
             if (currentUser.role === 'system_admin') {
-                return accountList;
+                return filtered;
             } else if (currentUser.scope === 'company' || currentUser.role === 'company_admin') {
-                return accountList.filter(a => a.companyCode === currentUser.companyCode);
+                return filtered.filter(a => a.companyCode === currentUser.companyCode);
             } else if (currentUser.scope === 'office' || currentUser.role === 'office_admin' || currentUser.role === 'staff') {
-                return accountList.filter(a => a.officeCode === currentUser.officeCode);
+                return filtered.filter(a => a.officeCode === currentUser.officeCode);
             }
             return [];
         }

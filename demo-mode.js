@@ -531,7 +531,7 @@ function initDemoData() {
     Object.keys(DEMO_ACCOUNTS).forEach(function(key){
         var a = DEMO_ACCOUNTS[key];
         if (a.role !== 'contractor') {
-            accountList.push({id:a.id,name:a.name,role:a.role,companyCode:a.companyCode,companyName:a.companyName,officeCode:a.officeCode,officeName:a.officeName,status:'active',password:a.password});
+            accountList.push({id:a.id,name:a.name,role:a.role,companyCode:a.companyCode,companyName:a.companyName,officeCode:a.officeCode,officeName:a.officeName,status:'active',password:a.password,createdAt:'2025-01-10'});
         }
     });
     localStorage.setItem('accounts', JSON.stringify(accountList));
