@@ -93,7 +93,7 @@
 
     /* 送信完了オーバーレイ */
     .sent-ok{position:fixed;inset:0;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;z-index:9998;animation:fadeIn .3s;}
-    .sent-ok-card{background:#fff;border-radius:20px;padding:40px 32px;text-align:center;max-width:320px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.15);animation:popIn .35s;}
+    .sent-ok-card{background:#fff;border-radius:20px;padding:40px 32px;text-align:center;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.15);animation:popIn .35s;}
     .sent-ok-icon{font-size:48px;margin-bottom:12px;color:var(--text);}
     .sent-ok-title{font-size:1.1rem;font-weight:700;margin-bottom:6px;color:var(--text);}
     .sent-ok-sub{font-size:1rem;color:var(--text-dim);line-height:1.5;}
@@ -1210,7 +1210,7 @@
         +'<div class="sent-ok-icon">✓</div>'
         +'<div class="sent-ok-title">送信ありがとうございました</div>'
         +(reportId ? '<div style="font-size:14px;color:#94a3b8;margin-bottom:8px;">受付番号：'+esc(reportId)+'</div>' : '')
-        +'<div class="sent-ok-sub">内容は自動で担当者に届いています。施設管理者への個別連絡は不要です。</div>'
+        +'<div class="sent-ok-sub">内容は自動で担当者に届いています。<br>施設管理者への個別連絡は不要です。</div>'
         +'<div style="display:flex;flex-direction:column;gap:10px;margin-top:24px;">'
         +'<button onclick="this.closest(\'.sent-ok\').remove();document.getElementById(\'historyArea\').scrollIntoView({behavior:\'smooth\'});" style="padding:14px 24px;background:#1e3a5f;color:white;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;min-height:50px;">履歴を見る</button>'
         +'<button onclick="this.closest(\'.sent-ok\').remove();" style="padding:14px 24px;background:#f0f0f0;color:#333;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;min-height:50px;">もう一件送る</button>'
