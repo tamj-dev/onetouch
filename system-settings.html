@@ -385,35 +385,6 @@
             </div>
         </div>
 
-        <!-- 通報カテゴリー設定（company_admin以上） -->
-        <div class="section" id="categorySettings" style="display:none;">
-            <div class="section-title"> 通報カテゴリー設定</div>
-            
-            <div style="margin-bottom: 16px; padding: 12px; background: #fafafa; border-radius: 6px; font-size: 14px; color: #666;">
-                標準カテゴリーは残しつつ、会社独自のカテゴリーを追加できます
-            </div>
-
-            <!-- 標準カテゴリー -->
-            <div style="margin-bottom: 20px;">
-                <div style="font-weight: 600; margin-bottom: 8px; color: #333;">標準カテゴリー（固定）</div>
-                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                    <span class="badge" style="background: #f5f5f5; color: #333;">建物・外</span>
-                    <span class="badge" style="background: #f5f5f5; color: #333;">部屋・共用部</span>
-                    <span class="badge" style="background: #f5f5f5; color: #333;">介護医療備品</span>
-                    <span class="badge" style="background: #f5f5f5; color: #333;">厨房</span>
-                    <span class="badge" style="background: #f5f5f5; color: #333;">ネットワーク</span>
-                </div>
-            </div>
-
-            <!-- カスタムカテゴリー -->
-            <div style="margin-bottom: 20px; opacity: 0.5;">
-                <div style="font-weight: 600; margin-bottom: 8px; color: #333;">カスタムカテゴリー <span style="font-size:12px; font-weight:400; color:#999; background:#f1f5f9; padding:2px 8px; border-radius:4px; margin-left:8px;">準備中</span></div>
-                <div style="padding: 16px; background: #f8f9fa; border-radius: 8px; border: 1px dashed #d1d5db; color: #999; font-size: 14px; text-align: center;">
-                    この機能は現在準備中です。今後のアップデートで利用可能になります。
-                </div>
-            </div>
-        </div>
-
         <!-- データ削除（system_adminのみ） -->
         <div class="section" id="dataDeleteSection" style="display:none;">
             <div class="section-title">️ データ管理</div>
@@ -793,7 +764,7 @@
             } else if (currentUser.role === 'company_admin') {
                 // 本社管理者
                 document.getElementById('companySettings').style.display = 'block';
-                document.getElementById('categorySettings').style.display = 'block';
+                // カテゴリー設定は一旦削除
                 document.getElementById('auditLogSection').style.display = 'block';
                 loadCompanySettings();
                 loadCustomCategories();
@@ -816,7 +787,7 @@
                 if (currentUser.role === 'system_admin') {
                     // システム管理者: 全体の統計
                     const companies = JSON.parse(localStorage.getItem('companies') || '[]');
-                    const offices = JSON.parse(localStorage.getItem('offices') || '[]');
+                    const offices = JSON.parse(localStorage.getItem('offices') || '[]').filter(o => !o.code || !o.code.match(/-H\d+$/));
                     const accounts = JSON.parse(demoGetFromLocalStorage('accounts') || '[]');
                     const partners = JSON.parse(demoGetFromLocalStorage('partners') || '[]');
                     const reports = JSON.parse(demoGetFromLocalStorage('onetouch.reports') || '[]');
@@ -845,7 +816,7 @@
                     `;
                 } else if (currentUser.role === 'company_admin') {
                     // 本社管理者: 自社の統計（localStorageから全件取得）
-                    const offices = JSON.parse(localStorage.getItem('offices') || '[]').filter(o => o.companyCode === currentUser.companyCode);
+                    const offices = JSON.parse(localStorage.getItem('offices') || '[]').filter(o => o.companyCode === currentUser.companyCode && !o.code.match(/-H\d+$/));
                     const accounts = JSON.parse(demoGetFromLocalStorage('accounts') || '[]').filter(a => a.companyCode === currentUser.companyCode);
                     const contracts = JSON.parse(localStorage.getItem('onetouch.contracts') || '[]').filter(c => c.companyCode === currentUser.companyCode && c.status === 'active');
                     const partnerIds = [...new Set(contracts.map(c => c.partnerId))];
