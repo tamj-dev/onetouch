@@ -224,7 +224,10 @@
           <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px;" id="categoryTabs"></div>
           <div style="position:relative;">
             <input type="text" id="equipmentSearch" placeholder="設備名・型番・メーカーで検索" autocomplete="off"
-              style="width:100%;padding:12px 14px;border:1px solid #ddd;border-radius:8px;font-size:15px;background:#fafafa;">
+              style="width:100%;padding:12px 44px 12px 14px;border:1px solid #ddd;border-radius:8px;font-size:15px;background:#fafafa;">
+            <button type="button" id="voiceSearchBtn" onclick="startVoice('equipmentSearch')" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:6px;border-radius:50%;transition:background .2s;" title="音声で検索">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="1" width="6" height="11" rx="3"/><path d="M19 10v1a7 7 0 01-14 0v-1"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            </button>
             <div id="suggestList" style="display:none;position:absolute;left:0;right:0;top:100%;background:white;border:1px solid #ddd;border-top:none;border-radius:0 0 8px 8px;max-height:240px;overflow-y:auto;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,.12);"></div>
           </div>
           <div id="selectedEquipment" style="display:none;margin-top:8px;padding:10px 14px;background:#e8f0fe;border:1px solid #93b4f5;border-radius:8px;font-size:14px;">
@@ -251,7 +254,12 @@
       
       <div class="field">
         <label>状況</label>
-        <textarea id="formDesc" placeholder="例：3階廊下のエアコンが動きません" maxlength="200"></textarea>
+        <div style="position:relative;">
+          <textarea id="formDesc" placeholder="例：3階廊下のエアコンが動きません" maxlength="200" style="padding-right:44px;"></textarea>
+          <button type="button" id="voiceDescBtn" onclick="startVoice('formDesc')" style="position:absolute;right:8px;top:12px;background:none;border:none;cursor:pointer;padding:6px;border-radius:50%;transition:background .2s;" title="音声で入力">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="1" width="6" height="11" rx="3"/><path d="M19 10v1a7 7 0 01-14 0v-1"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          </button>
+        </div>
         <div style="font-size:14px;color:#aaa;margin-top:4px;text-align:right;" id="formDescCount">0/200</div>
       </div>
 
@@ -1217,6 +1225,87 @@
         +'</div>'
         +'</div>';
       document.body.appendChild(ov);
+    }
+
+    // ========== 音声入力 ==========
+    var _voiceRecognition = null;
+    var _voiceTargetId = null;
+    var _voiceActive = false;
+
+    function startVoice(targetId) {
+      var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        toast('この端末では音声入力に対応していません');
+        return;
+      }
+
+      // 既に録音中なら停止
+      if (_voiceActive && _voiceRecognition) {
+        _voiceRecognition.stop();
+        return;
+      }
+
+      _voiceTargetId = targetId;
+      _voiceRecognition = new SpeechRecognition();
+      _voiceRecognition.lang = 'ja-JP';
+      _voiceRecognition.interimResults = true;
+      _voiceRecognition.continuous = false;
+      _voiceRecognition.maxAlternatives = 1;
+
+      var targetEl = document.getElementById(targetId);
+      var btnId = targetId === 'equipmentSearch' ? 'voiceSearchBtn' : 'voiceDescBtn';
+      var btn = document.getElementById(btnId);
+      var originalValue = targetEl.value;
+
+      // UI: 録音中表示
+      _voiceActive = true;
+      btn.style.background = '#fee2e2';
+      btn.querySelector('svg').setAttribute('stroke', '#ef4444');
+      targetEl.placeholder = '話してください...';
+      targetEl.style.borderColor = '#ef4444';
+      targetEl.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.15)';
+
+      _voiceRecognition.onresult = function(event) {
+        var transcript = '';
+        for (var i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        if (targetId === 'formDesc') {
+          targetEl.value = originalValue + (originalValue ? '' : '') + transcript;
+          // 文字数カウント更新
+          var countEl = document.getElementById('formDescCount');
+          if (countEl) countEl.textContent = targetEl.value.length + '/200';
+        } else {
+          targetEl.value = transcript;
+          // 検索候補を表示
+          showSuggestions();
+        }
+      };
+
+      _voiceRecognition.onend = function() {
+        _voiceActive = false;
+        btn.style.background = 'none';
+        btn.querySelector('svg').setAttribute('stroke', '#888');
+        targetEl.placeholder = targetId === 'equipmentSearch' ? '設備名・型番・メーカーで検索' : '例：3階廊下のエアコンが動きません';
+        targetEl.style.borderColor = '#ddd';
+        targetEl.style.boxShadow = 'none';
+      };
+
+      _voiceRecognition.onerror = function(event) {
+        _voiceActive = false;
+        btn.style.background = 'none';
+        btn.querySelector('svg').setAttribute('stroke', '#888');
+        targetEl.style.borderColor = '#ddd';
+        targetEl.style.boxShadow = 'none';
+        if (event.error === 'not-allowed') {
+          toast('マイクの使用が許可されていません。端末の設定を確認してください');
+        } else if (event.error !== 'aborted' && event.error !== 'no-speech') {
+          toast('音声認識エラー: ' + event.error);
+        }
+        targetEl.placeholder = targetId === 'equipmentSearch' ? '設備名・型番・メーカーで検索' : '例：3階廊下のエアコンが動きません';
+      };
+
+      _voiceRecognition.start();
     }
 
   </script>
