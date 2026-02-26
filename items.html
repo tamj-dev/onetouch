@@ -864,6 +864,11 @@
             <select class="filter-select" id="partnerFilter" onchange="applyFilters()">
                 <option value="">全て</option>
             </select>
+
+            <span class="filter-label">カテゴリー:</span>
+            <select class="filter-select" id="categoryFilter" onchange="applyFilters()">
+                <option value="">全カテゴリー</option>
+            </select>
             
             <div style="margin-left: auto; display: flex; gap: 8px;">
                 <button class="btn btn-secondary" id="btnImport" onclick="openImport()">インポート</button>
@@ -1176,11 +1181,19 @@
             
             // フォールバック: 契約がない場合は全カテゴリ表示
             if (categories.length === 0) {
-                categories = ['建物・外','部屋・共用部','介護医療備品','厨房','ネットワーク','その他'];
+                categories = (typeof window.getAllCategories === 'function') ? window.getAllCategories(companyCode || 'TAMJ') : ['建物・外','部屋・共用部','介護医療備品','厨房','ネットワーク','浴室','福祉用具','その他'];
             }
+
+            // ON/OFF設定を反映（ONカテゴリーのみ選択可能）
+            var enabledCats = (typeof window.getEnabledCategories === 'function') ? window.getEnabledCategories(companyCode || 'TAMJ') : categories;
             
             catSelect.innerHTML = '<option value="">選択してください</option>' + categories.map(function(cat) {
-                return '<option value="' + cat + '">' + cat + '</option>';
+                var isEnabled = enabledCats.indexOf(cat) !== -1;
+                if (isEnabled) {
+                    return '<option value="' + cat + '">' + cat + '</option>';
+                } else {
+                    return '<option value="' + cat + '" disabled style="color:#bbb;">' + cat + '（OFF）</option>';
+                }
             }).join('');
         }
 
@@ -1440,6 +1453,23 @@
             const partnerFilter = document.getElementById('partnerFilter');
             partnerFilter.innerHTML = '<option value="">全て</option>' + 
                 partners.map(p => `<option value="${p}">${p}</option>`).join('');
+
+            // カテゴリーフィルター（ON/OFF連動）
+            const catFilter = document.getElementById('categoryFilter');
+            if (catFilter) {
+                const companyCode = (currentUser && currentUser.companyCode) ? currentUser.companyCode : 'TAMJ';
+                const allCats = (typeof window.getAllCategories === 'function') ? window.getAllCategories(companyCode) : window.SYSTEM_CATEGORIES;
+                const enabledCats = (typeof window.getEnabledCategories === 'function') ? window.getEnabledCategories(companyCode) : allCats;
+                const disabledCats = (typeof window.getDisabledCategories === 'function') ? window.getDisabledCategories(companyCode) : [];
+                let opts = '<option value="">全カテゴリー</option>';
+                enabledCats.forEach(function(c) {
+                    opts += '<option value="' + c + '">' + c + '</option>';
+                });
+                disabledCats.forEach(function(c) {
+                    opts += '<option value="' + c + '" disabled style="color:#bbb;">' + c + '（OFF）</option>';
+                });
+                catFilter.innerHTML = opts;
+            }
         }
 
         // 会社フィルタ変更時に事業所リストを連動
@@ -1472,6 +1502,8 @@
             const officeFilter = officeFilterEl ? officeFilterEl.value : '';
             const companyFilterEl = document.getElementById('companyFilter');
             const companyFilter = companyFilterEl ? companyFilterEl.value : '';
+            const categoryFilterEl = document.getElementById('categoryFilter');
+            const categoryFilter = categoryFilterEl ? categoryFilterEl.value : '';
 
             filteredItems = allItems.filter(item => {
                 // 管理会社ログインの場合: 自社が担当している商品のみ表示
@@ -1501,7 +1533,10 @@
                 // 担当管理会社
                 const matchPartner = !partnerFilter || item.assignedPartnerName === partnerFilter;
 
-                return matchSearch && matchCompany && matchOffice && matchPartner;
+                // カテゴリーフィルタ
+                const matchCategory = !categoryFilter || item.category === categoryFilter;
+
+                return matchSearch && matchCompany && matchOffice && matchPartner && matchCategory;
             });
 
             // 検索・フィルタ時はページを1に戻す
@@ -1516,6 +1551,7 @@
         function showAllItems() {
             document.getElementById('searchInput').value = '';
             document.getElementById('partnerFilter').value = '';
+            var catF = document.getElementById('categoryFilter'); if (catF) catF.value = '';
             var cf = document.getElementById('companyFilter'); if (cf) cf.value = '';
             var of2 = document.getElementById('officeFilter'); if (of2) of2.value = '';
             if (typeof onCompanyFilterChange === 'function') onCompanyFilterChange();
@@ -1526,6 +1562,7 @@
         function clearSearch() {
             document.getElementById('searchInput').value = '';
             document.getElementById('partnerFilter').value = '';
+            var catF = document.getElementById('categoryFilter'); if (catF) catF.value = '';
             var cf = document.getElementById('companyFilter'); if (cf) cf.value = '';
             var ofSelect = document.getElementById('officeFilter');
             if (ofSelect) ofSelect.value = '';

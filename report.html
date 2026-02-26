@@ -467,26 +467,54 @@
     }
 
     function buildCategoryTabs(items) {
-      var catOrder = ['建物・外','部屋・共用部','介護医療備品','厨房','ネットワーク','浴室','福祉用具'];
       var cats = {};
       items.forEach(function(i) { var c = i.category || 'その他'; cats[c] = (cats[c]||0) + 1; });
+
+      // カテゴリーON/OFF取得（標準＋カスタム）
+      var companyCode = (currentUser && currentUser.companyCode) ? currentUser.companyCode : 'TAMJ';
+      var allCats = (typeof window.getAllCategories === 'function') ? window.getAllCategories(companyCode) : ['建物・外','部屋・共用部','介護医療備品','厨房','ネットワーク','浴室','福祉用具','その他'];
+      var enabledCats = (typeof window.getEnabledCategories === 'function') ? window.getEnabledCategories(companyCode) : allCats;
+      var disabledCats = (typeof window.getDisabledCategories === 'function') ? window.getDisabledCategories(companyCode) : [];
+
+      // 空き枠の数を計算
+      var catSettings = (typeof window.getCategorySettings === 'function') ? window.getCategorySettings(companyCode) : null;
+      var emptySlots = 0;
+      if (catSettings && catSettings.custom) {
+        catSettings.custom.forEach(function(c) { if (!c || !c.trim()) emptySlots++; });
+      }
+
       var tabsEl = document.getElementById('categoryTabs');
-      var btnBase = 'padding:14px 10px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;text-align:center;line-height:1.4;border:2px solid ';
+      var btnBase = 'padding:14px 10px;border-radius:12px;font-size:15px;font-weight:600;text-align:center;line-height:1.4;border:2px solid ';
       var h = '';
-      catOrder.forEach(function(c) {
+
+      // ON カテゴリー（上段）
+      var onCats = allCats.filter(function(c) { return enabledCats.indexOf(c) !== -1; });
+      onCats.forEach(function(c) {
         var count = cats[c] || 0;
-        h += '<button onclick="filterCategory(\'' + c + '\')" class="cat-tab" style="' + btnBase + '#ddd;background:#fafafa;color:#333;">';
-        h += '<span style="display:block;font-size:15px;font-weight:700;color:#1e293b;">' + c + '</span>';
+        var label = (typeof window.getCategoryDisplayName === 'function') ? window.getCategoryDisplayName(companyCode, c) : c;
+        h += '<button onclick="filterCategory(\'' + c.replace(/'/g, "\\'") + '\')" class="cat-tab" data-cat-status="on" style="' + btnBase + '#ddd;background:#fafafa;color:#333;cursor:pointer;">';
+        h += '<span style="display:block;font-size:15px;font-weight:700;color:#1e293b;">' + label + '</span>';
         h += '<span style="display:block;font-size:13px;font-weight:700;color:#2563eb;margin-top:4px;">(' + count + ')</span>';
         h += '</button>';
       });
-      // その他カテゴリ
-      if (cats['その他']) {
-        h += '<button onclick="filterCategory(\'その他\')" class="cat-tab" style="' + btnBase + '#ddd;background:#fafafa;color:#333;">';
-        h += '<span style="display:block;font-size:15px;font-weight:700;color:#1e293b;">その他</span>';
-        h += '<span style="display:block;font-size:13px;font-weight:700;color:#2563eb;margin-top:4px;">(' + cats['その他'] + ')</span>';
+
+      // OFF カテゴリー（下段・グレーアウト）
+      disabledCats.forEach(function(c) {
+        var label = (typeof window.getCategoryDisplayName === 'function') ? window.getCategoryDisplayName(companyCode, c) : c;
+        h += '<button class="cat-tab" data-cat-status="off" disabled style="' + btnBase + '#e5e5e5;background:#f0f0f0;color:#bbb;cursor:not-allowed;opacity:0.55;">';
+        h += '<span style="display:block;font-size:15px;font-weight:700;color:#bbb;">' + label + '</span>';
+        h += '<span style="display:block;font-size:12px;color:#ccc;margin-top:4px;">未使用</span>';
+        h += '</button>';
+      });
+
+      // 空き枠（グレー）
+      for (var i = 0; i < emptySlots; i++) {
+        h += '<button class="cat-tab" data-cat-status="empty" disabled style="padding:14px 10px;border-radius:12px;font-size:15px;font-weight:600;text-align:center;line-height:1.4;border:2px dashed #ccc;background:#f0f0f0;color:#999;cursor:not-allowed;opacity:0.7;">';
+        h += '<span style="display:block;font-size:14px;font-weight:700;color:#999;">カスタム</span>';
+        h += '<span style="display:block;font-size:11px;color:#aaa;margin-top:4px;">未設定</span>';
         h += '</button>';
       }
+
       tabsEl.innerHTML = h;
     }
 

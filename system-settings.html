@@ -385,6 +385,21 @@
             </div>
         </div>
 
+        <!-- カテゴリーON/OFF設定（本部管理者） -->
+        <div class="section" id="categoryOnOffSection" style="display:none;">
+            <div class="section-title">通報カテゴリー設定</div>
+            <div style="font-size:13px;color:#666;margin-bottom:16px;">
+                カテゴリーのON/OFFと表示名を設定できます。<br>
+                表示名を設定すると通報画面にその名前で表示されます。<br>
+                名称は8文字以内で入力してください（最大10個）。
+            </div>
+            <div id="categoryToggleList" style="display:flex;flex-direction:column;gap:10px;"></div>
+            <div style="margin-top:16px;">
+                <button class="btn" onclick="saveCatOnOff()" style="background:#4a5568;color:white;border:1px solid #4a5568;padding:10px 32px;border-radius:8px;font-size:14px;font-weight:600;">保存</button>
+                <span id="catSaveMsg" style="margin-left:12px;font-size:13px;color:#16a34a;display:none;">保存しました</span>
+            </div>
+        </div>
+
         <!-- データ削除（system_adminのみ） -->
         <div class="section" id="dataDeleteSection" style="display:none;">
             <div class="section-title">️ データ管理</div>
@@ -765,6 +780,8 @@
                 // 本社管理者
                 document.getElementById('companySettings').style.display = 'block';
                 // カテゴリー設定は一旦削除
+                document.getElementById('categoryOnOffSection').style.display = 'block';
+                loadCategoryOnOff();
                 document.getElementById('auditLogSection').style.display = 'block';
                 loadCompanySettings();
                 loadCustomCategories();
@@ -1035,6 +1052,202 @@
             };
             
             reader.readAsDataURL(file);
+        }
+
+        // カテゴリーON/OFF設定
+        function loadCategoryOnOff() {
+            var companyCode = currentUser.companyCode || 'TAMJ';
+            var settings = window.getCategorySettings(companyCode);
+            var stdCats = window.SYSTEM_CATEGORIES;
+            var container = document.getElementById('categoryToggleList');
+            var h = '';
+            var slotNum = 0;
+
+            // 標準カテゴリー（8個）
+            stdCats.forEach(function(cat) {
+                slotNum++;
+                var isOther = (cat === 'その他');
+                var isOn = isOther ? true : (settings.enabled[cat] !== false);
+                h += buildToggleRow(slotNum, cat, isOn, isOther, false);
+            });
+
+            // カスタム枠
+            settings.custom.forEach(function(customName, idx) {
+                slotNum++;
+                var name = (customName || '').trim();
+                var isOn = name ? (settings.enabled[name] !== false) : false;
+                h += buildToggleRow(slotNum, name, isOn, false, true, idx);
+            });
+
+            container.innerHTML = h;
+        }
+
+        function buildToggleRow(num, name, isOn, isOther, isCustom, customIdx) {
+            var h = '';
+            var companyCode = currentUser.companyCode || 'TAMJ';
+            var settings = window.getCategorySettings(companyCode);
+            var displayNames = settings.displayNames || {};
+            var displayName = name ? (displayNames[name] || '') : '';
+            var maxLen = 8;
+
+            var bgColor = isCustom && !name ? '#fafafa' : (isOn ? '#f7f9fc' : '#f5f5f5');
+            var borderColor = isCustom && !name ? '#e0e0e0' : (isOn ? '#b0c4de' : '#ddd');
+            var borderStyle = isCustom && !name ? 'dashed' : 'solid';
+
+            h += '<div style="background:' + bgColor + ';border:1px ' + borderStyle + ' ' + borderColor + ';border-radius:8px;padding:10px 14px;">';
+            h += '<div style="display:flex;align-items:center;gap:8px;">';
+
+            // 番号
+            h += '<span style="font-size:12px;color:#aaa;font-weight:600;min-width:22px;">' + num + '.</span>';
+
+            // カテゴリー名
+            if (isCustom) {
+                h += '<input type="text" data-custom-idx="' + customIdx + '" value="' + (name || '') + '" maxlength="' + maxLen + '" placeholder="名称を入力" onchange="onCustomCatNameChange(this)" style="width:150px;padding:5px 8px;border:1px solid #ddd;border-radius:5px;font-size:13px;font-weight:600;background:white;">';
+            } else {
+                h += '<span style="font-size:14px;font-weight:600;color:' + (isOn ? '#334155' : '#999') + ';min-width:80px;white-space:nowrap;">' + name + '</span>';
+            }
+
+            // 表示名（その他・空き枠以外）
+            if (name && !isOther) {
+                h += '<span style="font-size:11px;color:#aaa;">→</span>';
+                h += '<input type="text" data-display-cat="' + name + '" value="' + displayName + '" maxlength="' + maxLen + '" placeholder="表示名" style="width:150px;padding:5px 8px;border:1px solid #e0e0e0;border-radius:5px;font-size:12px;color:#555;background:white;">';
+            }
+
+            // スペーサー
+            h += '<span style="flex:1;"></span>';
+
+            // ONバッジ
+            if (name || !isCustom) {
+                if (isOn) {
+                    h += '<span style="font-size:10px;background:#64748b;color:white;padding:2px 6px;border-radius:8px;">ON</span>';
+                } else {
+                    h += '<span style="font-size:10px;background:#ccc;color:white;padding:2px 6px;border-radius:8px;">OFF</span>';
+                }
+            } else {
+                h += '<span style="font-size:11px;color:#bbb;">空き枠</span>';
+            }
+
+            // トグル
+            if (isOther) {
+                h += '<span style="font-size:11px;color:#999;margin-left:4px;">固定</span>';
+            } else if (isCustom && !name) {
+                h += '<span style="width:44px;"></span>';
+            } else {
+                var catKey = name;
+                h += '<label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;margin-left:4px;">';
+                h += '<input type="checkbox" data-cat="' + catKey + '" ' + (isOn ? 'checked' : '') + ' onchange="updateCatToggleUI(this)" style="opacity:0;width:0;height:0;">';
+                h += '<span style="position:absolute;top:0;left:0;right:0;bottom:0;background:' + (isOn ? '#64748b' : '#ccc') + ';border-radius:24px;transition:background .2s;"></span>';
+                h += '<span style="position:absolute;top:3px;left:' + (isOn ? '23px' : '3px') + ';width:18px;height:18px;background:white;border-radius:50%;transition:left .2s;box-shadow:0 1px 2px rgba(0,0,0,.2);"></span>';
+                h += '</label>';
+            }
+
+            h += '</div>';
+            h += '</div>';
+            return h;
+        }
+
+        function onCustomCatNameChange(input) {
+            var idx = parseInt(input.dataset.customIdx);
+            var companyCode = currentUser.companyCode || 'TAMJ';
+            var settings = window.getCategorySettings(companyCode);
+            var oldName = settings.custom[idx] || '';
+            var newName = input.value.trim();
+
+            // 8文字制限
+            if (newName.length > 8) {
+                alert('カテゴリー名は8文字以内で入力してください。');
+                input.value = oldName;
+                return;
+            }
+
+            // 重複チェック
+            if (newName) {
+                var allNames = window.SYSTEM_CATEGORIES.slice();
+                settings.custom.forEach(function(c, i) { if (i !== idx && c && c.trim()) allNames.push(c.trim()); });
+                if (allNames.indexOf(newName) !== -1) {
+                    alert('「' + newName + '」は既に使われています。');
+                    input.value = oldName;
+                    return;
+                }
+            }
+
+            // 旧名のenabled設定を移行
+            if (oldName && settings.enabled[oldName] !== undefined) {
+                if (newName) {
+                    settings.enabled[newName] = settings.enabled[oldName];
+                }
+                delete settings.enabled[oldName];
+            } else if (newName) {
+                settings.enabled[newName] = true; // 新規はデフォルトON
+            }
+
+            settings.custom[idx] = newName;
+            window.saveCategorySettings(companyCode, settings);
+            loadCategoryOnOff();
+        }
+
+        function updateCatToggleUI(changedCheckbox) {
+            var companyCode = currentUser.companyCode || 'TAMJ';
+
+            // OFFにしようとした場合、商品数チェック
+            if (changedCheckbox && !changedCheckbox.checked) {
+                var catName = changedCheckbox.dataset.cat;
+                var itemCount = countItemsByCategory(catName, companyCode);
+                if (itemCount > 0) {
+                    if (!confirm('「' + catName + '」には ' + itemCount + ' 件の商品が登録されています。\nOFFにすると通報画面で選択できなくなります。\n\nOFFにしますか？')) {
+                        changedCheckbox.checked = true;
+                        return;
+                    }
+                }
+            }
+
+            var checkboxes = document.querySelectorAll('#categoryToggleList input[type=checkbox]');
+            var settings = window.getCategorySettings(companyCode);
+            checkboxes.forEach(function(cb) {
+                if (cb.dataset.cat) settings.enabled[cb.dataset.cat] = cb.checked;
+            });
+            window.saveCategorySettings(companyCode, settings);
+            loadCategoryOnOff();
+        }
+
+        // カテゴリー別の商品件数を取得
+        function countItemsByCategory(categoryName, companyCode) {
+            var items = [];
+            try { items = JSON.parse(localStorage.getItem('onetouch.items') || '[]'); } catch(e) {}
+            return items.filter(function(item) {
+                return item.category === categoryName && (!companyCode || item.companyCode === companyCode);
+            }).length;
+        }
+
+        function saveCatOnOff() {
+            var companyCode = currentUser.companyCode || 'TAMJ';
+            var settings = window.getCategorySettings(companyCode);
+            // カスタム枠の入力値も反映
+            var inputs = document.querySelectorAll('#categoryToggleList input[type=text][data-custom-idx]');
+            inputs.forEach(function(inp) {
+                var idx = parseInt(inp.dataset.customIdx);
+                settings.custom[idx] = inp.value.trim();
+            });
+            var checkboxes = document.querySelectorAll('#categoryToggleList input[type=checkbox]');
+            checkboxes.forEach(function(cb) {
+                if (cb.dataset.cat) settings.enabled[cb.dataset.cat] = cb.checked;
+            });
+            // 表示名を保存
+            if (!settings.displayNames) settings.displayNames = {};
+            var dnInputs = document.querySelectorAll('#categoryToggleList input[data-display-cat]');
+            dnInputs.forEach(function(inp) {
+                var cat = inp.dataset.displayCat;
+                var val = inp.value.trim();
+                if (val && val !== cat) {
+                    settings.displayNames[cat] = val;
+                } else {
+                    delete settings.displayNames[cat];
+                }
+            });
+            window.saveCategorySettings(companyCode, settings);
+            var msg = document.getElementById('catSaveMsg');
+            msg.style.display = 'inline';
+            setTimeout(function() { msg.style.display = 'none'; }, 2000);
         }
 
         // カスタムカテゴリーを読み込み

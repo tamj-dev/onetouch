@@ -135,6 +135,73 @@ window.DEMO = { isDemo:isDemoMode, showWarning:showDemoWarning, save:demoSaveToL
 
 // ========== カテゴリ ==========
 window.SYSTEM_CATEGORIES = ['建物・外', '部屋・共用部', '介護医療備品', '厨房', 'ネットワーク', '浴室', '福祉用具', 'その他'];
+window.MAX_CATEGORIES = 10; // その他含めてMAX10
+
+// カテゴリーON/OFF管理（会社単位）
+// 保存形式: { "TAMJ": { "enabled": { "建物・外": true, ... }, "custom": ["カスタム名1", ""] }, ... }
+window.getCategorySettings = function(companyCode) {
+    var all = JSON.parse(localStorage.getItem('onetouch_category_settings') || '{}');
+    var settings = all[companyCode];
+    if (!settings) {
+        settings = { enabled: {}, custom: [] };
+        window.SYSTEM_CATEGORIES.forEach(function(c) { settings.enabled[c] = true; });
+        // 空き枠数 = MAX - 標準カテゴリー数
+        var emptySlots = window.MAX_CATEGORIES - window.SYSTEM_CATEGORIES.length;
+        for (var i = 0; i < emptySlots; i++) { settings.custom.push(''); }
+        all[companyCode] = settings;
+        localStorage.setItem('onetouch_category_settings', JSON.stringify(all));
+    }
+    // custom配列が足りなければ補完
+    var totalUsed = window.SYSTEM_CATEGORIES.length + settings.custom.length;
+    while (totalUsed < window.MAX_CATEGORIES) { settings.custom.push(''); totalUsed++; }
+    // displayNames初期化
+    if (!settings.displayNames) settings.displayNames = {};
+    return settings;
+};
+
+window.saveCategorySettings = function(companyCode, settings) {
+    var all = JSON.parse(localStorage.getItem('onetouch_category_settings') || '{}');
+    all[companyCode] = settings;
+    localStorage.setItem('onetouch_category_settings', JSON.stringify(all));
+};
+
+// 標準名→表示名変換
+window.getCategoryDisplayName = function(companyCode, standardName) {
+    var settings = window.getCategorySettings(companyCode);
+    return (settings.displayNames && settings.displayNames[standardName]) || standardName;
+};
+
+// 全カテゴリー一覧（標準＋カスタム、名前があるもののみ）
+window.getAllCategories = function(companyCode) {
+    var settings = window.getCategorySettings(companyCode);
+    var cats = window.SYSTEM_CATEGORIES.slice();
+    settings.custom.forEach(function(c) { if (c && c.trim()) cats.push(c.trim()); });
+    return cats;
+};
+
+window.getEnabledCategories = function(companyCode) {
+    var settings = window.getCategorySettings(companyCode);
+    var result = [];
+    window.SYSTEM_CATEGORIES.forEach(function(c) {
+        if (c === 'その他' || settings.enabled[c] !== false) result.push(c);
+    });
+    settings.custom.forEach(function(c) {
+        if (c && c.trim() && settings.enabled[c.trim()] !== false) result.push(c.trim());
+    });
+    return result;
+};
+
+window.getDisabledCategories = function(companyCode) {
+    var settings = window.getCategorySettings(companyCode);
+    var result = [];
+    window.SYSTEM_CATEGORIES.forEach(function(c) {
+        if (c !== 'その他' && settings.enabled[c] === false) result.push(c);
+    });
+    settings.custom.forEach(function(c) {
+        if (c && c.trim() && settings.enabled[c.trim()] === false) result.push(c.trim());
+    });
+    return result;
+};
 
 // カテゴリ別業者は契約テーブル（DEMO_CONTRACTS）で管理
 
