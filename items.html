@@ -144,6 +144,10 @@
             const items = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
             items.push(item);
             sessionStorage.setItem('demo.items', JSON.stringify(items));
+            // localStorageにも追加（通報画面等で参照するため）
+            const allItems = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
+            allItems.push(item);
+            localStorage.setItem('onetouch.items', JSON.stringify(allItems));
             return item;
           }
           const items = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
@@ -160,6 +164,13 @@
             if (index !== -1) {
               items[index] = item;
               sessionStorage.setItem('demo.items', JSON.stringify(items));
+            }
+            // localStorageにも書き戻し（通報画面等で参照するため）
+            const allItems = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
+            const allIdx = allItems.findIndex(i => i.itemId === item.itemId);
+            if (allIdx !== -1) {
+              allItems[allIdx] = item;
+              localStorage.setItem('onetouch.items', JSON.stringify(allItems));
             }
             return item;
           }
@@ -178,6 +189,10 @@
             const items = JSON.parse(sessionStorage.getItem('demo.items') || '[]');
             const filtered = items.filter(i => i.itemId !== itemId);
             sessionStorage.setItem('demo.items', JSON.stringify(filtered));
+            // localStorageからも削除
+            const allItems = JSON.parse(localStorage.getItem('onetouch.items') || '[]');
+            const allFiltered = allItems.filter(i => i.itemId !== itemId);
+            localStorage.setItem('onetouch.items', JSON.stringify(allFiltered));
             return true;
           }
           // 本番モード
