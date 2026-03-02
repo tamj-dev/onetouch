@@ -518,10 +518,16 @@
             content += '<div style="font-size: 15px; color: #333;">' + dateStr + '</div>';
             content += '</div>';
 
-            // 設備名
+            // 設備名（商品マスタの商品名）
             content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
             content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">設備名</div>';
-            content += '<div style="font-size: 15px; color: #333;">' + (report.equipmentName || report.title || '-') + '</div>';
+            content += '<div style="font-size: 15px; color: #333;">' + (report.equipmentName || report.itemName || '-') + '</div>';
+            content += '</div>';
+
+            // 通報内容（症状・タイトル）
+            content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
+            content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">通報内容</div>';
+            content += '<div style="font-size: 15px; color: #333;">' + (report.title || '-') + '</div>';
             content += '</div>';
 
             // 通報者
