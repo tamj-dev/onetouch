@@ -518,12 +518,10 @@
             content += '<div style="font-size: 15px; color: #333;">' + dateStr + '</div>';
             content += '</div>';
 
-            // 種別
+            // 設備名
             content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
-            content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">種別</div>';
-            const chipClass = report.emergency ? 'status-pending' : 'status-processing';
-            const chipLabel = report.emergency ? '緊急' : '通報';
-            content += '<div><span class="status-badge ' + chipClass + '">' + chipLabel + '</span></div>';
+            content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">設備名</div>';
+            content += '<div style="font-size: 15px; color: #333;">' + (report.equipmentName || report.title || '-') + '</div>';
             content += '</div>';
 
             // 通報者
@@ -545,14 +543,6 @@
             content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">カテゴリー</div>';
             content += '<div style="font-size: 15px; color: #333;">' + (report.category || typeLabels[report.type] || '-') + '</div>';
             content += '</div>';
-
-            // 対象商品
-            if (report.equipmentName || report.itemName) {
-                content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
-                content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">対象商品</div>';
-                content += '<div style="font-size: 15px; color: #333;">' + (report.equipmentName || report.itemName) + '</div>';
-                content += '</div>';
-            }
 
             // 場所
             if (report.location) {
@@ -1295,7 +1285,7 @@
 
             var esc = function(v) { return '"' + String(v || '').replace(/"/g, '""').replace(/\n/g, ' ') + '"'; };
 
-            const headers = ['通報ID','通報日時','通報者','会社コード','事業所','設備名','カテゴリ','場所','状況詳細','割当管理会社','管理会社ステータス','対応時間','最新コメント','写真枚数'];
+            const headers = ['通報ID','通報日時','通報者','会社コード','事業所','設備名','カテゴリ','場所','状況詳細','担当管理会社','管理会社ステータス','対応時間','最新コメント','写真枚数'];
             const rows = allReports.map(r => {
                 const date = r.timestamp ? new Date(r.timestamp).toLocaleString('ja-JP') : '';
                 let responseTime = '';
@@ -1305,7 +1295,7 @@
                     const m = Math.floor((diffMs % 3600000) / 60000);
                     responseTime = h > 0 ? h + '時間' + m + '分' : m + '分';
                 }
-                // 割当管理会社名
+                // 担当管理会社名
                 var partnerName = r.assignedPartnerName || '';
                 if (!partnerName && r.assignedPartnerId) {
                     var p = partners.find(function(x) { return x.id === r.assignedPartnerId; });
