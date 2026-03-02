@@ -1184,6 +1184,14 @@
                 categories = (typeof window.getAllCategories === 'function') ? window.getAllCategories(companyCode || 'TAMJ') : ['建物・外','部屋・共用部','介護医療備品','厨房','ネットワーク','浴室','福祉用具','その他'];
             }
 
+            // カスタムカテゴリー（ON設定）を契約カテゴリーにマージ
+            if (typeof window.getEnabledCategories === 'function') {
+                var allEnabled = window.getEnabledCategories(companyCode || 'TAMJ');
+                allEnabled.forEach(function(cat) {
+                    if (categories.indexOf(cat) < 0) categories.push(cat);
+                });
+            }
+
             // ON/OFF設定を反映（ONカテゴリーのみ選択可能）
             var enabledCats = (typeof window.getEnabledCategories === 'function') ? window.getEnabledCategories(companyCode || 'TAMJ') : categories;
             
