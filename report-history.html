@@ -540,11 +540,19 @@
                 content += '</div>';
             }
 
-            // 対象管理会社
+            // カテゴリー
             content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
-            content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">対象管理会社</div>';
-            content += '<div style="font-size: 15px; color: #333;">' + (typeLabels[report.type] || report.category || '-') + '</div>';
+            content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">カテゴリー</div>';
+            content += '<div style="font-size: 15px; color: #333;">' + (report.category || typeLabels[report.type] || '-') + '</div>';
             content += '</div>';
+
+            // 対象商品
+            if (report.equipmentName || report.itemName) {
+                content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
+                content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">対象商品</div>';
+                content += '<div style="font-size: 15px; color: #333;">' + (report.equipmentName || report.itemName) + '</div>';
+                content += '</div>';
+            }
 
             // 場所
             if (report.location) {
@@ -560,10 +568,10 @@
             content += '<div style="background: #f9fafb; padding: 16px; border-radius: 8px; font-size: 14px; line-height: 1.8; white-space: pre-wrap;">' + (report.description || '-') + '</div>';
             content += '</div>';
             
-            // 割当管理会社（追加）
+            // 担当管理会社
             if (report.assignedPartnerName || report.assignedPartnerId) {
                 content += '<div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">';
-                content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">割当管理会社</div>';
+                content += '<div style="font-size: 12px; color: #999; margin-bottom: 4px;">担当管理会社</div>';
                 const partnerName = report.assignedPartnerName || '管理会社ID: ' + report.assignedPartnerId;
                 content += '<div style="font-size: 15px; color: #333;">' + partnerName + '</div>';
                 content += '</div>';

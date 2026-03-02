@@ -537,33 +537,64 @@ function generateDemoItems(companyCode, officeCodes, officeNames) {
 // ========== 通報履歴ダミー ==========
 function generateDemoReports(companyCode, officeCodes, officeNames, accounts) {
     var reports = [];
+    // [タイトル, カテゴリー, ステータス, 場所, 商品名]
     var data = [
-        ['2F居室のエアコンが冷えない','建物・外','完了'],['共用廊下の蛍光灯が切れている','建物・外','完了'],
-        ['浴室の排水が詰まり気味','建物・外','対応中'],['車いすのブレーキが効きにくい','介護医療備品','未対応'],
-        ['業務用冷蔵庫から異音','厨房','完了'],['ナースコール応答遅延','ネットワーク','対応中'],
-        ['玄関の自動ドアの動作が遅い','建物・外','完了'],['給湯器のお湯が出にくい','建物・外','未対応'],
-        ['3F共用スペースのTV映らない','部屋・共用部','完了'],['歩行器のゴム摩耗','介護医療備品','完了'],
-        ['食洗機のエラー表示','厨房','対応中'],['Wi-Fiが途切れる','ネットワーク','完了'],
-        ['電動ベッドのリモコン故障','部屋・共用部','未対応'],['防犯カメラの映像乱れ','ネットワーク','完了'],
-        ['スチコンの温度上がらない','厨房','対応中'],['消火器の期限切れ確認','建物・外','完了'],
-        ['洗濯機の脱水異音','部屋・共用部','完了'],['吸引器の吸引力低下','介護医療備品','未対応'],
-        ['AEDバッテリー警告表示','介護医療備品','対応中'],['配膳車のキャスター不具合','厨房','完了'],
-        ['複合機の紙詰まり頻発','ネットワーク','完了'],['分電盤から焦げ臭い','建物・外','対応中'],
-        ['パルスオキシメーター電池切れ','介護医療備品','完了'],['製氷機が氷を作らない','厨房','未対応']
+        ['2F居室のエアコンが冷えない','部屋・共用部','完了','2F 居室201号室','エアコン 2F-201'],
+        ['共用廊下の蛍光灯が切れている','部屋・共用部','完了','1F 共用廊下','蛍光灯 1F廊下'],
+        ['浴室の排水が詰まり気味','浴室','対応中','1F 浴室','排水口 浴室'],
+        ['車いすのブレーキが効きにくい','福祉用具','未対応','1F 倉庫','車椅子 標準型'],
+        ['業務用冷蔵庫から異音','厨房','完了','1F 厨房','業務用冷蔵庫'],
+        ['ナースコール応答遅延','ネットワーク','対応中','1F スタッフステーション','ナースコール受信機'],
+        ['玄関の自動ドアの動作が遅い','建物・外','完了','1F 玄関','自動ドア 正面'],
+        ['給湯器のお湯が出にくい','建物・外','未対応','1F 機械室','給湯器 A'],
+        ['3F共用スペースのTV映らない','部屋・共用部','完了','3F 共用スペース','テレビ 3F共用'],
+        ['歩行器のゴム摩耗','福祉用具','完了','2F 廊下','歩行器 Aタイプ'],
+        ['食洗機のエラー表示','厨房','対応中','1F 厨房','食器洗浄機'],
+        ['Wi-Fiが途切れる','ネットワーク','完了','2F 事務室','Wi-Fiルーター 2F'],
+        ['電動ベッドのリモコン故障','部屋・共用部','未対応','2F 居室205号室','電動ベッド 205'],
+        ['防犯カメラの映像乱れ','ネットワーク','完了','1F 玄関','防犯カメラ 玄関'],
+        ['スチコンの温度上がらない','厨房','対応中','1F 厨房','スチームコンベクション'],
+        ['消火器の期限切れ確認','建物・外','完了','各フロア','消火器 各階'],
+        ['洗濯機の脱水異音','部屋・共用部','完了','2F 洗濯室','洗濯機 2F'],
+        ['吸引器の吸引力低下','介護医療備品','未対応','1F スタッフステーション','吸引器 A'],
+        ['AEDバッテリー警告表示','介護医療備品','対応中','1F エントランス','AED'],
+        ['配膳車のキャスター不具合','厨房','完了','1F 厨房','配膳車'],
+        ['複合機の紙詰まり頻発','ネットワーク','完了','1F 事務室','複合機'],
+        ['分電盤から焦げ臭い','建物・外','対応中','1F 機械室','分電盤'],
+        ['機械浴槽のリフト動作不良','浴室','未対応','1F 浴室','機械浴槽'],
+        ['製氷機が氷を作らない','厨房','未対応','1F 厨房','製氷機']
     ];
+
+    // 契約テーブルからカテゴリ→管理会社を解決
+    var contracts = [];
+    try { contracts = DEMO_CONTRACTS || []; } catch(e) {}
+    function resolvePartner(cat) {
+        var ct = contracts.find(function(c) {
+            return c.companyCode === companyCode && c.status === 'active' && (c.categories||[]).indexOf(cat) >= 0;
+        });
+        if (ct) {
+            var p = DEMO_PARTNERS.find(function(pp) { return pp.id === ct.partnerId; });
+            return { id: ct.partnerId, name: p ? p.name : '' };
+        }
+        return { id: null, name: '' };
+    }
+
     var staffs = accounts.filter(function(a){return a.companyCode===companyCode&&(a.role==='staff'||a.role==='office_admin');});
+    var statusMap = {'未対応':'pending','対応中':'in_progress','完了':'completed'};
+
     for (var i = 0; i < data.length; i++) {
         var oi = i % officeCodes.length; var si = i % staffs.length;
         var s = staffs[si]||{name:'スタッフ',id:'unknown'};
         var ts = new Date(); ts.setDate(ts.getDate()-(30-i)); ts.setHours(8+(i%10),(i*17)%60,0,0);
-        var statusMap = {'未対応':'pending','対応中':'in_progress','完了':'completed'};
+        var partner = resolvePartner(data[i][1]);
         reports.push({
             id:'RPT-'+companyCode+'-'+String(i+1).padStart(4,'0'),
             companyCode:companyCode, officeCode:officeCodes[oi], officeName:officeNames[oi],
             title:data[i][0], category:data[i][1], description:data[i][0], type:'report',
+            location:data[i][3], equipmentName:data[i][4],
             timestamp:ts.toISOString(), reporter:s.name, reporterId:s.id, userId:s.id,
             status:statusMap[data[i][2]], contractorStatus:data[i][2],
-            assignedPartnerId:null, assignedPartnerName:'',
+            assignedPartnerId:partner.id, assignedPartnerName:partner.name,
             createdAt:ts.toISOString(), updatedAt:ts.toISOString()
         });
     }
@@ -572,7 +603,7 @@ function generateDemoReports(companyCode, officeCodes, officeNames, accounts) {
 
 // ========== デモマスタデータ初期化 ==========
 function initDemoData() {
-    if (localStorage.getItem('demo_initialized') === 'v12') return;
+    if (localStorage.getItem('demo_initialized') === 'v13') return;
 
     var companies = [
         {code:'TAMJ',name:'タムジ株式会社',status:'active',postalCode:'100-0001',prefecture:'東京都',address:'千代田区千代田1-1',phone:'03-1234-5678'},
@@ -651,7 +682,7 @@ function initDemoData() {
     });
     localStorage.setItem('onetouch.reports', JSON.stringify(allReports));
 
-    localStorage.setItem('demo_initialized', 'v12');
+    localStorage.setItem('demo_initialized', 'v13');
 }
 
 // ========== 業者振り分けロジック ==========
