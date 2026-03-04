@@ -137,18 +137,18 @@ window.DEMO = { isDemo:isDemoMode, showWarning:showDemoWarning, save:demoSaveToL
 window.SYSTEM_CATEGORIES = ['建物・外', '部屋・共用部', '介護医療備品', '厨房', 'ネットワーク', '浴室', '福祉用具', 'その他'];
 window.MAX_CATEGORIES = 10; // その他含めてMAX10
 
-// カテゴリーON/OFF管理（会社単位）
-// 保存形式: { "TAMJ": { "enabled": { "建物・外": true, ... }, "custom": ["カスタム名1", ""] }, ... }
-window.getCategorySettings = function(companyCode) {
+// カテゴリーON/OFF管理（事業所単位）
+// 保存形式: { "TAMJ-J0001": { "enabled": { "建物・外": true, ... }, "custom": ["カスタム名1", ""] }, ... }
+window.getCategorySettings = function(officeCode) {
     var all = JSON.parse(localStorage.getItem('onetouch_category_settings') || '{}');
-    var settings = all[companyCode];
+    var settings = all[officeCode];
     if (!settings) {
         settings = { enabled: {}, custom: [] };
         window.SYSTEM_CATEGORIES.forEach(function(c) { settings.enabled[c] = true; });
         // 空き枠数 = MAX - 標準カテゴリー数
         var emptySlots = window.MAX_CATEGORIES - window.SYSTEM_CATEGORIES.length;
         for (var i = 0; i < emptySlots; i++) { settings.custom.push(''); }
-        all[companyCode] = settings;
+        all[officeCode] = settings;
         localStorage.setItem('onetouch_category_settings', JSON.stringify(all));
     }
     // custom配列が足りなければ補完
@@ -159,31 +159,31 @@ window.getCategorySettings = function(companyCode) {
     return settings;
 };
 
-window.saveCategorySettings = function(companyCode, settings) {
+window.saveCategorySettings = function(officeCode, settings) {
     var all = JSON.parse(localStorage.getItem('onetouch_category_settings') || '{}');
-    all[companyCode] = settings;
+    all[officeCode] = settings;
     localStorage.setItem('onetouch_category_settings', JSON.stringify(all));
 };
 
 // 標準名→表示名変換
-window.getCategoryDisplayName = function(companyCode, standardName) {
-    var settings = window.getCategorySettings(companyCode);
+window.getCategoryDisplayName = function(officeCode, standardName) {
+    var settings = window.getCategorySettings(officeCode);
     return (settings.displayNames && settings.displayNames[standardName]) || standardName;
 };
 
 // 全カテゴリー一覧（標準＋カスタム、名前があるもののみ）
-window.getAllCategories = function(companyCode) {
-    var settings = window.getCategorySettings(companyCode);
+window.getAllCategories = function(officeCode) {
+    var settings = window.getCategorySettings(officeCode);
     var cats = window.SYSTEM_CATEGORIES.slice();
     settings.custom.forEach(function(c) { if (c && c.trim()) cats.push(c.trim()); });
     return cats;
 };
 
-window.getEnabledCategories = function(companyCode) {
-    var settings = window.getCategorySettings(companyCode);
+window.getEnabledCategories = function(officeCode) {
+    var settings = window.getCategorySettings(officeCode);
     var result = [];
     window.SYSTEM_CATEGORIES.forEach(function(c) {
-        if (c === 'その他' || settings.enabled[c] !== false) result.push(c);
+        if (settings.enabled[c] !== false) result.push(c);
     });
     settings.custom.forEach(function(c) {
         if (c && c.trim() && settings.enabled[c.trim()] !== false) result.push(c.trim());
@@ -191,11 +191,11 @@ window.getEnabledCategories = function(companyCode) {
     return result;
 };
 
-window.getDisabledCategories = function(companyCode) {
-    var settings = window.getCategorySettings(companyCode);
+window.getDisabledCategories = function(officeCode) {
+    var settings = window.getCategorySettings(officeCode);
     var result = [];
     window.SYSTEM_CATEGORIES.forEach(function(c) {
-        if (c !== 'その他' && settings.enabled[c] === false) result.push(c);
+        if (settings.enabled[c] === false) result.push(c);
     });
     settings.custom.forEach(function(c) {
         if (c && c.trim() && settings.enabled[c.trim()] === false) result.push(c.trim());

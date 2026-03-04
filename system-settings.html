@@ -780,8 +780,7 @@
                 // 本社管理者
                 document.getElementById('companySettings').style.display = 'block';
                 // カテゴリー設定は一旦削除
-                document.getElementById('categoryOnOffSection').style.display = 'block';
-                loadCategoryOnOff();
+                // カテゴリー設定は事業所管理者に移動
                 document.getElementById('auditLogSection').style.display = 'block';
                 loadCompanySettings();
                 loadCustomCategories();
@@ -789,8 +788,10 @@
             } else if (currentUser.role === 'office_admin') {
                 // 事業所管理者
                 document.getElementById('officeInfo').style.display = 'block';
+                document.getElementById('categoryOnOffSection').style.display = 'block';
                 document.getElementById('auditLogSection').style.display = 'block';
                 loadOfficeInfo();
+                loadCategoryOnOff();
                 initAuditCsvFilters();
             }
         }
@@ -1056,8 +1057,8 @@
 
         // カテゴリーON/OFF設定
         function loadCategoryOnOff() {
-            var companyCode = currentUser.companyCode || 'TAMJ';
-            var settings = window.getCategorySettings(companyCode);
+            var officeCode = currentUser.officeCode || 'TAMJ-J0001';
+            var settings = window.getCategorySettings(officeCode);
             var stdCats = window.SYSTEM_CATEGORIES;
             var container = document.getElementById('categoryToggleList');
             var h = '';
@@ -1066,9 +1067,8 @@
             // 標準カテゴリー（8個）
             stdCats.forEach(function(cat) {
                 slotNum++;
-                var isOther = (cat === 'その他');
-                var isOn = isOther ? true : (settings.enabled[cat] !== false);
-                h += buildToggleRow(slotNum, cat, isOn, isOther, false);
+                var isOn = settings.enabled[cat] !== false;
+                h += buildToggleRow(slotNum, cat, isOn, false);
             });
 
             // カスタム枠
@@ -1076,16 +1076,16 @@
                 slotNum++;
                 var name = (customName || '').trim();
                 var isOn = name ? (settings.enabled[name] !== false) : false;
-                h += buildToggleRow(slotNum, name, isOn, false, true, idx);
+                h += buildToggleRow(slotNum, name, isOn, true, idx);
             });
 
             container.innerHTML = h;
         }
 
-        function buildToggleRow(num, name, isOn, isOther, isCustom, customIdx) {
+        function buildToggleRow(num, name, isOn, isCustom, customIdx) {
             var h = '';
-            var companyCode = currentUser.companyCode || 'TAMJ';
-            var settings = window.getCategorySettings(companyCode);
+            var officeCode = currentUser.officeCode || 'TAMJ-J0001';
+            var settings = window.getCategorySettings(officeCode);
             var displayNames = settings.displayNames || {};
             var displayName = name ? (displayNames[name] || '') : '';
             var maxLen = 8;
@@ -1107,8 +1107,8 @@
                 h += '<span style="font-size:14px;font-weight:600;color:' + (isOn ? '#334155' : '#999') + ';min-width:80px;white-space:nowrap;">' + name + '</span>';
             }
 
-            // 表示名（その他・空き枠以外）
-            if (name && !isOther) {
+            // 表示名
+            if (name) {
                 h += '<span style="font-size:11px;color:#aaa;">→</span>';
                 h += '<input type="text" data-display-cat="' + name + '" value="' + displayName + '" maxlength="' + maxLen + '" placeholder="表示名" style="width:150px;padding:5px 8px;border:1px solid #e0e0e0;border-radius:5px;font-size:12px;color:#555;background:white;">';
             }
@@ -1128,9 +1128,7 @@
             }
 
             // トグル
-            if (isOther) {
-                h += '<span style="font-size:11px;color:#999;margin-left:4px;">固定</span>';
-            } else if (isCustom && !name) {
+            if (isCustom && !name) {
                 h += '<span style="width:44px;"></span>';
             } else {
                 var catKey = name;
@@ -1148,8 +1146,8 @@
 
         function onCustomCatNameChange(input) {
             var idx = parseInt(input.dataset.customIdx);
-            var companyCode = currentUser.companyCode || 'TAMJ';
-            var settings = window.getCategorySettings(companyCode);
+            var officeCode = currentUser.officeCode || 'TAMJ-J0001';
+            var settings = window.getCategorySettings(officeCode);
             var oldName = settings.custom[idx] || '';
             var newName = input.value.trim();
 
@@ -1182,17 +1180,17 @@
             }
 
             settings.custom[idx] = newName;
-            window.saveCategorySettings(companyCode, settings);
+            window.saveCategorySettings(officeCode, settings);
             loadCategoryOnOff();
         }
 
         function updateCatToggleUI(changedCheckbox) {
-            var companyCode = currentUser.companyCode || 'TAMJ';
+            var officeCode = currentUser.officeCode || 'TAMJ-J0001';
 
             // OFFにしようとした場合、商品数チェック
             if (changedCheckbox && !changedCheckbox.checked) {
                 var catName = changedCheckbox.dataset.cat;
-                var itemCount = countItemsByCategory(catName, companyCode);
+                var itemCount = countItemsByCategory(catName, officeCode);
                 if (itemCount > 0) {
                     if (!confirm('「' + catName + '」には ' + itemCount + ' 件の商品が登録されています。\nOFFにすると通報画面で選択できなくなります。\n\nOFFにしますか？')) {
                         changedCheckbox.checked = true;
@@ -1202,26 +1200,26 @@
             }
 
             var checkboxes = document.querySelectorAll('#categoryToggleList input[type=checkbox]');
-            var settings = window.getCategorySettings(companyCode);
+            var settings = window.getCategorySettings(officeCode);
             checkboxes.forEach(function(cb) {
                 if (cb.dataset.cat) settings.enabled[cb.dataset.cat] = cb.checked;
             });
-            window.saveCategorySettings(companyCode, settings);
+            window.saveCategorySettings(officeCode, settings);
             loadCategoryOnOff();
         }
 
         // カテゴリー別の商品件数を取得
-        function countItemsByCategory(categoryName, companyCode) {
+        function countItemsByCategory(categoryName, officeCode) {
             var items = [];
             try { items = JSON.parse(localStorage.getItem('onetouch.items') || '[]'); } catch(e) {}
             return items.filter(function(item) {
-                return item.category === categoryName && (!companyCode || item.companyCode === companyCode);
+                return item.category === categoryName && (!officeCode || item.officeCode === officeCode);
             }).length;
         }
 
         function saveCatOnOff() {
-            var companyCode = currentUser.companyCode || 'TAMJ';
-            var settings = window.getCategorySettings(companyCode);
+            var officeCode = currentUser.officeCode || 'TAMJ-J0001';
+            var settings = window.getCategorySettings(officeCode);
             // カスタム枠の入力値も反映
             var inputs = document.querySelectorAll('#categoryToggleList input[type=text][data-custom-idx]');
             inputs.forEach(function(inp) {
@@ -1244,7 +1242,7 @@
                     delete settings.displayNames[cat];
                 }
             });
-            window.saveCategorySettings(companyCode, settings);
+            window.saveCategorySettings(officeCode, settings);
             var msg = document.getElementById('catSaveMsg');
             msg.style.display = 'inline';
             setTimeout(function() { msg.style.display = 'none'; }, 2000);

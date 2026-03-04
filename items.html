@@ -1196,19 +1196,19 @@
             
             // フォールバック: 契約がない場合は全カテゴリ表示
             if (categories.length === 0) {
-                categories = (typeof window.getAllCategories === 'function') ? window.getAllCategories(companyCode || 'TAMJ') : ['建物・外','部屋・共用部','介護医療備品','厨房','ネットワーク','浴室','福祉用具','その他'];
+                categories = (typeof window.getAllCategories === 'function') ? window.getAllCategories(currentUser.officeCode || 'TAMJ-J0001') : ['建物・外','部屋・共用部','介護医療備品','厨房','ネットワーク','浴室','福祉用具','その他'];
             }
 
             // カスタムカテゴリー（ON設定）を契約カテゴリーにマージ
             if (typeof window.getEnabledCategories === 'function') {
-                var allEnabled = window.getEnabledCategories(companyCode || 'TAMJ');
+                var allEnabled = window.getEnabledCategories(currentUser.officeCode || 'TAMJ-J0001');
                 allEnabled.forEach(function(cat) {
                     if (categories.indexOf(cat) < 0) categories.push(cat);
                 });
             }
 
             // ON/OFF設定を反映（ONカテゴリーのみ選択可能）
-            var enabledCats = (typeof window.getEnabledCategories === 'function') ? window.getEnabledCategories(companyCode || 'TAMJ') : categories;
+            var enabledCats = (typeof window.getEnabledCategories === 'function') ? window.getEnabledCategories(currentUser.officeCode || 'TAMJ-J0001') : categories;
             
             catSelect.innerHTML = '<option value="">選択してください</option>' + categories.map(function(cat) {
                 var isEnabled = enabledCats.indexOf(cat) !== -1;
@@ -1480,10 +1480,10 @@
             // カテゴリーフィルター（ON/OFF連動）
             const catFilter = document.getElementById('categoryFilter');
             if (catFilter) {
-                const companyCode = (currentUser && currentUser.companyCode) ? currentUser.companyCode : 'TAMJ';
-                const allCats = (typeof window.getAllCategories === 'function') ? window.getAllCategories(companyCode) : window.SYSTEM_CATEGORIES;
-                const enabledCats = (typeof window.getEnabledCategories === 'function') ? window.getEnabledCategories(companyCode) : allCats;
-                const disabledCats = (typeof window.getDisabledCategories === 'function') ? window.getDisabledCategories(companyCode) : [];
+                const officeCode = (currentUser && currentUser.officeCode) ? currentUser.officeCode : 'TAMJ-J0001';
+                const allCats = (typeof window.getAllCategories === 'function') ? window.getAllCategories(officeCode) : window.SYSTEM_CATEGORIES;
+                const enabledCats = (typeof window.getEnabledCategories === 'function') ? window.getEnabledCategories(officeCode) : allCats;
+                const disabledCats = (typeof window.getDisabledCategories === 'function') ? window.getDisabledCategories(officeCode) : [];
                 let opts = '<option value="">全カテゴリー</option>';
                 enabledCats.forEach(function(c) {
                     opts += '<option value="' + c + '">' + c + '</option>';

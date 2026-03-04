@@ -470,14 +470,14 @@
       var cats = {};
       items.forEach(function(i) { var c = i.category || 'その他'; cats[c] = (cats[c]||0) + 1; });
 
-      // カテゴリーON/OFF取得（標準＋カスタム）
-      var companyCode = (currentUser && currentUser.companyCode) ? currentUser.companyCode : 'TAMJ';
-      var allCats = (typeof window.getAllCategories === 'function') ? window.getAllCategories(companyCode) : ['建物・外','部屋・共用部','介護医療備品','厨房','ネットワーク','浴室','福祉用具','その他'];
-      var enabledCats = (typeof window.getEnabledCategories === 'function') ? window.getEnabledCategories(companyCode) : allCats;
-      var disabledCats = (typeof window.getDisabledCategories === 'function') ? window.getDisabledCategories(companyCode) : [];
+      // カテゴリーON/OFF取得（事業所単位）
+      var officeCode = (currentUser && currentUser.officeCode) ? currentUser.officeCode : 'TAMJ-J0001';
+      var allCats = (typeof window.getAllCategories === 'function') ? window.getAllCategories(officeCode) : ['建物・外','部屋・共用部','介護医療備品','厨房','ネットワーク','浴室','福祉用具','その他'];
+      var enabledCats = (typeof window.getEnabledCategories === 'function') ? window.getEnabledCategories(officeCode) : allCats;
+      var disabledCats = (typeof window.getDisabledCategories === 'function') ? window.getDisabledCategories(officeCode) : [];
 
       // 空き枠の数を計算
-      var catSettings = (typeof window.getCategorySettings === 'function') ? window.getCategorySettings(companyCode) : null;
+      var catSettings = (typeof window.getCategorySettings === 'function') ? window.getCategorySettings(officeCode) : null;
       var emptySlots = 0;
       if (catSettings && catSettings.custom) {
         catSettings.custom.forEach(function(c) { if (!c || !c.trim()) emptySlots++; });
@@ -491,7 +491,7 @@
       var onCats = allCats.filter(function(c) { return enabledCats.indexOf(c) !== -1; });
       onCats.forEach(function(c) {
         var count = cats[c] || 0;
-        var label = (typeof window.getCategoryDisplayName === 'function') ? window.getCategoryDisplayName(companyCode, c) : c;
+        var label = (typeof window.getCategoryDisplayName === 'function') ? window.getCategoryDisplayName(officeCode, c) : c;
         h += '<button onclick="filterCategory(\'' + c.replace(/'/g, "\\'") + '\')" class="cat-tab" data-cat-status="on" style="' + btnBase + '#ddd;background:#fafafa;color:#333;cursor:pointer;">';
         h += '<span style="display:block;font-size:15px;font-weight:700;color:#1e293b;">' + label + '</span>';
         h += '<span style="display:block;font-size:13px;font-weight:700;color:#2563eb;margin-top:4px;">(' + count + ')</span>';
@@ -500,7 +500,7 @@
 
       // OFF カテゴリー（下段・グレーアウト）
       disabledCats.forEach(function(c) {
-        var label = (typeof window.getCategoryDisplayName === 'function') ? window.getCategoryDisplayName(companyCode, c) : c;
+        var label = (typeof window.getCategoryDisplayName === 'function') ? window.getCategoryDisplayName(officeCode, c) : c;
         h += '<button class="cat-tab" data-cat-status="off" disabled style="' + btnBase + '#e5e5e5;background:#f0f0f0;color:#bbb;cursor:not-allowed;opacity:0.55;">';
         h += '<span style="display:block;font-size:15px;font-weight:700;color:#bbb;">' + label + '</span>';
         h += '<span style="display:block;font-size:12px;color:#ccc;margin-top:4px;">未使用</span>';
