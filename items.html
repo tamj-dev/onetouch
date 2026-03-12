@@ -976,7 +976,7 @@
                     </select>
                     <input type="hidden" id="itemAssignedPartner" value="">
                     <div style="font-size: 12px; color: #888; margin-top: 4px;">
-                        ※ カテゴリに紐づく管理会社が自動表示されます（複数の場合は選択可）
+                        ※ カテゴリに紐づく管理会社が自動表示されます。契約未設定の場合も手動で選択できます
                     </div>
                 </div>
 
@@ -1280,7 +1280,18 @@
             }
             
             if (matchedPartners.length === 0) {
-                partnerSelect.innerHTML = '<option value="">（未割当 — 契約設定をご確認ください）</option>';
+                // 契約未設定の場合は全管理会社から手動選択できるようにする
+                var allPartners = [];
+                try { allPartners = JSON.parse(sessionStorage.getItem('partners') || '[]'); } catch(e) {}
+                try { var pl2 = JSON.parse(localStorage.getItem('partners') || '[]'); pl2.forEach(function(p){ if(!allPartners.find(function(x){return x.id===p.id;})) allPartners.push(p); }); } catch(e) {}
+                
+                if (allPartners.length > 0) {
+                    partnerSelect.innerHTML = '<option value="">（契約未設定 — 手動で選択してください）</option>' + allPartners.map(function(p) {
+                        return '<option value="' + p.id + '">' + p.name + '</option>';
+                    }).join('');
+                } else {
+                    partnerSelect.innerHTML = '<option value="">（管理会社が登録されていません）</option>';
+                }
                 hidden.value = '';
             } else if (matchedPartners.length === 1) {
                 partnerSelect.innerHTML = '<option value="' + matchedPartners[0].id + '">' + matchedPartners[0].name + '</option>';

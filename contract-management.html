@@ -64,7 +64,7 @@
         <div class="section">
             <div class="links-row">
                 <a href="docs.html#guide" class="link-btn" style="background:#f0f7ff; border:1px solid #bfdbfe; color:#1e3a5f;">
-                    📖 契約テーブルとは（概要）
+                    📖 インポート補助機能について
                 </a>
                 <a href="docs.html#howto" class="link-btn" style="background:#f0fdf4; border:1px solid #bbf7d0; color:#166534;">
                     🔧 管理会社の変更手順
@@ -78,10 +78,19 @@
             </div>
         </div>
 
+        <!-- インポート補助の説明バナー -->
+        <div class="section" style="background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:16px 20px; margin-bottom:0;">
+            <div style="font-size:14px; color:#92400e; line-height:1.7;">
+                💡 <strong>この設定はCSVインポートを楽にするためのものです。</strong><br>
+                カテゴリごとに管理会社を紐づけておくと、インポート時にCSV側の「担当管理会社」列を省略できます。<br>
+                商品マスタでの手動登録・編集では、契約未設定でも管理会社を直接選択できます。
+            </div>
+        </div>
+
         <!-- 契約一覧テーブル -->
         <div class="section">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
-                <div class="section-title" style="margin-bottom:0;">契約一覧（管理会社 × 会社 × カテゴリ）</div>
+                <div class="section-title" style="margin-bottom:0;">契約一覧（インポート時の管理会社自動解決）</div>
                 <div style="display:flex;gap:8px;align-items:center;">
                     <input type="text" id="contractFilter" placeholder="管理会社名で検索..." oninput="cm_currentPage=1;renderTable()" style="padding:8px 14px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; width:220px;">
                     <button onclick="downloadCSV()" style="padding: 8px 20px; background: #1e3a5f; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; white-space:nowrap;">CSVエクスポート</button>
@@ -167,7 +176,16 @@
         onBack: function() { window.location.href = 'system-admin.html'; }
     });
 
-    var ALL_CATEGORIES = ['建物・外','部屋・共用部','介護医療備品','厨房','ネットワーク','その他'];
+    // カテゴリはdemo-mode.jsのgetAllCategoriesから動的取得（ハードコードしない）
+    function getContractCategories() {
+        if (typeof window.getAllCategories === 'function') {
+            var officeCode = (typeof currentUser !== 'undefined' && currentUser.officeCode) ? currentUser.officeCode : 'TAMJ-J0001';
+            return window.getAllCategories(officeCode);
+        }
+        // フォールバック（demo-mode.js未読込時）
+        return ['建物・外','部屋・共用部','介護医療備品','厨房','ネットワーク','浴室','福祉用具','その他'];
+    }
+    var ALL_CATEGORIES = getContractCategories();
     var _contracts = [];
     var _partners = [];
     var _companies = [];
@@ -287,7 +305,9 @@
         document.getElementById('contractEditTitle').textContent = getPartnerName(contract.partnerId) + ' の契約編集';
         document.getElementById('editContractStatus').value = contract.status || 'active';
         var currentCats = contract.categories || [];
-        document.getElementById('editCategoryCheckboxes').innerHTML = ALL_CATEGORIES.map(function(cat) {
+        // モーダルopen時に最新カテゴリ一覧を再取得
+        var latestCategories = getContractCategories();
+        document.getElementById('editCategoryCheckboxes').innerHTML = latestCategories.map(function(cat) {
             var checked = currentCats.indexOf(cat) >= 0 ? 'checked' : '';
             return '<label style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:' + (checked ? '#eff6ff' : '#f8f9fa') + ';border:1px solid ' + (checked ? '#2563eb' : '#e5e7eb') + ';border-radius:6px;cursor:pointer;font-size:13px;">'
                 + '<input type="checkbox" name="editCat" value="' + cat + '" ' + checked + ' style="accent-color:#2563eb;">'
