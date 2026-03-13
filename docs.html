@@ -783,7 +783,6 @@
   "title": "エアコン1号機",
   "itemId": "ITEM-DEMO-003",
   "category": "部屋・共用部",
-  "priority": "中",                  // 低 | 中 | 高
   "description": "異音がする",
   "status": "未対応",                // 未対応 | 対応中 | 完了 | 対応不可
   "assignedPartnerId": "PN001",
@@ -864,12 +863,12 @@
                 </ul>
                 <h3 style="margin-top:16px;">DEMOアカウント一覧</h3>
                 <table class="perm-table" style="margin-top:8px;">
-                    <tr><th>ロール</th><th>会社コード</th><th>ログインID</th><th>パスワード</th></tr>
-                    <tr><td>staff</td><td>TAMJ</td><td>TAMJ-staff01</td><td>demo</td></tr>
-                    <tr><td>office_admin</td><td>TAMJ</td><td>TAMJ-office</td><td>demo</td></tr>
-                    <tr><td>company_admin</td><td>TAMJ</td><td>TAMJ-admin</td><td>demo</td></tr>
-                    <tr><td>管理会社</td><td>PN001</td><td>PN001-yamada</td><td>demo</td></tr>
-                    <tr><td>system_admin</td><td>SYS</td><td>SYS-admin</td><td>demo</td></tr>
+                    <tr><th>ロール</th><th>会社コード</th><th>ログインID</th><th>パスワード</th><th>名前・事業所</th></tr>
+                    <tr><td>staff</td><td>TAMJ</td><td>tamj-j1-staff1</td><td>demo</td><td>さくら苑スタッフ1</td></tr>
+                    <tr><td>office_admin</td><td>TAMJ</td><td>tamj-j1-admin</td><td>demo</td><td>さくら苑 管理者</td></tr>
+                    <tr><td>company_admin</td><td>TAMJ</td><td>TAMJ-H001</td><td>demo</td><td>タムジ 本社管理者</td></tr>
+                    <tr><td>管理会社</td><td>PN001</td><td>pn001-yamada</td><td>demo</td><td>山田 太郎（TAMJ建設）</td></tr>
+                    <tr><td>system_admin</td><td>SYSTEM</td><td>admin</td><td>admin</td><td>システム管理者</td></tr>
                 </table>
                 <h3 style="margin-top:16px;">DEMOデータ</h3>
                 <ul style="margin-top:8px;padding-left:20px;line-height:2;">
@@ -889,7 +888,6 @@
                 <ol style="margin-top:8px;padding-left:20px;line-height:2;">
                     <li>スタッフが通報画面を開く</li>
                     <li><strong>設備名/商品名</strong>を選択（カテゴリタブで絞り込み + 検索サジェスト）</li>
-                    <li>緊急度を選択（低・中・高）</li>
                     <li>状況を入力（200文字以内）</li>
                     <li>写真を添付（最大3枚、任意）</li>
                     <li>通報ボタンで送信 → 担当管理会社に自動割り当て</li>

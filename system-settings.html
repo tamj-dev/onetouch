@@ -930,36 +930,6 @@
             }
         }
 
-        // 滞留アラート設定を読み込み
-        function loadStagnationSetting() {
-            var storageKey = 'onetouch.stagnationDays';
-            var saved = localStorage.getItem(storageKey) || sessionStorage.getItem(storageKey);
-            if (saved) {
-                document.getElementById('stagnationDays').value = saved;
-            }
-        }
-
-        // 滞留アラート設定を保存
-        function saveStagnationSetting() {
-            var days = document.getElementById('stagnationDays').value;
-            var storageKey = 'onetouch.stagnationDays';
-            var oldDays = localStorage.getItem(storageKey) || sessionStorage.getItem(storageKey) || '3';
-            localStorage.setItem(storageKey, days);
-            if (typeof isDemoMode === 'function' && isDemoMode()) {
-                sessionStorage.setItem(storageKey, days);
-            }
-            // 監査ログ
-            if (typeof logEvent === 'function') {
-                logEvent('update_setting', { setting: '滞留アラート日数', before: { stagnationDays: oldDays + '日' }, after: { stagnationDays: days + '日' } });
-            }
-            // トースト表示
-            var toast = document.createElement('div');
-            toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e3a5f;color:white;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.2);z-index:9999;';
-            toast.textContent = '滞留アラート設定を保存しました（' + days + '日）';
-            document.body.appendChild(toast);
-            setTimeout(function() { toast.remove(); }, 2500);
-        }
-
         // 会社設定を読み込み
         function loadCompanySettings() {
             // DEMOモードの場合
