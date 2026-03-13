@@ -290,16 +290,21 @@
                     <div class="flow-arrow">→</div>
                     <div class="flow-item">完了</div>
                 </div>
-                <div class="doc-note">商品のカテゴリ（部屋・共用部、建物・外など）と契約設定に基づいて、担当管理会社が自動で決まります。スタッフが管理会社を選ぶ必要はありません。</div>
+                <div class="doc-note">商品のカテゴリと契約設定に基づいて、担当管理会社が自動で決まります。契約が設定されていない場合は、商品マスタで手動で管理会社を選択できます。</div>
             </div>
 
             <div class="doc-card">
                 <h2>契約テーブルとは</h2>
-                <p>「どの管理会社が、どの会社の、どのカテゴリを担当するか」を管理する仕組みです。</p>
+                <p>CSVインポート時に「担当管理会社」列を省略できるようにするための補助機能です。カテゴリごとに管理会社を紐づけておくと、インポート時に自動で管理会社が設定されます。</p>
+                <h3>主な用途</h3>
+                <ul>
+                    <li><strong>インポートの省力化</strong> — CSVに管理会社列がなくても、カテゴリから自動で管理会社を解決</li>
+                    <li><strong>通報時の自動振り分け</strong> — 通報された商品のカテゴリから担当管理会社を特定して通知</li>
+                </ul>
                 <h3>例</h3>
                 <ul>
-                    <li>TAMJ建設 × タムジ株式会社 × 建物・外 他 → エアコンが壊れたらTAMJ建設に通知</li>
-                    <li>ACタムジ × タムジ株式会社 × 建物・外 → トイレの水漏れならACタムジに通知</li>
+                    <li>「建物・外」カテゴリ → TAMJ建設 に割り当て済みの場合、该当カテゴリの商品インポート時に自動セット</li>
+                    <li>契約未設定のカテゴリは、商品マスタで手動で管理会社を選択できます</li>
                 </ul>
                 <div class="doc-note">契約は事業所単位でも設定できます。「全事業所」にすれば、その会社の全施設に適用されます。</div>
             </div>
@@ -345,12 +350,12 @@
 
                 <h3>管理会社が変わった場合</h3>
                 <ol>
-                    <li>契約管理画面を開く</li>
-                    <li>旧管理会社の契約を「停止」にする</li>
                     <li>新しい管理会社を管理会社マスタで登録（未登録の場合）</li>
-                    <li>新しい管理会社の契約を作成</li>
+                    <li>契約管理画面で旧管理会社の契約を「停止」にする</li>
+                    <li>新しい管理会社の契約を作成（カテゴリを紐づけ）</li>
+                    <li>必要に応じて、商品マスタで該当商品の担当管理会社を手動更新</li>
                 </ol>
-                <div class="doc-note">商品マスタの変更は不要です。カテゴリに基づいて自動的に新しい管理会社に通知が行きます。</div>
+                <div class="doc-note">契約を更新すると、以降のインポートや通報では新しい管理会社が自動で適用されます。既存の商品の担当管理会社は商品マスタから個別に変更できます。</div>
 
                 <h3>商品を大量に追加する場合</h3>
                 <ol>
@@ -374,9 +379,10 @@
 
                 <h3>通報したのに管理会社に通知が行かない</h3>
                 <ul>
-                    <li>契約管理画面で該当カテゴリの契約が「有効」になっているか確認</li>
+                    <li>商品マスタで該当商品の「担当管理会社」が設定されているか確認</li>
                     <li>商品のカテゴリが正しく設定されているか確認</li>
                     <li>管理会社のアカウントが有効か確認</li>
+                    <li>契約管理画面で該当カテゴリの契約が「有効」になっているか確認（インポートで自動設定した場合）</li>
                 </ul>
 
                 <h3>管理会社がダッシュボードにログインできない</h3>
@@ -411,7 +417,7 @@
                     <tr><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">通報履歴</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">全通報の確認・検索・CSV出力</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">管理者全般</td></tr>
                     <tr><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">セットアップウィザード</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">新規施設の一括登録</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">システム管理者</td></tr>
                     <tr><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">契約管理</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">管理会社×会社×カテゴリの紐づけ</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">システム管理者</td></tr>
-                    <tr><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">システム設定</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">ロゴ・カテゴリ・滞留アラート・データ管理</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">本社管理者以上</td></tr>
+                    <tr><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">システム設定</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">ロゴ・カテゴリ・滞留アラート・データ管理</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">本社管理者以上（事業所管理者は閲覧のみ）</td></tr>
                     <tr><td style="padding:8px 12px;">商品インポート</td><td style="padding:8px 12px;">Excel/CSVから商品を一括登録</td><td style="padding:8px 12px;">管理会社・管理者</td></tr>
                 </table>
             </div>
@@ -427,7 +433,7 @@
                 </div>
                 <div class="step-guide">
                     <span class="step-num">2</span><span class="step-title">「新規登録」ボタンをクリック</span>
-                    <div class="step-desc">会社名、担当者名、ローマ字（ログインID用）を入力</div>
+                    <div class="step-desc">会社名、担当者名、ログイン名を入力。ログインIDは「管理会社コード＋ログイン名」で自動生成されます（例: PN001-yamada）</div>
                 </div>
                 <div class="step-guide">
                     <span class="step-num">3</span><span class="step-title">追加担当者がいれば「＋担当者を追加」</span>
@@ -478,7 +484,7 @@
                     <span class="step-num">2</span><span class="step-title">新しい管理会社の契約を作成する</span>
                     <div class="step-desc">同じカテゴリで新しい管理会社との契約を追加</div>
                 </div>
-                <div class="doc-note">商品マスタの変更は不要です。カテゴリに基づいて自動的に新しい管理会社に通知が行くようになります。</div>
+                <div class="doc-note">契約を更新すると、以降のインポートや通報では新しい管理会社が自動で適用されます。既存の商品の担当管理会社を一括で変えたい場合は、商品マスタから個別に変更するか、CSVで再インポートしてください。</div>
             </div>
 
             <div class="doc-card">
@@ -545,7 +551,7 @@
                     <tr>
                         <td>契約管理</td>
                         <td class="perm-ok">○</td>
-                        <td class="perm-partial">閲覧</td>
+                        <td class="perm-ok">○（自社）</td>
                         <td class="perm-no">✕</td>
                         <td class="perm-no">✕</td>
                         <td class="perm-no">✕</td>
@@ -622,8 +628,8 @@
                 <p>全ユーザーは3つの情報でログインします。</p>
                 <ul>
                     <li><strong>会社コード</strong> — 施設スタッフなら会社コード（例: TAMJ）、管理会社なら管理会社コード（例: PN001）</li>
-                    <li><strong>ログインID</strong> — 会社コード + ログイン名が自動生成（例: TAMJ-yamada）</li>
-                    <li><strong>パスワード</strong> — 初回は管理者が設定したパスワード。変更可能</li>
+                    <li><strong>ログインID</strong> — 「会社コード＋ログイン名」が自動生成（例: TAMJ-yamada）。アカウント登録時にQRコードも発行されます</li>
+                    <li><strong>パスワード</strong> — 初回は管理者が設定したパスワード。変更可能。初回ログイン時に変更を推奨するバナーが表示されます</li>
                 </ul>
             </div>
         </div>
@@ -635,7 +641,7 @@
 
                 <div class="faq-item">
                     <div class="faq-q" onclick="toggleFaq(this)">管理会社が変わったらどうする？</div>
-                    <div class="faq-a">契約管理画面で旧管理会社の契約を「停止」にして、新しい管理会社の契約を作成します。商品マスタの変更は不要です。カテゴリに基づいて自動的に新しい管理会社に通知が行きます。</div>
+                    <div class="faq-a">契約管理画面で旧管理会社の契約を「停止」にして、新しい管理会社の契約を作成します。以降のインポートや通報では新しい管理会社が自動で適用されます。既存の商品の担当管理会社は商品マスタから手動で変更できます。</div>
                 </div>
 
                 <div class="faq-item">
@@ -751,23 +757,26 @@
                 <h2>管理会社割当の優先順位</h2>
                 <p>通報時に担当管理会社を自動で決定するロジックです。</p>
                 <ol>
-                    <li><strong>商品の直接指定</strong> — 商品マスタにassignedPartnerIdがある場合（レガシー、基本使わない）</li>
-                    <li><strong>契約テーブル</strong> — 会社コード + 事業所 + カテゴリで契約を検索</li>
+                    <li><strong>商品の直接指定</strong> — 商品マスタのassignedPartnerIdを使用（手動登録・編集で設定）</li>
+                    <li><strong>契約テーブル</strong> — CSVインポート時にカテゴリから自動解決（会社コード + 事業所 + カテゴリで検索）</li>
                     <li><strong>事業所のcategoryPartners</strong> — 後方互換用</li>
-                    <li><strong>未割当</strong> — 該当する契約がない場合</li>
+                    <li><strong>未割当</strong> — 該当する契約がなく、商品への直接指定もない場合</li>
                 </ol>
             </div>
 
             <div class="doc-card">
                 <h2>カテゴリ体系</h2>
-                <p>現在のシステムで使用している固定カテゴリ（10種類）です。</p>
+                <p>標準カテゴリ8種類＋カスタムカテゴリ最大2種類（合計最大10種類）です。カスタムカテゴリはシステム設定から追加できます。</p>
                 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">
                     <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">建物・外</span>
                     <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">部屋・共用部</span>
                     <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">介護医療備品</span>
                     <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">厨房</span>
                     <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">ネットワーク</span>
+                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">浴室</span>
+                    <span style="background:#eff6ff;color:#1e40af;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">福祉用具</span>
                     <span style="background:#f1f5f9;color:#64748b;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;">その他</span>
+                    <span style="background:#f0fdf4;color:#166534;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;border:1px dashed #86efac;">＋ カスタム（最大2種）</span>
                 </div>
             </div>
         </div>
