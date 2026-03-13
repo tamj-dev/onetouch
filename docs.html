@@ -858,7 +858,7 @@
                 <p>会社コード「TAMJ」でログインするとDEMOモードが有効になります。ヘッダーに紫色の「DEMOモード」バッジが表示されます。</p>
                 <h3 style="margin-top:16px;">判定ロジック（isDemoMode）</h3>
                 <ul style="margin-top:8px;padding-left:20px;line-height:2;">
-                    <li>スタッフ・管理者: <code>currentUser.companyCode === 'TAMJ'</code></li>
+                    <li>スタッフ・管理者: <code>companyCode</code> が <code>TAMJ</code> / <code>JMAT</code> / <code>SYSTEM</code> のいずれか</li>
                     <li>管理会社: <code>currentUser.isDemoMode === true</code>（assignedCompaniesにTAMJが含まれる場合）</li>
                 </ul>
                 <h3 style="margin-top:16px;">DEMOアカウント一覧</h3>
@@ -990,7 +990,12 @@
                     <tr><td>office-master.html</td><td>事業所マスタ</td><td>company_admin</td></tr>
                     <tr><td>system-settings.html</td><td>システム設定</td><td>company_admin, system_admin</td></tr>
                     <tr><td>system-admin.html</td><td>システム管理</td><td>system_admin</td></tr>
+                    <tr><td>system-admin-dashboard.html</td><td>システム管理者ダッシュボード</td><td>system_admin</td></tr>
                     <tr><td>audit-log.html</td><td>監査ログ</td><td>company_admin, system_admin</td></tr>
+                    <tr><td>notification-settings.html</td><td>通知設定</td><td>company_admin, system_admin</td></tr>
+                    <tr><td>change-password.html</td><td>パスワード変更（単体）</td><td>全員</td></tr>
+                    <tr><td>help.html</td><td>ヘルプ</td><td>staff, office_admin, company_admin</td></tr>
+                    <tr><td>contractor-help.html</td><td>管理会社ヘルプ</td><td>contractor</td></tr>
                     <tr><td>docs.html</td><td>ドキュメント</td><td>全員</td></tr>
                 </table>
                 <h3 style="margin-top:16px;">共通JavaScript</h3>
@@ -1001,6 +1006,10 @@
                     <tr><td>item-storage.js</td><td>商品CRUD（DEMOモード/本番モード自動切替）</td></tr>
                     <tr><td>document-storage.js</td><td>インポートドキュメント・LineItems管理</td></tr>
                     <tr><td>csv-utils.js</td><td>CSVエクスポートユーティリティ</td></tr>
+                    <tr><td>api-client.js</td><td>バックエンドAPI通信クライアント</td></tr>
+                    <tr><td>upload-limits.js</td><td>アップロード回数制限</td></tr>
+                    <tr><td>error-handler.js</td><td>グローバルエラーハンドリング</td></tr>
+                    <tr><td>loading.js</td><td>ローディング表示</td></tr>
                 </table>
             </div>
 
