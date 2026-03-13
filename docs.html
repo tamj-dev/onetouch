@@ -314,7 +314,7 @@
                 <h2>日常運用でやること</h2>
                 <h3>毎日（推奨）</h3>
                 <ul>
-                    <li><strong>通報履歴を確認</strong> — 未対応の通報がないかチェック。滞留アラートが出ていたら管理会社に連絡</li>
+                    <li><strong>通報履歴を確認</strong> — 未対応の通報がないかチェック。担当未割当や長期未対応がないか確認</li>
                     <li><strong>管理会社のステータス確認</strong> — 「対応中」のまま止まっている案件がないか確認</li>
                 </ul>
                 <h3>週1回（推奨）</h3>
@@ -417,7 +417,7 @@
                     <tr><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">通報履歴</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">全通報の確認・検索・CSV出力</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">管理者全般</td></tr>
                     <tr><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">セットアップウィザード</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">新規施設の一括登録</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">システム管理者</td></tr>
                     <tr><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">契約管理</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">管理会社×会社×カテゴリの紐づけ</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">システム管理者</td></tr>
-                    <tr><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">システム設定</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">ロゴ・カテゴリ・滞留アラート・データ管理</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">本社管理者以上（事業所管理者は閲覧のみ）</td></tr>
+                    <tr><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">システム設定</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">ロゴ・カテゴリ・データ管理</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">本社管理者以上（事業所管理者は閲覧のみ）</td></tr>
                     <tr><td style="padding:8px 12px;">商品インポート</td><td style="padding:8px 12px;">Excel/CSVから商品を一括登録</td><td style="padding:8px 12px;">管理会社・管理者</td></tr>
                 </table>
             </div>
@@ -503,19 +503,7 @@
                 </div>
             </div>
 
-            <div class="doc-card">
-                <h2>滞留アラートの設定</h2>
-                <p>通報が一定日数以上対応されていない場合、通報履歴画面にアラートが表示されます。</p>
-                <div class="step-guide">
-                    <span class="step-num">1</span><span class="step-title">システム設定を開く</span>
-                    <div class="step-desc">ダッシュボード → システム設定</div>
-                </div>
-                <div class="step-guide">
-                    <span class="step-num">2</span><span class="step-title">滞留アラート日数を変更</span>
-                    <div class="step-desc">1〜14日から選択。デフォルトは3日です</div>
-                </div>
-                <div class="doc-note">この設定は会社全体に適用されます。本社管理者のみ変更できます。</div>
-            </div>
+
         </div>
 
         <!-- ========== 権限 ========== -->
@@ -594,7 +582,7 @@
                         <td class="perm-ok">○</td>
                         <td class="perm-ok">○</td>
                         <td class="perm-ok">○</td>
-                        <td class="perm-partial">自分担当分</td>
+                        <td class="perm-no">✕</td>
                     </tr>
                     <tr>
                         <td>通報履歴</td>
@@ -607,8 +595,8 @@
                     <tr>
                         <td>システム設定</td>
                         <td class="perm-ok">○</td>
-                        <td class="perm-partial">一部</td>
-                        <td class="perm-partial">閲覧</td>
+                        <td class="perm-ok">○</td>
+                        <td class="perm-no">✕</td>
                         <td class="perm-no">✕</td>
                         <td class="perm-no">✕</td>
                     </tr>
@@ -659,10 +647,7 @@
                     <div class="faq-a">管理会社マスタの編集画面で「＋担当者を追加」から追加できます。各担当者に個別のログインIDが発行され、それぞれ管理会社ダッシュボードにログインできます。</div>
                 </div>
 
-                <div class="faq-item">
-                    <div class="faq-q" onclick="toggleFaq(this)">通報が滞留している場合の通知は？</div>
-                    <div class="faq-a">通報履歴画面の上部にアラートバナーが表示されます。「担当未割当の通報があります」（赤）と「X日以上滞留している通報があります」（オレンジ）の2種類があります。滞留日数はシステム設定で変更できます。</div>
-                </div>
+
 
                 <div class="faq-item">
                     <div class="faq-q" onclick="toggleFaq(this)">パスワードを忘れた場合は？</div>
